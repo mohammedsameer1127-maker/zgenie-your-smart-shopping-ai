@@ -1,70 +1,78 @@
 import { Link } from "@tanstack/react-router";
-import { Facebook, Instagram, Sparkles, Twitter, Youtube } from "lucide-react";
+import compareLogo from "@/assets/compare-logo.svg";
+import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
+import { toast } from "sonner";
 
 const groups = [
   {
     title: "Company",
     links: [
-      { to: "/about", label: "About" },
-      { to: "/careers", label: "Careers" },
-      { to: "/press", label: "Press" },
+      { to: "/home", label: "About Us" },
+      { to: "/home", label: "Careers" },
+      { to: "/home", label: "Press & Media" },
     ],
   },
   {
     title: "Support",
     links: [
-      { to: "/support", label: "Help center" },
-      { to: "/contact", label: "Contact" },
-      { to: "/orders", label: "Track order" },
+      { to: "/assistant", label: "Help Center & AI" },
+      { to: "/assistant", label: "Contact Us" },
+      { to: "/orders", label: "Track Order" },
     ],
   },
   {
     title: "Legal",
     links: [
-      { to: "/privacy", label: "Privacy" },
-      { to: "/terms", label: "Terms" },
-      { to: "/cookies", label: "Cookies" },
+      { to: "/home", label: "Privacy Policy" },
+      { to: "/home", label: "Terms of Service" },
+      { to: "/home", label: "Cookie Policy" },
     ],
   },
 ];
 
+const SOCIAL_LINKS = [
+  { name: "Twitter", icon: Twitter },
+  { name: "Instagram", icon: Instagram },
+  { name: "Facebook", icon: Facebook },
+  { name: "YouTube", icon: Youtube },
+];
+
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-surface">
+    <footer className="border-t border-border bg-card">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-5 lg:px-8">
         <div className="lg:col-span-2">
-          <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[image:var(--gradient-brand)] text-white">
-              <Sparkles className="h-5 w-5" />
+          <div className="flex items-center gap-3">
+            <img src={compareLogo} alt="Comparing Products" className="h-9 w-9 rounded-xl shadow-xs" />
+            <span className="text-xl font-black tracking-tight text-foreground">
+              Comparing <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Products</span>
             </span>
-            <span className="text-lg font-bold text-foreground">ZGenie</span>
           </div>
-          <p className="mt-4 max-w-sm text-sm text-muted-foreground">
-            Your intelligent shopping companion. Predict prices, avoid regret,
-            and shop for the life you're actually living.
+          <p className="mt-4 max-w-sm text-xs text-muted-foreground leading-relaxed">
+            Your intelligent AI product comparison engine. Compare prices, analyze specs side-by-side, score regret risk, and shop smarter every day.
           </p>
           <div className="mt-6 flex items-center gap-2">
-            {[Twitter, Instagram, Facebook, Youtube].map((Icon, i) => (
-              <a
-                key={i}
-                href="#"
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-brand hover:text-brand"
-                aria-label="social link"
+            {SOCIAL_LINKS.map(({ name, icon: Icon }) => (
+              <button
+                key={name}
+                onClick={() => toast.info(`Opening Comparing Products on ${name}...`)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-brand hover:text-brand hover:bg-muted"
+                aria-label={name}
               >
                 <Icon className="h-4 w-4" />
-              </a>
+              </button>
             ))}
           </div>
         </div>
         {groups.map((g) => (
           <div key={g.title}>
-            <p className="text-sm font-semibold text-foreground">{g.title}</p>
-            <ul className="mt-4 space-y-3">
-              {g.links.map((l) => (
-                <li key={l.to}>
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">{g.title}</p>
+            <ul className="mt-4 space-y-2.5">
+              {g.links.map((l, idx) => (
+                <li key={idx}>
                   <Link
                     to={l.to}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="text-xs text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {l.label}
                   </Link>
@@ -74,10 +82,10 @@ export function Footer() {
           </div>
         ))}
       </div>
-      <div className="border-t border-border">
+      <div className="border-t border-border/70">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
-          <p>© {new Date().getFullYear()} ZGenie. All rights reserved.</p>
-          <p>Made with intelligence, curated with care.</p>
+          <p>© {new Date().getFullYear()} Comparing Products. All rights reserved.</p>
+          <p>AI-Powered Side-by-Side Product Intelligence.</p>
         </div>
       </div>
     </footer>

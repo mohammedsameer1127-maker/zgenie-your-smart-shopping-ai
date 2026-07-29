@@ -1,0 +1,52 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <linearGradient id="cp-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+    <linearGradient id="cp-grad-2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#d946ef" />
+    </linearGradient>
+    <linearGradient id="cp-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#c084fc" stop-opacity="0.3" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  
+  <!-- Outer Glow Badge -->
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#cp-glow)" />
+  <rect x="10" y="10" width="108" height="108" rx="26" fill="#0f172a" stroke="rgba(255,255,255,0.18)" stroke-width="2" />
+  
+  <!-- Product Card Left (Cyan/Blue) -->
+  <g filter="url(#shadow)">
+    <rect x="22" y="34" width="40" height="60" rx="10" fill="url(#cp-grad-1)" />
+    <!-- Card content -->
+    <rect x="28" y="42" width="28" height="20" rx="4" fill="#ffffff" fill-opacity="0.25" />
+    <rect x="28" y="68" width="20" height="4" rx="2" fill="#ffffff" fill-opacity="0.85" />
+    <rect x="28" y="76" width="14" height="4" rx="2" fill="#ffffff" fill-opacity="0.5" />
+    <circle cx="52" cy="78" r="3.5" fill="#34d399" />
+  </g>
+  
+  <!-- Product Card Right (Purple/Pink) -->
+  <g filter="url(#shadow)">
+    <rect x="66" y="34" width="40" height="60" rx="10" fill="url(#cp-grad-2)" />
+    <!-- Card content -->
+    <rect x="72" y="42" width="28" height="20" rx="4" fill="#ffffff" fill-opacity="0.25" />
+    <rect x="72" y="68" width="22" height="4" rx="2" fill="#ffffff" fill-opacity="0.85" />
+    <rect x="72" y="76" width="16" height="4" rx="2" fill="#ffffff" fill-opacity="0.5" />
+    <circle cx="96" cy="78" r="3.5" fill="#fbbf24" />
+  </g>
+  
+  <!-- Central Comparison Badge -->
+  <circle cx="64" cy="64" r="16" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5" />
+  <!-- Double Swap Arrows inside circle -->
+  <path d="M56 60h16m-4-4l4 4-4 4" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M72 68H56m4 4l-4-4 4-4" stroke="#d946ef" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Top Sparkle -->
+  <path d="M64 18l2.5 5.5L72 26l-5.5 2.5L64 34l-2.5-5.5L56 26l5.5-2.5z" fill="#38bdf8" />
+</svg>

@@ -5,13 +5,13 @@ export function AiFloatingButton() {
   return (
     <Link
       to="/assistant"
-      className="group fixed bottom-6 right-6 z-50 flex h-14 items-center gap-2 rounded-full bg-[image:var(--gradient-brand)] pl-4 pr-5 text-sm font-semibold text-white shadow-[var(--shadow-glow)] transition-transform hover:-translate-y-0.5"
+      className="group fixed bottom-6 right-6 z-50 flex h-12 items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 pl-3.5 pr-4 text-xs font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
       aria-label="Open AI assistant"
     >
-      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 ring-1 ring-inset ring-white/30">
-        <Sparkles className="h-4 w-4" />
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
+        <Sparkles className="h-3.5 w-3.5" />
       </span>
-      <span className="hidden sm:inline">Ask ZGenie</span>
+      <span className="hidden sm:inline">AI Assistant</span>
     </Link>
   );
 }

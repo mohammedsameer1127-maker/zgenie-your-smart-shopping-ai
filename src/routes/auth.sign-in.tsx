@@ -1,25 +1,26 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Sparkles } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth/sign-in")({
   head: () => ({
     meta: [
-      { title: "Sign in — ZGenie" },
+      { title: "Sign In — Comparing Products" },
       {
         name: "description",
         content:
-          "Sign in to ZGenie to access your Shopping Twin, wishlists, and AI-powered recommendations.",
+          "Sign in to Comparing Products to access your saved comparisons, price alerts, and AI insights.",
       },
-      { property: "og:title", content: "Sign in — ZGenie" },
+      { property: "og:title", content: "Sign In — Comparing Products" },
       {
         property: "og:description",
-        content: "Access your AI-powered ZGenie shopping account.",
+        content: "Access your AI-powered Comparing Products account.",
       },
     ],
   }),
@@ -27,37 +28,52 @@ export const Route = createFileRoute("/auth/sign-in")({
 });
 
 function SignInPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSignIn = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      toast.success(`Welcome back to Comparing Products! Logged in as ${email}`);
+      navigate({ to: "/home" });
+    }, 800);
+  };
 
   return (
     <AuthLayout
-      title="Welcome back"
-      subtitle="Sign in to continue shopping smarter with ZGenie."
+      title="Welcome back to Comparing Products"
+      subtitle="Sign in to access your saved product comparisons and price alerts."
       footer={
         <>
-          New to ZGenie?{" "}
-          <Link to="/auth/sign-up" className="font-semibold text-brand hover:underline">
+          Don't have an account?{" "}
+          <Link to="/auth/sign-up" className="font-bold text-brand hover:underline">
             Create an account
           </Link>
         </>
       }
     >
-      <form
-        className="space-y-5"
-        onSubmit={(e) => {
-          e.preventDefault();
-        }}
-      >
+      <form className="space-y-4" onSubmit={handleSignIn}>
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Email Address
+          </Label>
           <div className="relative">
-            <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="email"
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
-              placeholder="you@example.com"
-              className="h-11 rounded-xl pl-9"
+              placeholder="name@company.com"
+              className="h-11 rounded-xl pl-10"
               required
             />
           </div>
@@ -65,28 +81,36 @@ function SignInPage() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link
-              to="/auth/sign-in"
-              className="text-xs font-medium text-brand hover:underline"
+            <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Password
+            </Label>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                toast.info("Password reset link sent to your email!");
+              }}
+              className="text-xs font-semibold text-brand hover:underline"
             >
-              Forgot password?
-            </Link>
+              Forgot Password?
+            </a>
           </div>
           <div className="relative">
-            <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
-              placeholder="Enter your password"
-              className="h-11 rounded-xl px-9"
+              placeholder="••••••••••••"
+              className="h-11 rounded-xl px-10"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -94,35 +118,49 @@ function SignInPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Checkbox id="remember" />
-          <Label htmlFor="remember" className="text-sm font-normal text-muted-foreground">
-            Remember me for 30 days
+        <div className="flex items-center gap-2 pt-1">
+          <Checkbox id="remember" defaultChecked />
+          <Label htmlFor="remember" className="text-xs font-medium text-muted-foreground cursor-pointer">
+            Remember me on this device
           </Label>
         </div>
 
-        <Button type="submit" className="h-11 w-full rounded-xl text-sm font-semibold">
-          Sign in
+        <Button
+          type="submit"
+          disabled={loading}
+          className="h-11 w-full rounded-xl text-sm font-bold shadow-md gap-2"
+        >
+          {loading ? "Signing in..." : <>Sign In <ArrowRight className="h-4 w-4" /></>}
         </Button>
 
         <div className="relative py-1">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
+            <span className="w-full border-t border-border/70" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-background px-2 text-muted-foreground">
+            <span className="bg-background px-3 font-semibold uppercase tracking-wider text-muted-foreground">
               or continue with
             </span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" type="button" className="h-11 rounded-xl">
+          <Button variant="outline" type="button" onClick={() => toast.info("Google Sign-In ready!")} className="h-11 rounded-xl gap-2 font-semibold text-xs">
             <GoogleIcon /> Google
           </Button>
-          <Button variant="outline" type="button" className="h-11 rounded-xl">
+          <Button variant="outline" type="button" onClick={() => toast.info("Apple Sign-In ready!")} className="h-11 rounded-xl gap-2 font-semibold text-xs">
             <AppleIcon /> Apple
           </Button>
+        </div>
+
+        <div className="pt-2 text-center">
+          <Link
+            to="/home"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-brand transition-colors"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+            Continue as Guest to Storefront →
+          </Link>
         </div>
       </form>
     </AuthLayout>

@@ -77,22 +77,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ZGenie — Your Intelligent Shopping Companion" },
+      { title: "Comparing Products — AI Smart Shopping & Comparison Engine" },
       {
         name: "description",
         content:
-          "ZGenie is the AI-powered shopping platform that predicts prices, scores regret risk, and curates products for your life — from first job to new home.",
+          "Comparing Products is the AI-powered shopping platform that compares products side-by-side, predicts prices, and scores regret risk.",
       },
-      { name: "author", content: "ZGenie" },
-      { property: "og:title", content: "ZGenie — Your Intelligent Shopping Companion" },
+      { name: "author", content: "Comparing Products" },
+      { property: "og:title", content: "Comparing Products — AI Smart Shopping & Comparison Engine" },
       {
         property: "og:description",
         content:
-          "AI-powered product discovery, regret scores, price predictions, and life-event shopping — all in one premium storefront.",
+          "Side-by-side product comparison, AI regret scores, price predictions, and smart shopping — all in one platform.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@ZGenie" },
+      { name: "twitter:site", content: "@ComparingProducts" },
     ],
     links: [
       {

@@ -1,26 +1,27 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth/sign-up")({
   head: () => ({
     meta: [
-      { title: "Create your account — ZGenie" },
+      { title: "Create Account — Comparing Products" },
       {
         name: "description",
         content:
-          "Join ZGenie to unlock AI Regret Scores, price predictions, and your personal Shopping Twin.",
+          "Join Comparing Products to unlock AI Regret Scores, price predictions, and side-by-side product comparisons.",
       },
-      { property: "og:title", content: "Create your account — ZGenie" },
+      { property: "og:title", content: "Create Account — Comparing Products" },
       {
         property: "og:description",
         content:
-          "Sign up for ZGenie and start shopping smarter with AI-powered insights.",
+          "Sign up for Comparing Products and start shopping smarter with AI.",
       },
     ],
   }),
@@ -28,114 +29,185 @@ export const Route = createFileRoute("/auth/sign-up")({
 });
 
 function SignUpPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSignUp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+    if (!agreed) {
+      toast.error("Please agree to the Terms of Service.");
+      return;
+    }
+
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      toast.success(`Account created! Welcome to Comparing Products, ${name}!`);
+      navigate({ to: "/home" });
+    }, 800);
+  };
 
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Join ZGenie and let AI guide every purchase."
+      subtitle="Join Comparing Products and let AI guide every purchase decision."
       footer={
         <>
           Already have an account?{" "}
-          <Link to="/auth/sign-in" className="font-semibold text-brand hover:underline">
+          <Link to="/auth/sign-in" className="font-bold text-brand hover:underline">
             Sign in
           </Link>
         </>
       }
     >
-      <form
-        className="space-y-5"
-        onSubmit={(e) => {
-          e.preventDefault();
-        }}
-      >
+      <form className="space-y-4" onSubmit={handleSignUp}>
         <div className="space-y-2">
-          <Label htmlFor="name">Full name</Label>
+          <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Full Name
+          </Label>
           <div className="relative">
-            <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="name"
               type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               autoComplete="name"
               placeholder="Alex Morgan"
-              className="h-11 rounded-xl pl-9"
+              className="h-11 rounded-xl pl-10"
               required
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Email Address
+          </Label>
           <div className="relative">
-            <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="email"
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
-              placeholder="you@example.com"
-              className="h-11 rounded-xl pl-9"
+              placeholder="name@company.com"
+              className="h-11 rounded-xl pl-10"
               required
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              placeholder="At least 8 characters"
-              className="h-11 rounded-xl px-9"
-              required
-              minLength={8}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Password
+            </Label>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                placeholder="8+ characters"
+                className="h-11 rounded-xl px-10"
+                required
+                minLength={8}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Use 8+ characters with a mix of letters, numbers & symbols.
-          </p>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirm" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Confirm Password
+            </Label>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="confirm"
+                type={showConfirm ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+                placeholder="Repeat password"
+                className="h-11 rounded-xl px-10"
+                required
+                minLength={8}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm((v) => !v)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showConfirm ? "Hide" : "Show"}
+              >
+                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-start gap-2">
-          <Checkbox id="terms" className="mt-0.5" required />
-          <Label htmlFor="terms" className="text-sm font-normal leading-relaxed text-muted-foreground">
+        <div className="flex items-start gap-2 pt-1">
+          <Checkbox
+            id="terms"
+            checked={agreed}
+            onCheckedChange={(checked) => setAgreed(checked === true)}
+            className="mt-0.5"
+            required
+          />
+          <Label htmlFor="terms" className="text-xs font-normal leading-relaxed text-muted-foreground cursor-pointer">
             I agree to the{" "}
-            <a href="#" className="text-brand hover:underline">Terms of Service</a>{" "}
+            <a href="#" className="font-semibold text-brand hover:underline">Terms of Service</a>{" "}
             and{" "}
-            <a href="#" className="text-brand hover:underline">Privacy Policy</a>.
+            <a href="#" className="font-semibold text-brand hover:underline">Privacy Policy</a> of Comparing Products.
           </Label>
         </div>
 
-        <Button type="submit" className="h-11 w-full rounded-xl text-sm font-semibold">
-          Create account
+        <Button
+          type="submit"
+          disabled={loading}
+          className="h-11 w-full rounded-xl text-sm font-bold shadow-md gap-2"
+        >
+          {loading ? "Creating Account..." : <>Create Account <ArrowRight className="h-4 w-4" /></>}
         </Button>
 
         <div className="relative py-1">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
+            <span className="w-full border-t border-border/70" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-background px-2 text-muted-foreground">
+            <span className="bg-background px-3 font-semibold uppercase tracking-wider text-muted-foreground">
               or sign up with
             </span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" type="button" className="h-11 rounded-xl">
+          <Button variant="outline" type="button" onClick={() => toast.info("Google Sign-Up ready!")} className="h-11 rounded-xl gap-2 font-semibold text-xs">
             <GoogleIcon /> Google
           </Button>
-          <Button variant="outline" type="button" className="h-11 rounded-xl">
+          <Button variant="outline" type="button" onClick={() => toast.info("Apple Sign-Up ready!")} className="h-11 rounded-xl gap-2 font-semibold text-xs">
             <AppleIcon /> Apple
           </Button>
         </div>
