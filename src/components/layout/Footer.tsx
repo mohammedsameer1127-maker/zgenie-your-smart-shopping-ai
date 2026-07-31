@@ -43,19 +43,19 @@ export function Footer() {
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-5 lg:px-8">
         <div className="lg:col-span-2">
           <div className="flex items-center gap-3">
-            <img src={compareLogo} alt="Comparing Products" className="h-9 w-9 rounded-xl shadow-xs" />
+            <img src={compareLogo} alt="ZGenie Logo" className="h-9 w-9 rounded-xl shadow-xs" />
             <span className="text-xl font-black tracking-tight text-foreground">
-              Comparing <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Products</span>
+              Z<span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Genie</span>
             </span>
           </div>
           <p className="mt-4 max-w-sm text-xs text-muted-foreground leading-relaxed">
-            Your intelligent AI product comparison engine. Compare prices, analyze specs side-by-side, score regret risk, and shop smarter every day.
+            Your smart shopping AI assistant. Compare prices, analyze specs side-by-side across Amazon, Flipkart, Meesho, & more.
           </p>
           <div className="mt-6 flex items-center gap-2">
             {SOCIAL_LINKS.map(({ name, icon: Icon }) => (
               <button
                 key={name}
-                onClick={() => toast.info(`Opening Comparing Products on ${name}...`)}
+                onClick={() => toast.info(`Opening ZGenie on ${name}...`)}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-brand hover:text-brand hover:bg-muted"
                 aria-label={name}
               >
@@ -84,7 +84,7 @@ export function Footer() {
       </div>
       <div className="border-t border-border/70">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
-          <p>© {new Date().getFullYear()} Comparing Products. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} ZGenie. All rights reserved.</p>
           <p>AI-Powered Side-by-Side Product Intelligence.</p>
         </div>
       </div>

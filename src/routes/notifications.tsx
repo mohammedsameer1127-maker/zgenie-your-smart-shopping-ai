@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/notifications")({
   head: () => ({
-    meta: [{ title: "Notifications & Alerts — Comparing Products" }],
+    meta: [{ title: "Notifications & Alerts — ZGenie" }],
   }),
   component: NotificationsPage,
 });

@@ -22,7 +22,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/categories")({
   head: () => ({
     meta: [
-      { title: "Product Categories — Comparing Products" },
+      { title: "Product Categories — ZGenie" },
       { name: "description", content: "Explore all product categories available for AI side-by-side comparison." },
     ],
   }),

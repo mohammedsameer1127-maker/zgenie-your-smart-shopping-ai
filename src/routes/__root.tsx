@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { DigitalTwinProvider } from "../context/DigitalTwinContext";
 import {
   Outlet,
   Link,
@@ -77,22 +78,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Comparing Products — AI Smart Shopping & Comparison Engine" },
+      { title: "ZGenie — Your Smart Shopping AI" },
       {
         name: "description",
         content:
-          "Comparing Products is the AI-powered shopping platform that compares products side-by-side, predicts prices, and scores regret risk.",
+          "ZGenie is your smart shopping AI assistant that compares products side-by-side across Amazon, Flipkart, Meesho, Croma, and Reliance Digital.",
       },
-      { name: "author", content: "Comparing Products" },
-      { property: "og:title", content: "Comparing Products — AI Smart Shopping & Comparison Engine" },
+      { name: "author", content: "ZGenie" },
+      { property: "og:title", content: "ZGenie — Your Smart Shopping AI" },
       {
         property: "og:description",
         content:
-          "Side-by-side product comparison, AI regret scores, price predictions, and smart shopping — all in one platform.",
+          "Multi-platform product comparison, AI regret scores, price predictions, and smart shopping — powered by ZGenie.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@ComparingProducts" },
+      { name: "twitter:site", content: "@ZGenieAI" },
     ],
     links: [
       {
@@ -133,8 +134,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <DigitalTwinProvider>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+      </DigitalTwinProvider>
     </QueryClientProvider>
   );
 }

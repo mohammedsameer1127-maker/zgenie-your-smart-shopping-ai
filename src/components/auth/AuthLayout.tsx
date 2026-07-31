@@ -8,17 +8,17 @@ export function CompanyLogo({ size = 42, className = "" }: { size?: number; clas
     <span className={`inline-flex items-center gap-3 ${className}`}>
       <img
         src={compareLogo}
-        alt="Comparing Products Logo"
+        alt="ZGenie Logo"
         width={size}
         height={size}
         className="rounded-xl shadow-md transition-transform hover:scale-105"
       />
       <span className="flex flex-col">
         <span className="text-xl font-extrabold tracking-tight text-foreground sm:text-2xl">
-          Comparing <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Products</span>
+          Z<span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Genie</span>
         </span>
         <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-          AI-Powered Smart Shopping
+          Your Smart Shopping AI
         </span>
       </span>
     </span>
@@ -53,12 +53,12 @@ export function AuthLayout({
           {/* Header Branding */}
           <div className="relative z-10">
             <Link to="/home" className="inline-flex items-center gap-3">
-              <img src={compareLogo} alt="Comparing Products" className="h-11 w-11 rounded-xl shadow-lg ring-1 ring-white/20" />
+              <img src={compareLogo} alt="ZGenie Logo" className="h-11 w-11 rounded-xl shadow-lg ring-1 ring-white/20" />
               <div>
                 <div className="text-2xl font-black tracking-tight text-white">
-                  Comparing <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Products</span>
+                  Z<span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Genie</span>
                 </div>
-                <div className="text-xs font-medium text-cyan-300/80">Smart AI Shopping Engine</div>
+                <div className="text-xs font-medium text-cyan-300/80">Your Smart Shopping AI</div>
               </div>
             </Link>
           </div>
@@ -78,7 +78,7 @@ export function AuthLayout({
             </h2>
 
             <p className="text-base text-slate-300 leading-relaxed">
-              Comparing Products uses advanced AI to compare prices across stores, evaluate real user reviews, score product regret risk, and find you the perfect deal every time.
+              ZGenie uses advanced AI to compare prices across stores, evaluate real user reviews, score product regret risk, and find you the perfect deal every time.
             </p>
 
             {/* Feature Highlights */}
@@ -106,7 +106,7 @@ export function AuthLayout({
 
           {/* Footer note & link */}
           <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-6 text-xs text-slate-400">
-            <p>© {new Date().getFullYear()} Comparing Products. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} ZGenie. All rights reserved.</p>
             <Link to="/home" className="inline-flex items-center gap-1 font-medium text-cyan-400 hover:text-cyan-300 hover:underline">
               Explore Storefront <ArrowRight className="h-3.5 w-3.5" />
             </Link>
@@ -119,9 +119,9 @@ export function AuthLayout({
             {/* Mobile Header Logo */}
             <div className="mb-8 flex justify-center lg:hidden">
               <Link to="/home" className="inline-flex items-center gap-3">
-                <img src={compareLogo} alt="Comparing Products" className="h-10 w-10 rounded-xl shadow-md" />
+                <img src={compareLogo} alt="ZGenie Logo" className="h-10 w-10 rounded-xl shadow-md" />
                 <span className="text-xl font-bold tracking-tight text-foreground">
-                  Comparing <span className="text-brand">Products</span>
+                  Z<span className="text-brand">Genie</span>
                 </span>
               </Link>
             </div>
@@ -148,7 +148,7 @@ export function AuthLayout({
           {/* Mobile Footer Guest Navigation */}
           <div className="mt-8 text-center text-xs text-muted-foreground lg:hidden">
             <Link to="/home" className="font-semibold text-brand hover:underline">
-              Continue to Comparing Products Storefront →
+              Continue to ZGenie Storefront →
             </Link>
           </div>
         </div>

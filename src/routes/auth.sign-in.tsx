@@ -11,16 +11,16 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/auth/sign-in")({
   head: () => ({
     meta: [
-      { title: "Sign In — Comparing Products" },
+      { title: "Sign In — ZGenie" },
       {
         name: "description",
         content:
-          "Sign in to Comparing Products to access your saved comparisons, price alerts, and AI insights.",
+          "Sign in to ZGenie to access your saved comparisons, price alerts, and AI insights.",
       },
-      { property: "og:title", content: "Sign In — Comparing Products" },
+      { property: "og:title", content: "Sign In — ZGenie" },
       {
         property: "og:description",
-        content: "Access your AI-powered Comparing Products account.",
+        content: "Access your AI-powered ZGenie account.",
       },
     ],
   }),
@@ -41,14 +41,14 @@ function SignInPage() {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      toast.success(`Welcome back to Comparing Products! Logged in as ${email}`);
+      toast.success(`Welcome back to ZGenie! Logged in as ${email}`);
       navigate({ to: "/home" });
     }, 800);
   };
 
   return (
     <AuthLayout
-      title="Welcome back to Comparing Products"
+      title="Welcome back to ZGenie"
       subtitle="Sign in to access your saved product comparisons and price alerts."
       footer={
         <>

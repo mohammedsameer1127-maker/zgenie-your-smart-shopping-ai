@@ -11,17 +11,17 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/auth/sign-up")({
   head: () => ({
     meta: [
-      { title: "Create Account — Comparing Products" },
+      { title: "Create Account — ZGenie" },
       {
         name: "description",
         content:
-          "Join Comparing Products to unlock AI Regret Scores, price predictions, and side-by-side product comparisons.",
+          "Join ZGenie to unlock AI Regret Scores, price predictions, and side-by-side product comparisons.",
       },
-      { property: "og:title", content: "Create Account — Comparing Products" },
+      { property: "og:title", content: "Create Account — ZGenie" },
       {
         property: "og:description",
         content:
-          "Sign up for Comparing Products and start shopping smarter with AI.",
+          "Sign up for ZGenie and start shopping smarter with AI.",
       },
     ],
   }),
@@ -53,7 +53,7 @@ function SignUpPage() {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      toast.success(`Account created! Welcome to Comparing Products, ${name}!`);
+      toast.success(`Account created! Welcome to ZGenie, ${name}!`);
       navigate({ to: "/home" });
     }, 800);
   };
@@ -61,7 +61,7 @@ function SignUpPage() {
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Join Comparing Products and let AI guide every purchase decision."
+      subtitle="Join ZGenie and let AI guide every purchase decision."
       footer={
         <>
           Already have an account?{" "}
@@ -180,7 +180,7 @@ function SignUpPage() {
             I agree to the{" "}
             <a href="#" className="font-semibold text-brand hover:underline">Terms of Service</a>{" "}
             and{" "}
-            <a href="#" className="font-semibold text-brand hover:underline">Privacy Policy</a> of Comparing Products.
+            <a href="#" className="font-semibold text-brand hover:underline">Privacy Policy</a> of ZGenie.
           </Label>
         </div>
 

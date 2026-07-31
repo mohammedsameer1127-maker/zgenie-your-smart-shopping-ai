@@ -11,13 +11,13 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Sign In & Sign Up — Comparing Products" },
+      { title: "Sign In & Sign Up — ZGenie" },
       {
         name: "description",
         content:
-          "Sign in or create your Comparing Products account to start comparing products, tracking price drops, and shopping smarter with AI.",
+          "Sign in or create your ZGenie account to start comparing products, tracking price drops, and shopping smarter with AI.",
       },
-      { property: "og:title", content: "Comparing Products — Sign In / Sign Up" },
+      { property: "og:title", content: "ZGenie — Sign In / Sign Up" },
       {
         property: "og:description",
         content:
@@ -33,11 +33,11 @@ function AuthPage() {
 
   return (
     <AuthLayout
-      title={tab === "signin" ? "Welcome back to Comparing Products" : "Create your Comparing Products account"}
+      title={tab === "signin" ? "Welcome back to ZGenie" : "Create your ZGenie account"}
       subtitle={
         tab === "signin"
           ? "Sign in to access your saved comparisons, price alerts, and AI insights."
-          : "Join Comparing Products today for intelligent side-by-side product analysis."
+          : "Join ZGenie today for intelligent side-by-side product analysis."
       }
       footer={
         tab === "signin" ? (
@@ -114,7 +114,7 @@ function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      toast.success(`Welcome back to Comparing Products! Logged in as ${email}`);
+      toast.success(`Welcome back to ZGenie! Logged in as ${email}`);
       navigate({ to: "/home" });
     }, 800);
   };
@@ -195,7 +195,7 @@ function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
           "Signing in..."
         ) : (
           <>
-            Sign In to Comparing Products <ArrowRight className="h-4 w-4" />
+            Sign In to ZGenie <ArrowRight className="h-4 w-4" />
           </>
         )}
       </Button>
@@ -210,7 +210,7 @@ function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-brand transition-colors"
         >
           <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-          Continue as Guest to Comparing Products Storefront →
+          Continue as Guest to ZGenie Storefront →
         </Link>
       </div>
     </form>
@@ -242,7 +242,7 @@ function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      toast.success(`Account created successfully! Welcome to Comparing Products, ${name}!`);
+      toast.success(`Account created successfully! Welcome to ZGenie, ${name}!`);
       navigate({ to: "/home" });
     }, 800);
   };
@@ -357,7 +357,7 @@ function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
           I agree to the{" "}
           <a href="#" className="font-semibold text-brand hover:underline">Terms of Service</a>{" "}
           and{" "}
-          <a href="#" className="font-semibold text-brand hover:underline">Privacy Policy</a> of Comparing Products.
+          <a href="#" className="font-semibold text-brand hover:underline">Privacy Policy</a> of ZGenie.
         </Label>
       </div>
 
@@ -370,7 +370,7 @@ function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
           "Creating Account..."
         ) : (
           <>
-            Create Comparing Products Account <ArrowRight className="h-4 w-4" />
+            Create ZGenie Account <ArrowRight className="h-4 w-4" />
           </>
         )}
       </Button>

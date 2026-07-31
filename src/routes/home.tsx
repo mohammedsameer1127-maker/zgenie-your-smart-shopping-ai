@@ -37,13 +37,13 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/home")({
   head: () => ({
     meta: [
-      { title: "Comparing Products — Multi-Platform Price & Quality Compare Engine" },
+      { title: "ZGenie — Your Smart Shopping AI" },
       {
         name: "description",
         content:
-          "Compare product prices and quality specs across Amazon, Flipkart, Meesho, Croma, & Reliance Digital. AI price predictions & regret scores.",
+          "ZGenie compares product prices and quality specs across Amazon, Flipkart, Meesho, Croma, & Reliance Digital. AI price predictions & regret scores.",
       },
-      { property: "og:title", content: "Comparing Products — Multi-Platform Compare" },
+      { property: "og:title", content: "ZGenie — Your Smart Shopping AI" },
       {
         property: "og:description",
         content:
@@ -169,10 +169,10 @@ function HeroSection() {
           <div className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-lg p-2">
             <img
               src={heroImg}
-              alt="Comparing Products Multi-Platform Interface"
-              width={1200}
-              height={900}
-              className="w-full rounded-2xl object-cover"
+              alt="ZGenie Smart Shopping AI"
+              width={1000}
+              height={1500}
+              className="w-full max-h-[520px] rounded-2xl object-cover"
             />
             <div className="mt-2 flex items-center justify-between rounded-xl bg-slate-900 p-3.5 text-white">
               <div className="flex items-center gap-2.5">
@@ -409,7 +409,7 @@ function CoreCapabilities() {
             Four Core Tools for Smarter Shopping
           </h2>
           <p className="mt-3 text-sm text-slate-300 leading-relaxed">
-            Comparing Products simplifies every stage of product research so you never overpay or buy the wrong item.
+            ZGenie simplifies every stage of product research so you never overpay or buy the wrong item.
           </p>
         </div>
 
@@ -480,9 +480,9 @@ function TestimonialsSection() {
 
         <div className="grid gap-6 md:grid-cols-3">
           {[
-            { name: "Samantha K.", role: "Tech Buyer", quote: "Comparing Products saved me ₹14,000 on my iPhone 15 Pro by comparing Amazon vs Meesho. Amazing tool!" },
+            { name: "Samantha K.", role: "Tech Buyer", quote: "ZGenie saved me ₹14,000 on my iPhone 15 Pro by comparing Amazon vs Meesho. Amazing tool!" },
             { name: "David M.", role: "Frequent Shopper", quote: "The Regret Score warned me about a laptop with high return rates on Flipkart. Bought the alternative on Amazon." },
-            { name: "Elena R.", role: "Smart Home Enthusiast", quote: "I never buy tech without checking Comparing Products across stores first. Fast, accurate, and completely unbiased." },
+            { name: "Elena R.", role: "Smart Home Enthusiast", quote: "I never buy tech without checking ZGenie across stores first. Fast, accurate, and completely unbiased." },
           ].map((t) => (
             <div key={t.name} className="rounded-2xl border border-border/80 bg-card p-6 shadow-xs space-y-3">
               <div className="flex gap-1 text-amber-400">

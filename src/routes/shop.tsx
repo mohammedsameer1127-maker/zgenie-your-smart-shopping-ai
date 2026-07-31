@@ -11,7 +11,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/shop")({
   head: () => ({
     meta: [
-      { title: "Full Product Catalog — Comparing Products" },
+      { title: "Full Product Catalog — ZGenie" },
       { name: "description", content: "Explore all products, compare specs side-by-side, and track price drops." },
     ],
   }),

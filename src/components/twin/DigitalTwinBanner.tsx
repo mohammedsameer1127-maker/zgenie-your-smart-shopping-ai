@@ -1,0 +1,70 @@
+import React from "react";
+import { useDigitalTwin } from "@/context/DigitalTwinContext";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Bot, Sparkles, TrendingUp, Sliders, ArrowRight, ShieldCheck } from "lucide-react";
+
+export function DigitalTwinBanner() {
+  const { profile, openTwinModal } = useDigitalTwin();
+
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-blue-500/20 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl">
+      {/* Background Ambient Glows */}
+      <div className="absolute top-0 right-0 -mt-12 -mr-12 h-64 w-64 rounded-full bg-blue-600/20 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-1/3 -mb-12 h-48 w-48 rounded-full bg-purple-600/20 blur-3xl pointer-events-none" />
+
+      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        {/* Left Info */}
+        <div className="space-y-3 max-w-2xl">
+          <div className="flex items-center gap-2">
+            <Badge className="rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-cyan-300 border border-cyan-500/30 px-3 py-1 text-xs font-bold gap-1.5">
+              <Bot className="h-3.5 w-3.5" /> AI Digital Twin Active
+            </Badge>
+            <Badge variant="outline" className="text-[11px] text-emerald-400 border-emerald-500/30 bg-emerald-500/10 font-bold">
+              96% Personal Calibration
+            </Badge>
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
+            Your Personal Shopping Twin is{" "}
+            <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-purple-400 bg-clip-text text-transparent">
+              Monitoring 14 Deals
+            </span>
+          </h2>
+
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Configured for <span className="font-bold text-white uppercase tracking-wider">{profile.personaType.replace("_", " ")}</span> mode. Target budget ₹{profile.minBudget.toLocaleString()} - ₹{profile.maxBudget.toLocaleString()}. Your Twin projects <span className="font-bold text-emerald-400">₹24,850 annual savings</span>.
+          </p>
+
+          {/* Quick Metrics */}
+          <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-slate-300">
+            <div className="flex items-center gap-1.5 font-medium">
+              <ShieldCheck className="h-4 w-4 text-emerald-400" /> Low Regret Risk Filter
+            </div>
+            <div className="flex items-center gap-1.5 font-medium">
+              <TrendingUp className="h-4 w-4 text-cyan-400" /> {profile.priceDropThreshold}% Price Drop Trigger
+            </div>
+          </div>
+        </div>
+
+        {/* Right Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+          <Button
+            onClick={() => openTwinModal("results")}
+            className="h-11 rounded-2xl px-6 text-xs font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg gap-2"
+          >
+            <Sparkles className="h-4 w-4" /> View Twin Insights & Deals <ArrowRight className="h-4 w-4" />
+          </Button>
+
+          <Button
+            onClick={() => openTwinModal("collect")}
+            variant="outline"
+            className="h-11 rounded-2xl px-5 text-xs font-bold border-white/20 text-white hover:bg-white/10 gap-2"
+          >
+            <Sliders className="h-4 w-4" /> Calibrate Data
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

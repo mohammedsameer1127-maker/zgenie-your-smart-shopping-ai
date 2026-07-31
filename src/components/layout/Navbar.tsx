@@ -16,9 +16,12 @@ import {
   ChevronDown,
   Scale,
   LayoutGrid,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useDigitalTwin } from "@/context/DigitalTwinContext";
+import { DigitalTwinModal } from "@/components/twin/DigitalTwinModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +42,7 @@ const primaryLinks = [
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { openTwinModal } = useDigitalTwin();
   const [wishlistCount] = useState(2);
   const [cartCount] = useState(3);
 
@@ -50,15 +54,15 @@ export function Navbar() {
         <Link to="/home" className="flex items-center gap-3 shrink-0 group">
           <img
             src={logoUrl}
-            alt="Comparing Products"
+            alt="ZGenie Logo"
             className="h-9 w-9 rounded-xl shadow-sm transition-transform group-hover:scale-105"
           />
           <div className="flex flex-col">
-            <span className="text-lg font-black tracking-tight text-foreground leading-none">
-              Comparing <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Products</span>
+            <span className="text-xl font-black tracking-tight text-foreground leading-none">
+              Z<span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Genie</span>
             </span>
             <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase hidden sm:block mt-0.5">
-              Smart Shopping Engine
+              Your Smart Shopping AI
             </span>
           </div>
         </Link>
@@ -89,6 +93,16 @@ export function Navbar() {
 
         {/* Categorized Actions & Account Dropdown */}
         <div className="flex items-center gap-2">
+          {/* Digital Twin Button */}
+          <button
+            onClick={() => openTwinModal()}
+            aria-label="AI Digital Twin"
+            className="relative flex h-9 items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-500/20"
+          >
+            <Bot className="h-4 w-4" />
+            <span className="hidden sm:inline">Digital Twin</span>
+          </button>
+
           {/* Wishlist Button with Badge */}
           <Link
             to="/wishlist"
@@ -218,6 +232,9 @@ export function Navbar() {
           <div className="space-y-1 pt-2 border-t border-border/60">
             <p className="px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Account & Tools</p>
             <div className="grid grid-cols-2 gap-1.5">
+              <button onClick={() => { openTwinModal(); setMobileMenuOpen(false); }} className="flex items-center gap-2 rounded-xl bg-blue-500/10 border border-blue-500/20 px-3.5 py-2.5 text-xs font-bold text-blue-600">
+                <Bot className="h-4 w-4" /> Digital Twin
+              </button>
               <Link to="/wishlist" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3.5 py-2.5 text-xs font-medium">
                 <Heart className="h-4 w-4 text-rose-500" /> Wishlist ({wishlistCount})
               </Link>
@@ -238,6 +255,7 @@ export function Navbar() {
           </Button>
         </div>
       )}
+      <DigitalTwinModal />
     </header>
   );
 }

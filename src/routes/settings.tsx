@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
-    meta: [{ title: "Account Settings — Comparing Products" }],
+    meta: [{ title: "Account Settings — ZGenie" }],
   }),
   component: SettingsPage,
 });

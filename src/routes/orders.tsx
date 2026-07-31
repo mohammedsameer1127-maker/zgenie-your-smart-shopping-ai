@@ -5,7 +5,7 @@ import { Package, Truck, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/orders")({
   head: () => ({
-    meta: [{ title: "My Orders — Comparing Products" }],
+    meta: [{ title: "My Orders — ZGenie" }],
   }),
   component: OrdersPage,
 });

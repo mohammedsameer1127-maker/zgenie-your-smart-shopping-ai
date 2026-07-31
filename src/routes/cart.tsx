@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
-    meta: [{ title: "Shopping Cart — Comparing Products" }],
+    meta: [{ title: "Shopping Cart — ZGenie" }],
   }),
   component: CartPage,
 });

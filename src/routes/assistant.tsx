@@ -1,53 +1,69 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sparkles, Send, Bot, User, Scale, ArrowRight, Mic, Camera } from "lucide-react";
+import {
+  Sparkles,
+  Send,
+  Bot,
+  User,
+  Mic,
+  Camera,
+  Wifi,
+  WifiOff,
+  Loader2,
+  RotateCcw,
+} from "lucide-react";
 import { toast } from "sonner";
+import { useOllamaChat } from "@/hooks/useOllamaChat";
 
 export const Route = createFileRoute("/assistant")({
   head: () => ({
     meta: [
-      { title: "AI Shopping Assistant — Comparing Products" },
-      { name: "description", content: "Chat with Comparing Products AI for personalized product comparison and advice." },
+      { title: "AI Shopping Assistant — ZGenie" },
+      {
+        name: "description",
+        content:
+          "Chat with ZGenie AI for personalized product comparison and advice.",
+      },
     ],
   }),
   component: AssistantPage,
 });
 
-interface Message {
-  sender: "ai" | "user";
-  text: string;
-}
-
 function AssistantPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      sender: "ai",
-      text: "Hello! I am your Comparing Products AI Assistant. Tell me what you're looking for (e.g., 'Compare Mac vs PC laptops under $1,200') and I'll find the best options for you!",
-    },
-  ]);
-  const [input, setInput] = useState("");
+  const {
+    messages,
+    isLoading,
+    isOllamaOnline,
+    error,
+    sendMessage,
+    checkConnection,
+    clearChat,
+  } = useOllamaChat();
 
-  const handleSend = (e: React.FormEvent) => {
+  const [input, setInput] = useState("");
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Check Ollama connection on mount
+  useEffect(() => {
+    checkConnection();
+  }, [checkConnection]);
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
 
     const userMsg = input.trim();
-    setMessages((prev) => [...prev, { sender: "user", text: userMsg }]);
     setInput("");
-
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: "ai",
-          text: `Based on your request "${userMsg}", I evaluated 14 products across 3 retailers. The top winner is Aether Pro 14 due to its 94% spec match and low 8% return risk score! Would you like to view the side-by-side spec comparison table?`,
-        },
-      ]);
-    }, 600);
+    await sendMessage(userMsg);
   };
 
   const handleVoiceSearch = () => {
@@ -55,23 +71,80 @@ function AssistantPage() {
   };
 
   const handleImageSearch = () => {
-    toast.info("Image Search activated: Please upload a photo of the product...");
+    toast.info(
+      "Image Search activated: Please upload a photo of the product..."
+    );
   };
 
   return (
     <AppLayout>
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8 space-y-6">
-        <div>
-          <Badge className="rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20 text-xs font-bold">
-            <Sparkles className="mr-1.5 h-3.5 w-3.5" /> AI Shopping Concierge
-          </Badge>
-          <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl mt-2">
-            Chat with Comparing Products AI
-          </h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Get instant, unbiased recommendations, spec comparisons, and price drop forecasts.
-          </p>
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <Badge className="rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20 text-xs font-bold">
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" /> AI Shopping
+              Concierge
+            </Badge>
+            <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl mt-2">
+              Chat with ZGenie AI
+            </h1>
+            <p className="text-xs text-muted-foreground mt-1">
+              Get instant, unbiased recommendations, spec comparisons, and price
+              drop forecasts.
+            </p>
+          </div>
+
+          {/* Connection Status + Clear */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={clearChat}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              title="Clear chat"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+            </button>
+            <div
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold ${
+                isOllamaOnline === true
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
+                  : isOllamaOnline === false
+                    ? "border-red-500/30 bg-red-500/10 text-red-600"
+                    : "border-border bg-muted/40 text-muted-foreground"
+              }`}
+            >
+              {isOllamaOnline === true ? (
+                <>
+                  <Wifi className="h-3 w-3" />
+                  <span>Ollama Online</span>
+                </>
+              ) : isOllamaOnline === false ? (
+                <>
+                  <WifiOff className="h-3 w-3" />
+                  <span>Ollama Offline</span>
+                </>
+              ) : (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>Checking…</span>
+                </>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Error Banner */}
+        {error && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-600 flex items-center justify-between">
+            <span>{error}</span>
+            <button
+              onClick={checkConnection}
+              className="ml-3 rounded-lg bg-red-500/20 px-2.5 py-1 text-[11px] font-bold hover:bg-red-500/30 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         {/* Chat Box */}
         <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-xs min-h-[420px] flex flex-col justify-between">
@@ -87,13 +160,19 @@ function AssistantPage() {
                   </span>
                 )}
                 <div
-                  className={`max-w-md rounded-2xl p-4 text-xs leading-relaxed ${
+                  className={`max-w-md rounded-2xl p-4 text-xs leading-relaxed whitespace-pre-wrap ${
                     m.sender === "user"
                       ? "bg-brand text-white rounded-br-none"
                       : "bg-muted/60 text-foreground border border-border/60 rounded-bl-none"
                   }`}
                 >
                   {m.text}
+                  {/* Streaming cursor */}
+                  {isLoading &&
+                    idx === messages.length - 1 &&
+                    m.sender === "ai" && (
+                      <span className="inline-block w-1.5 h-3.5 bg-blue-500 rounded-sm ml-0.5 animate-pulse" />
+                    )}
                 </div>
                 {m.sender === "user" && (
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white shadow-xs">
@@ -102,12 +181,15 @@ function AssistantPage() {
                 )}
               </div>
             ))}
+            <div ref={chatEndRef} />
           </div>
 
           {/* Quick Prompt Chips */}
           <div className="pt-4 border-t border-border/60 mt-4">
             <div className="flex flex-wrap gap-2 text-xs mb-3">
-              <span className="text-muted-foreground font-semibold">Try asking:</span>
+              <span className="text-muted-foreground font-semibold">
+                Try asking:
+              </span>
               {[
                 "Best wireless noise-canceling headphones under $300",
                 "Compare MacBook Pro M3 vs Dell XPS 14",
@@ -148,14 +230,29 @@ function AssistantPage() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask anything about products, prices, or comparisons..."
                 className="h-10 rounded-xl bg-background text-xs flex-1"
+                disabled={isLoading}
               />
-              <Button type="submit" className="h-10 rounded-xl px-4 font-bold text-xs gap-1.5">
-                <Send className="h-3.5 w-3.5" /> Send
+              <Button
+                type="submit"
+                className="h-10 rounded-xl px-4 font-bold text-xs gap-1.5"
+                disabled={isLoading || !input.trim()}
+              >
+                {isLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Send className="h-3.5 w-3.5" />
+                )}
+                {isLoading ? "Thinking..." : "Send"}
               </Button>
             </form>
+
+            {/* Model indicator */}
+            <p className="text-[10px] text-muted-foreground/60 text-center mt-2">
+              Powered by Qwen3:8b via local Ollama · Responses are
+              shopping-focused only
+            </p>
           </div>
         </div>
-
       </div>
     </AppLayout>
   );
