@@ -5,8 +5,9 @@
  * Includes the ZGenie system prompt that constrains the model to shopping-related topics only.
  */
 
-const OLLAMA_BASE_URL = "http://localhost:11434";
+const OLLAMA_BASE_URL = typeof window !== "undefined" ? "/api/ollama" : "http://localhost:11434";
 const OLLAMA_MODEL = "Qwen3:8b";
+
 
 /**
  * System prompt that constrains the Qwen3:8b model to only answer

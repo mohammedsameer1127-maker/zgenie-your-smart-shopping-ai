@@ -12,8 +12,13 @@ This skill documents how the ZGenie AI Shopping Assistant is powered by a **loca
 ```
 Browser (React)
     │
-    │  fetch POST http://localhost:11434/api/chat
-    │  (streaming NDJSON)
+    │  fetch POST /api/ollama/api/chat
+    │  (same-origin request, bypassing CORS)
+    │
+    ▼
+Vite Dev Server / Proxy
+    │
+    │  forward to http://localhost:11434
     │
     ▼
 Ollama Server (local, port 11434)
@@ -24,7 +29,8 @@ Ollama Server (local, port 11434)
 Streaming tokens → React state → UI
 ```
 
-The browser communicates **directly** with the local Ollama server. There is no server-side proxy since Ollama runs on the same machine and allows localhost CORS by default.
+The browser sends requests relative to `/api/ollama` which are transparently proxied by Vite server to `http://localhost:11434`. This avoids CORS restriction when accessing the app over local network IP (e.g., `http://10.71.131.58:8083`).
+
 
 ## Key Files
 
