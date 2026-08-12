@@ -77,11 +77,11 @@ function HeroSection() {
     e.preventDefault();
     const query = searchQuery.trim();
     if (!query) {
-      navigate({ to: "/compare" });
+      navigate({ to: "/compare", search: { q: "" } });
       return;
     }
     toast.success(`Searching multi-platform deals for "${query}" across Amazon, Flipkart, Meesho, Croma, & Reliance Digital...`);
-    navigate({ to: "/compare" });
+    navigate({ to: "/compare", search: { q: query } });
   };
 
   return (
@@ -132,7 +132,7 @@ function HeroSection() {
                 onClick={() => {
                   setSearchQuery(query);
                   toast.info(`Pre-filled comparison for "${query}"`);
-                  navigate({ to: "/compare" });
+                  navigate({ to: "/compare", search: { q: query } });
                 }}
                 className="rounded-full border border-border/70 bg-muted/40 px-3 py-1 text-xs font-medium transition-colors hover:border-brand hover:text-brand"
               >
@@ -185,7 +185,7 @@ function HeroSection() {
                 </div>
               </div>
               <Button asChild size="sm" variant="secondary" className="h-8 rounded-lg text-xs font-bold">
-                <Link to="/compare">Compare Stores</Link>
+                <Link to="/compare" search={{ q: "" }}>Compare Stores</Link>
               </Button>
             </div>
           </div>
@@ -209,7 +209,7 @@ function MultiPlatformHomeShowcase() {
           </h2>
         </div>
         <Button asChild variant="outline" size="sm" className="rounded-full text-xs font-bold">
-          <Link to="/compare">Launch Full Comparison Tool <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
+          <Link to="/compare" search={{ q: "" }}>Launch Full Comparison Tool <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
         </Button>
       </div>
 
@@ -360,7 +360,7 @@ function ProductComparisonShowcase() {
 
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <Button asChild variant="outline" size="sm" className="rounded-xl text-xs font-bold gap-1">
-                  <Link to="/compare"><Scale className="h-3.5 w-3.5" /> Compare</Link>
+                  <Link to="/compare" search={{ q: "" }}><Scale className="h-3.5 w-3.5" /> Compare</Link>
                 </Button>
                 <Button size="sm" className="rounded-xl text-xs font-bold">
                   View Specs
@@ -521,7 +521,7 @@ function CtaSection() {
               <Link to="/">Create Free Account</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-full border-white/40 bg-transparent text-white hover:bg-white/10 font-bold text-xs">
-              <Link to="/compare">Launch Multi-Store Engine</Link>
+              <Link to="/compare" search={{ q: "" }}>Launch Multi-Store Engine</Link>
             </Button>
           </div>
         </div>

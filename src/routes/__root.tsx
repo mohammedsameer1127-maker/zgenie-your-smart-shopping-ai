@@ -1,5 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DigitalTwinProvider } from "../context/DigitalTwinContext";
+import { AuthProvider } from "../context/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import {
   Outlet,
   Link,
@@ -7,7 +9,10 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  ScrollRestoration,
+  useLocation,
 } from "@tanstack/react-router";
+import * as React from "react";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
@@ -129,15 +134,24 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function RouteWrapper({ children }: { children: React.ReactNode }) {
+  // Bypassing auth protection as requested
+  return <>{children}</>;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <DigitalTwinProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-      </DigitalTwinProvider>
+      <AuthProvider>
+        <DigitalTwinProvider>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <RouteWrapper>
+            <Outlet />
+          </RouteWrapper>
+        </DigitalTwinProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

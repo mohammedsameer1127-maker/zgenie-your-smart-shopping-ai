@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import logoUrl from "@/assets/compare-logo.svg";
 import { useState } from "react";
 import {
@@ -45,6 +45,18 @@ export function Navbar() {
   const { openTwinModal } = useDigitalTwin();
   const [wishlistCount] = useState(2);
   const [cartCount] = useState(3);
+  const [navSearch, setNavSearch] = useState("");
+  const navigate = useNavigate();
+
+  const handleNavSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = navSearch.trim();
+    if (query) {
+      navigate({ to: "/compare", search: { q: query } });
+    } else {
+      navigate({ to: "/compare", search: { q: "" } });
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-xl transition-all">
@@ -83,13 +95,15 @@ export function Navbar() {
         </nav>
 
         {/* Search Bar - Center */}
-        <div className="relative hidden max-w-xs flex-1 lg:block">
+        <form onSubmit={handleNavSearchSubmit} className="relative hidden max-w-xs flex-1 lg:block">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            value={navSearch}
+            onChange={(e) => setNavSearch(e.target.value)}
             placeholder="Search products to compare..."
             className="h-9 rounded-full border-border/70 bg-muted/50 pl-9 pr-4 text-xs focus-visible:bg-background transition-all"
           />
-        </div>
+        </form>
 
         {/* Categorized Actions & Account Dropdown */}
         <div className="flex items-center gap-2">

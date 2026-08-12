@@ -117,7 +117,7 @@ function ShopPage() {
 
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <Button asChild variant="outline" size="sm" className="rounded-xl text-xs font-bold gap-1">
-                    <Link to="/compare"><Scale className="h-3.5 w-3.5" /> Compare</Link>
+                    <Link to="/compare" search={{ q: p.name }}><Scale className="h-3.5 w-3.5" /> Compare</Link>
                   </Button>
                   <Button
                     size="sm"

@@ -64,7 +64,7 @@ function WishlistPage() {
 
                 <div className="flex items-center gap-2">
                   <Button asChild variant="outline" size="sm" className="rounded-xl text-xs font-bold gap-1">
-                    <Link to="/compare"><Scale className="h-3.5 w-3.5" /> Compare</Link>
+                    <Link to="/compare" search={{ q: "" }}><Scale className="h-3.5 w-3.5" /> Compare</Link>
                   </Button>
                   <Button
                     size="sm"
