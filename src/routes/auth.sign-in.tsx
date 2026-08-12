@@ -1,5 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { signInWithEmailAndPassword, getRedirectResult } from "firebase/auth";
+import { auth, googleProvider, appleProvider } from "@/lib/firebase";
+import { handleProviderSignIn } from "@/lib/auth-helpers";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Sparkles } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
@@ -7,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+
+import { PublicOnlyRoute } from "@/components/auth/ProtectedRoute";
 
 export const Route = createFileRoute("/auth/sign-in")({
   head: () => ({
@@ -24,7 +29,7 @@ export const Route = createFileRoute("/auth/sign-in")({
       },
     ],
   }),
-  component: SignInPage,
+  component: () => <PublicOnlyRoute><SignInPage /></PublicOnlyRoute>,
 });
 
 function SignInPage() {
@@ -34,16 +39,38 @@ function SignInPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSignIn = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Check for errors from a previous redirect login
+    getRedirectResult(auth).catch((error: any) => {
+      if (error.code !== 'auth/invalid-api-key') {
+        console.error("Redirect login error:", error);
+        toast.error(`Login failed: ${error.message}`);
+      }
+    });
+  }, []);
+
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email || !password) {
+      toast.error("Please enter both email and password.");
+      return;
+    }
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast.success(`Welcome back to ZGenie! Logged in as ${email}`);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      toast.success(`Welcome back to ZGenie! Logged in as ${userCredential.user.email}`);
       navigate({ to: "/home" });
-    }, 800);
+    } catch (error: any) {
+      console.error(error);
+      if (error.code === 'auth/invalid-credential') {
+        toast.error("Invalid email or password.");
+      } else {
+        toast.error(`Login failed: ${error.message}`);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -84,16 +111,12 @@ function SignInPage() {
             <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Password
             </Label>
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                toast.info("Password reset link sent to your email!");
-              }}
+            <Link
+              to="/auth/forgot-password"
               className="text-xs font-semibold text-brand hover:underline"
             >
               Forgot Password?
-            </a>
+            </Link>
           </div>
           <div className="relative">
             <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -145,10 +168,32 @@ function SignInPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" type="button" onClick={() => toast.info("Google Sign-In ready!")} className="h-11 rounded-xl gap-2 font-semibold text-xs">
+          <Button 
+            variant="outline" 
+            type="button" 
+            onClick={async () => {
+              try {
+                await handleProviderSignIn(googleProvider);
+              } catch (error: any) {
+                toast.error(`Login failed: ${error.message}`);
+              }
+            }} 
+            className="h-11 rounded-xl gap-2 font-semibold text-xs"
+          >
             <GoogleIcon /> Google
           </Button>
-          <Button variant="outline" type="button" onClick={() => toast.info("Apple Sign-In ready!")} className="h-11 rounded-xl gap-2 font-semibold text-xs">
+          <Button 
+            variant="outline" 
+            type="button" 
+            onClick={async () => {
+              try {
+                await handleProviderSignIn(appleProvider);
+              } catch (error: any) {
+                toast.error(`Login failed: ${error.message}`);
+              }
+            }} 
+            className="h-11 rounded-xl gap-2 font-semibold text-xs"
+          >
             <AppleIcon /> Apple
           </Button>
         </div>

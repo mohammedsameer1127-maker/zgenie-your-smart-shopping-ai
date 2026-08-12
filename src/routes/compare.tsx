@@ -19,6 +19,11 @@ import {
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/compare")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      q: typeof search.q === "string" ? search.q : "",
+    };
+  },
   head: () => ({
     meta: [
       { title: "Multi-Platform Price & Product Compare Engine" },
@@ -43,7 +48,7 @@ const INITIAL_PRODUCTS = [
     reviews: 1240,
     regretScore: "Low (8%)",
     regretColor: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
-    display: "14.2\" Mini-LED 120Hz",
+    display: '14.2" Mini-LED 120Hz',
     processor: "M3 Pro 11-Core CPU",
     ram: "18GB Unified",
     storage: "512GB NVMe SSD",
@@ -62,7 +67,7 @@ const INITIAL_PRODUCTS = [
     reviews: 890,
     regretScore: "Moderate (12%)",
     regretColor: "text-amber-600 bg-amber-500/10 border-amber-500/20",
-    display: "14.0\" OLED 90Hz",
+    display: '14.0" OLED 90Hz',
     processor: "Intel Core Ultra 7",
     ram: "16GB LPDDR5X",
     storage: "1TB PCIe 4.0 SSD",
@@ -84,7 +89,7 @@ const AVAILABLE_ADDITIONS = [
     reviews: 620,
     regretScore: "Low (9%)",
     regretColor: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
-    display: "14.5\" 3.2K OLED Touch",
+    display: '14.5" 3.2K OLED Touch',
     processor: "Intel Core Ultra 7",
     ram: "16GB LPDDR5X",
     storage: "512GB SSD",
@@ -96,6 +101,7 @@ const AVAILABLE_ADDITIONS = [
 ];
 
 function ComparePage() {
+  const { q } = Route.useSearch();
   const [activeTab, setActiveTab] = useState<"platform" | "specs">("platform");
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [searchQuery, setSearchQuery] = useState("");
@@ -165,7 +171,7 @@ function ComparePage() {
 
         {/* Tab 1: Multi-Platform Price Comparison */}
         {activeTab === "platform" ? (
-          <MultiPlatformCompare />
+          <MultiPlatformCompare initialQuery={q} />
         ) : (
           /* Tab 2: Specs Matrix */
           <div className="space-y-6">

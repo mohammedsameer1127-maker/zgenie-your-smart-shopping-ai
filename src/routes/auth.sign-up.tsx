@@ -1,5 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createUserWithEmailAndPassword, updateProfile, getRedirectResult } from "firebase/auth";
+import { auth, googleProvider, appleProvider } from "@/lib/firebase";
+import { handleProviderSignIn } from "@/lib/auth-helpers";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
@@ -8,24 +11,25 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
+import { PublicOnlyRoute } from "@/components/auth/ProtectedRoute";
+
 export const Route = createFileRoute("/auth/sign-up")({
   head: () => ({
     meta: [
-      { title: "Create Account — ZGenie" },
+      { title: "Sign Up — ZGenie" },
       {
         name: "description",
         content:
-          "Join ZGenie to unlock AI Regret Scores, price predictions, and side-by-side product comparisons.",
+          "Create your ZGenie account to start comparing products, tracking price drops, and shopping smarter with AI.",
       },
-      { property: "og:title", content: "Create Account — ZGenie" },
+      { property: "og:title", content: "Sign Up — ZGenie" },
       {
         property: "og:description",
-        content:
-          "Sign up for ZGenie and start shopping smarter with AI.",
+        content: "Join ZGenie today for intelligent side-by-side product analysis.",
       },
     ],
   }),
-  component: SignUpPage,
+  component: () => <PublicOnlyRoute><SignUpPage /></PublicOnlyRoute>,
 });
 
 function SignUpPage() {
@@ -39,23 +43,52 @@ function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSignUp = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Check for errors from a previous redirect login
+    getRedirectResult(auth).catch((error: any) => {
+      if (error.code !== 'auth/invalid-api-key') {
+        console.error("Redirect login error:", error);
+        toast.error(`Sign up failed: ${error.message}`);
+      }
+    });
+  }, []);
+
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name || !email || !password || !confirmPassword) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+    
     if (password !== confirmPassword) {
       toast.error("Passwords do not match.");
       return;
     }
+    
     if (!agreed) {
-      toast.error("Please agree to the Terms of Service.");
+      toast.error("You must agree to the Terms of Service.");
       return;
     }
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast.success(`Account created! Welcome to ZGenie, ${name}!`);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Update profile with name
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, { displayName: name });
+      }
+      toast.success("Account created successfully! Welcome to ZGenie.");
       navigate({ to: "/home" });
-    }, 800);
+    } catch (error: any) {
+      console.error(error);
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error("Email is already registered. Please sign in instead.");
+      } else {
+        toast.error(`Sign up failed: ${error.message}`);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -204,10 +237,32 @@ function SignUpPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" type="button" onClick={() => toast.info("Google Sign-Up ready!")} className="h-11 rounded-xl gap-2 font-semibold text-xs">
+          <Button 
+            variant="outline" 
+            type="button" 
+            onClick={async () => {
+              try {
+                await handleProviderSignIn(googleProvider);
+              } catch (error: any) {
+                toast.error(`Sign up failed: ${error.message}`);
+              }
+            }} 
+            className="h-11 rounded-xl gap-2 font-semibold text-xs"
+          >
             <GoogleIcon /> Google
           </Button>
-          <Button variant="outline" type="button" onClick={() => toast.info("Apple Sign-Up ready!")} className="h-11 rounded-xl gap-2 font-semibold text-xs">
+          <Button 
+            variant="outline" 
+            type="button" 
+            onClick={async () => {
+              try {
+                await handleProviderSignIn(appleProvider);
+              } catch (error: any) {
+                toast.error(`Sign up failed: ${error.message}`);
+              }
+            }} 
+            className="h-11 rounded-xl gap-2 font-semibold text-xs"
+          >
             <AppleIcon /> Apple
           </Button>
         </div>

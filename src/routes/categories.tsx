@@ -60,27 +60,34 @@ function CategoriesPage() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {ALL_CATEGORIES.map((cat) => (
-            <Card
+            <Link
               key={cat.name}
-              onClick={() => toast.info(`Filtered products by ${cat.name}`)}
-              className="group cursor-pointer rounded-2xl border-border/80 bg-card p-5 transition-all hover:-translate-y-1 hover:border-brand/40 hover:shadow-md"
+              to="/compare"
+              search={{ q: cat.name }}
+              className="block"
             >
-              <div className="flex items-start justify-between">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10 text-brand transition-transform group-hover:scale-110">
-                  <cat.icon className="h-5 w-5" />
-                </span>
-                <Badge variant="outline" className="text-[10px] font-bold rounded-lg">
-                  {cat.count}
-                </Badge>
-              </div>
-              <h3 className="text-sm font-bold text-foreground mt-4 group-hover:text-brand transition-colors">
-                {cat.name}
-              </h3>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{cat.desc}</p>
-              <div className="mt-4 flex items-center text-xs font-bold text-brand gap-1 group-hover:translate-x-1 transition-transform">
-                <span>Explore Category</span> <ArrowRight className="h-3.5 w-3.5" />
-              </div>
-            </Card>
+              <Card
+                className="group cursor-pointer rounded-2xl border-border/80 bg-card p-5 transition-all hover:-translate-y-1 hover:border-brand/40 hover:shadow-md h-full flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-start justify-between">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10 text-brand transition-transform group-hover:scale-110">
+                      <cat.icon className="h-5 w-5" />
+                    </span>
+                    <Badge variant="outline" className="text-[10px] font-bold rounded-lg">
+                      {cat.count}
+                    </Badge>
+                  </div>
+                  <h3 className="text-sm font-bold text-foreground mt-4 group-hover:text-brand transition-colors">
+                    {cat.name}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{cat.desc}</p>
+                </div>
+                <div className="mt-4 flex items-center text-xs font-bold text-brand gap-1 group-hover:translate-x-1 transition-transform">
+                  <span>Compare Category Live Prices</span> <ArrowRight className="h-3.5 w-3.5" />
+                </div>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>
