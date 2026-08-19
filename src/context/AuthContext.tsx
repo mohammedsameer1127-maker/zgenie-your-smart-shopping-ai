@@ -8,6 +8,11 @@ interface AuthContextType {
   loading: boolean;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
+  isAuthModalOpen: boolean;
+  authModalMessage: string;
+  requireAuth: (action: () => void, message?: string) => void;
+  closeAuthModal: () => void;
+  onAuthSuccess: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -15,6 +20,11 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   logout: async () => {},
   getToken: async () => null,
+  isAuthModalOpen: false,
+  authModalMessage: "",
+  requireAuth: () => {},
+  closeAuthModal: () => {},
+  onAuthSuccess: () => {},
 });
 
 export function useAuth() {
@@ -24,6 +34,11 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Modal and Pending Action State
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMessage, setAuthModalMessage] = useState("");
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   useEffect(() => {
     let unsubscribe = () => {};
@@ -70,11 +85,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return await currentUser.getIdToken();
   };
 
+  const requireAuth = (action: () => void, message: string = "Sign in to unlock ZGenie's AI-powered search, product comparison, and personalized recommendations.") => {
+    if (currentUser) {
+      action();
+    } else {
+      setPendingAction(() => action);
+      setAuthModalMessage(message);
+      setIsAuthModalOpen(true);
+    }
+  };
+
+  const closeAuthModal = () => {
+    setIsAuthModalOpen(false);
+    setPendingAction(null);
+  };
+
+  const onAuthSuccess = () => {
+    setIsAuthModalOpen(false);
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+    }
+  };
+
   const value = {
     currentUser,
     loading,
     logout,
-    getToken
+    getToken,
+    isAuthModalOpen,
+    authModalMessage,
+    requireAuth,
+    closeAuthModal,
+    onAuthSuccess
   };
 
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;

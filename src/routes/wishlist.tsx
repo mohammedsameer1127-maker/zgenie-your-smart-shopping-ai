@@ -15,8 +15,8 @@ export const Route = createFileRoute("/wishlist")({
 });
 
 const INITIAL_WISHLIST = [
-  { id: "w1", name: "Aether Pro 14 Laptop", price: "$1,299", was: "$1,499", status: "Price Dropped -$200" },
-  { id: "w2", name: "Nimbus Wireless Headphones", price: "$249", was: "$299", status: "Lowest Price in 30 Days" },
+  { id: "w1", name: "Aether Pro 14 Laptop", price: "₹1,05,000", was: "₹1,20,000", status: "Price Dropped -₹15,000" },
+  { id: "w2", name: "Nimbus Wireless Headphones", price: "₹20,000", was: "₹25,000", status: "Lowest Price in 30 Days" },
 ];
 
 function WishlistPage() {
@@ -63,15 +63,8 @@ function WishlistPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button asChild variant="outline" size="sm" className="rounded-xl text-xs font-bold gap-1">
-                    <Link to="/compare" search={{ q: "" }}><Scale className="h-3.5 w-3.5" /> Compare</Link>
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => toast.success(`Moved ${item.name} to Cart!`)}
-                    className="rounded-xl text-xs font-bold gap-1"
-                  >
-                    <ShoppingCart className="h-3.5 w-3.5" /> Add to Cart
+                  <Button asChild size="sm" className="rounded-xl text-xs font-bold gap-1 bg-brand text-white hover:bg-brand/90 hover:text-white">
+                    <Link to="/compare" search={{ q: item.name }}><Scale className="h-3.5 w-3.5" /> Compare</Link>
                   </Button>
                   <button
                     onClick={() => removeItem(item.id, item.name)}

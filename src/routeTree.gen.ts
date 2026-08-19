@@ -11,12 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssistantRouteImport } from './routes/assistant'
-import { Route as CartRouteImport } from './routes/cart'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as NotificationsRouteImport } from './routes/notifications'
-import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShopRouteImport } from './routes/shop'
@@ -33,11 +31,6 @@ const IndexRoute = IndexRouteImport.update({
 const AssistantRoute = AssistantRouteImport.update({
   id: '/assistant',
   path: '/assistant',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CartRoute = CartRouteImport.update({
-  id: '/cart',
-  path: '/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategoriesRoute = CategoriesRouteImport.update({
@@ -58,11 +51,6 @@ const HomeRoute = HomeRouteImport.update({
 const NotificationsRoute = NotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OrdersRoute = OrdersRouteImport.update({
-  id: '/orders',
-  path: '/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -104,12 +92,10 @@ const AuthSignUpRoute = AuthSignUpRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/assistant': typeof AssistantRoute
-  '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
   '/home': typeof HomeRoute
   '/notifications': typeof NotificationsRoute
-  '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
@@ -121,12 +107,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/assistant': typeof AssistantRoute
-  '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
   '/home': typeof HomeRoute
   '/notifications': typeof NotificationsRoute
-  '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
@@ -139,12 +123,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/assistant': typeof AssistantRoute
-  '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
   '/home': typeof HomeRoute
   '/notifications': typeof NotificationsRoute
-  '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
@@ -158,12 +140,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/assistant'
-    | '/cart'
     | '/categories'
     | '/compare'
     | '/home'
     | '/notifications'
-    | '/orders'
     | '/profile'
     | '/settings'
     | '/shop'
@@ -175,12 +155,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/assistant'
-    | '/cart'
     | '/categories'
     | '/compare'
     | '/home'
     | '/notifications'
-    | '/orders'
     | '/profile'
     | '/settings'
     | '/shop'
@@ -192,12 +170,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/assistant'
-    | '/cart'
     | '/categories'
     | '/compare'
     | '/home'
     | '/notifications'
-    | '/orders'
     | '/profile'
     | '/settings'
     | '/shop'
@@ -210,12 +186,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AssistantRoute: typeof AssistantRoute
-  CartRoute: typeof CartRoute
   CategoriesRoute: typeof CategoriesRoute
   CompareRoute: typeof CompareRoute
   HomeRoute: typeof HomeRoute
   NotificationsRoute: typeof NotificationsRoute
-  OrdersRoute: typeof OrdersRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
   ShopRoute: typeof ShopRoute
@@ -239,13 +213,6 @@ declare module '@tanstack/react-router' {
       path: '/assistant'
       fullPath: '/assistant'
       preLoaderRoute: typeof AssistantRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cart': {
-      id: '/cart'
-      path: '/cart'
-      fullPath: '/cart'
-      preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/categories': {
@@ -274,13 +241,6 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof NotificationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/orders': {
-      id: '/orders'
-      path: '/orders'
-      fullPath: '/orders'
-      preLoaderRoute: typeof OrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -338,12 +298,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssistantRoute: AssistantRoute,
-  CartRoute: CartRoute,
   CategoriesRoute: CategoriesRoute,
   CompareRoute: CompareRoute,
   HomeRoute: HomeRoute,
   NotificationsRoute: NotificationsRoute,
-  OrdersRoute: OrdersRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
   ShopRoute: ShopRoute,

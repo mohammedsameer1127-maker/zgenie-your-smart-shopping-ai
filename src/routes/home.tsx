@@ -33,6 +33,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MultiPlatformCompare } from "@/components/compare/MultiPlatformCompare";
 import heroImg from "@/assets/hero.png";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 export const Route = createFileRoute("/home")({
   head: () => ({
@@ -72,16 +73,20 @@ function HomePage() {
 function HeroSection() {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { requireAuth } = useAuth();
 
   const handleCompareSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const query = searchQuery.trim();
-    if (!query) {
-      navigate({ to: "/compare", search: { q: "" } });
-      return;
-    }
-    toast.success(`Searching multi-platform deals for "${query}" across Amazon, Flipkart, Meesho, Croma, & Reliance Digital...`);
-    navigate({ to: "/compare", search: { q: query } });
+    requireAuth(() => {
+      const query = searchQuery.trim();
+      if (!query) {
+        toast.error("Please enter a product name to compare.");
+        navigate({ to: "/compare", search: { q: "" } });
+        return;
+      }
+      toast.success(`Searching multi-platform deals for "${query}" across Amazon, Flipkart, Meesho, Croma, & Reliance Digital...`);
+      navigate({ to: "/compare", search: { q: query } });
+    });
   };
 
   return (
@@ -130,9 +135,11 @@ function HeroSection() {
                 key={query}
                 type="button"
                 onClick={() => {
-                  setSearchQuery(query);
-                  toast.info(`Pre-filled comparison for "${query}"`);
-                  navigate({ to: "/compare", search: { q: query } });
+                  requireAuth(() => {
+                    setSearchQuery(query);
+                    toast.info(`Pre-filled comparison for "${query}"`);
+                    navigate({ to: "/compare", search: { q: query } });
+                  });
                 }}
                 className="rounded-full border border-border/70 bg-muted/40 px-3 py-1 text-xs font-medium transition-colors hover:border-brand hover:text-brand"
               >
@@ -174,7 +181,7 @@ function HeroSection() {
               height={1500}
               className="w-full max-h-[520px] rounded-2xl object-cover"
             />
-            <div className="mt-2 flex items-center justify-between rounded-xl bg-slate-900 p-3.5 text-white">
+            <div className="mt-2 flex items-center justify-between rounded-xl bg-slate-100 border border-border p-3.5 text-foreground">
               <div className="flex items-center gap-2.5">
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-bold">
                   ₹
@@ -263,8 +270,8 @@ const COMPARISON_PRODUCTS = [
   {
     name: "Aether Pro 14 Laptop",
     category: "Laptops",
-    price: 1299,
-    was: 1499,
+    price: 105000,
+    was: 120000,
     rating: 4.8,
     regretScore: "Low (8%)",
     verdict: "Winner: Power & Display",
@@ -273,8 +280,8 @@ const COMPARISON_PRODUCTS = [
   {
     name: "Nimbus Wireless Headphones",
     category: "Audio",
-    price: 249,
-    was: 299,
+    price: 20000,
+    was: 25000,
     rating: 4.7,
     regretScore: "Low (5%)",
     verdict: "Top Noise Canceling",
@@ -283,8 +290,8 @@ const COMPARISON_PRODUCTS = [
   {
     name: "Halo Smart Watch Series 6",
     category: "Wearables",
-    price: 379,
-    was: 429,
+    price: 30000,
+    was: 35000,
     rating: 4.6,
     regretScore: "Moderate (14%)",
     verdict: "Best Battery Life",
@@ -293,8 +300,8 @@ const COMPARISON_PRODUCTS = [
   {
     name: "Lumen Desk Lamp & Charger",
     category: "Home Office",
-    price: 89,
-    was: 109,
+    price: 7000,
+    was: 8500,
     rating: 4.9,
     regretScore: "Low (3%)",
     verdict: "Highest Value",
@@ -320,7 +327,7 @@ function ProductComparisonShowcase() {
           <Card key={p.name} className="group rounded-2xl border-border/80 bg-card overflow-hidden shadow-xs hover:shadow-md transition-all">
             <div className="relative aspect-[4/3] bg-muted/40 p-4 flex flex-col justify-between">
               <div className="flex items-center justify-between">
-                <Badge className="rounded-full bg-slate-900 text-white text-[10px] font-bold">{p.tag}</Badge>
+                <Badge className="rounded-full bg-slate-100 border border-slate-200 text-slate-800 text-[10px] font-bold">{p.tag}</Badge>
                 <button className="flex h-7 w-7 items-center justify-center rounded-full bg-background text-muted-foreground shadow-xs hover:text-rose-500" aria-label="Wishlist">
                   <Heart className="h-3.5 w-3.5" />
                 </button>
@@ -344,8 +351,8 @@ function ProductComparisonShowcase() {
 
               <div className="flex items-baseline justify-between">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-lg font-black text-foreground">${p.price}</span>
-                  <span className="text-xs text-muted-foreground line-through">${p.was}</span>
+                  <span className="text-lg font-black text-foreground">₹{p.price}</span>
+                  <span className="text-xs text-muted-foreground line-through">₹{p.was}</span>
                 </div>
                 <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
                   <Star className="h-3.5 w-3.5 fill-amber-400" />
@@ -399,16 +406,16 @@ const CAPABILITIES = [
 
 function CoreCapabilities() {
   return (
-    <section className="bg-slate-900 text-white py-16">
+    <section className="bg-secondary/30 text-foreground py-16 border-y border-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <Badge className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-bold text-cyan-300">
+          <Badge className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
             Categorized AI Capabilities
           </Badge>
-          <h2 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">
+          <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
             Four Core Tools for Smarter Shopping
           </h2>
-          <p className="mt-3 text-sm text-slate-300 leading-relaxed">
+          <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
             ZGenie simplifies every stage of product research so you never overpay or buy the wrong item.
           </p>
         </div>
@@ -417,13 +424,13 @@ function CoreCapabilities() {
           {CAPABILITIES.map((c) => (
             <div
               key={c.title}
-              className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-cyan-400/40 hover:bg-white/10"
+              className="rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-white/10 text-cyan-300">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 border border-blue-100 text-blue-600">
                 <c.icon className="h-5 w-5" />
               </div>
-              <h3 className="mt-5 text-base font-bold text-white">{c.title}</h3>
-              <p className="mt-2 text-xs text-slate-300 leading-relaxed">{c.description}</p>
+              <h3 className="mt-5 text-base font-bold text-foreground">{c.title}</h3>
+              <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{c.description}</p>
             </div>
           ))}
         </div>
@@ -504,6 +511,9 @@ function TestimonialsSection() {
 }
 
 function CtaSection() {
+  const { requireAuth } = useAuth();
+  const navigate = useNavigate();
+  
   return (
     <section className="px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-10 text-white shadow-lg sm:p-14">
@@ -517,11 +527,20 @@ function CtaSection() {
             </p>
           </div>
           <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 lg:items-end">
-            <Button asChild size="lg" className="rounded-full bg-white text-slate-900 hover:bg-slate-100 font-bold text-xs">
-              <Link to="/">Create Free Account</Link>
+            <Button 
+              size="lg" 
+              className="rounded-full bg-white text-slate-900 hover:bg-slate-100 font-bold text-xs"
+              onClick={() => requireAuth(() => navigate({ to: "/compare", search: { q: "" } }), "Create your free account to save custom product matrices.")}
+            >
+              Create Free Account
             </Button>
-            <Button asChild size="lg" variant="outline" className="rounded-full border-white/40 bg-transparent text-white hover:bg-white/10 font-bold text-xs">
-              <Link to="/compare" search={{ q: "" }}>Launch Multi-Store Engine</Link>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="rounded-full border-white/40 bg-transparent text-white hover:bg-white/10 font-bold text-xs"
+              onClick={() => requireAuth(() => navigate({ to: "/compare", search: { q: "" } }))}
+            >
+              Launch Multi-Store Engine
             </Button>
           </div>
         </div>

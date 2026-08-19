@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DigitalTwinProvider } from "../context/DigitalTwinContext";
 import { AuthProvider } from "../context/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AuthModal } from "@/components/auth/AuthModal";
 import {
   Outlet,
   Link,
@@ -149,6 +150,7 @@ function RootComponent() {
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <RouteWrapper>
             <Outlet />
+            <AuthModal />
           </RouteWrapper>
         </DigitalTwinProvider>
       </AuthProvider>
