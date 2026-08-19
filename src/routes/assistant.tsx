@@ -191,7 +191,7 @@ function AssistantPage() {
                 Try asking:
               </span>
               {[
-                "Best wireless noise-canceling headphones under $300",
+                "Best wireless noise-canceling headphones under ₹25,000",
                 "Compare MacBook Pro M3 vs Dell XPS 14",
                 "Predict price drop for OLED TVs next month",
               ].map((prompt) => (

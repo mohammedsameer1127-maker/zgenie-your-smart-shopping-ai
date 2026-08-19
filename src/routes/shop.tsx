@@ -19,12 +19,12 @@ export const Route = createFileRoute("/shop")({
 });
 
 const ALL_PRODUCTS = [
-  { id: "1", name: "Aether Pro 14 Laptop", price: 1299, was: 1499, rating: 4.8, regret: "Low (8%)", tag: "Editor Pick" },
-  { id: "2", name: "Nimbus Wireless Headphones", price: 249, was: 299, rating: 4.7, regret: "Low (5%)", tag: "Top Audio" },
-  { id: "3", name: "Halo Smart Watch Series 6", price: 379, was: 429, rating: 4.6, regret: "Low (12%)", tag: "Popular" },
-  { id: "4", name: "Lumen Desk Lamp & Charger", price: 89, was: 109, rating: 4.9, regret: "Low (3%)", tag: "Best Value" },
-  { id: "5", name: "UltraWide 34\" Curved Monitor", price: 649, was: 749, rating: 4.8, regret: "Low (7%)", tag: "Top Display" },
-  { id: "6", name: "Ergonomic Mesh Task Chair", price: 329, was: 399, rating: 4.6, regret: "Low (10%)", tag: "Office Tech" },
+  { id: "1", name: "Aether Pro 14 Laptop", price: 105000, was: 120000, rating: 4.8, regret: "Low (8%)", tag: "Editor Pick" },
+  { id: "2", name: "Nimbus Wireless Headphones", price: 20000, was: 25000, rating: 4.7, regret: "Low (5%)", tag: "Top Audio" },
+  { id: "3", name: "Halo Smart Watch Series 6", price: 30000, was: 35000, rating: 4.6, regret: "Low (12%)", tag: "Popular" },
+  { id: "4", name: "Lumen Desk Lamp & Charger", price: 7000, was: 8500, rating: 4.9, regret: "Low (3%)", tag: "Best Value" },
+  { id: "5", name: "UltraWide 34\" Curved Monitor", price: 55000, was: 65000, rating: 4.8, regret: "Low (7%)", tag: "Top Display" },
+  { id: "6", name: "Ergonomic Mesh Task Chair", price: 25000, was: 30000, rating: 4.6, regret: "Low (10%)", tag: "Office Tech" },
 ];
 
 function ShopPage() {
@@ -106,8 +106,8 @@ function ShopPage() {
 
                 <div className="flex items-baseline justify-between">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-lg font-black text-foreground">${p.price}</span>
-                    <span className="text-xs text-muted-foreground line-through">${p.was}</span>
+                    <span className="text-lg font-black text-foreground">₹{p.price}</span>
+                    <span className="text-xs text-muted-foreground line-through">₹{p.was}</span>
                   </div>
                   <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
                     <Star className="h-3.5 w-3.5 fill-amber-400" />
@@ -115,16 +115,9 @@ function ShopPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <Button asChild variant="outline" size="sm" className="rounded-xl text-xs font-bold gap-1">
-                    <Link to="/compare" search={{ q: p.name }}><Scale className="h-3.5 w-3.5" /> Compare</Link>
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => toast.success(`Added ${p.name} to cart!`)}
-                    className="rounded-xl text-xs font-bold"
-                  >
-                    Add to Cart
+                <div className="grid grid-cols-1 gap-2 pt-1">
+                  <Button asChild variant="outline" size="sm" className="rounded-xl text-xs font-bold gap-1 bg-brand text-white hover:bg-brand/90 hover:text-white border-0">
+                    <Link to="/compare" search={{ q: p.name }}><Scale className="h-3.5 w-3.5" /> Compare Features</Link>
                   </Button>
                 </div>
               </CardContent>

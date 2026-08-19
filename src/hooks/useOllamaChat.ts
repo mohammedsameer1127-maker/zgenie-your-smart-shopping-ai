@@ -22,7 +22,7 @@ interface UseOllamaChatReturn {
 
 const WELCOME_MESSAGE: DisplayMessage = {
   sender: "ai",
-  text: "Hello! I am your ZGenie AI Assistant, powered by local AI. Tell me what you're looking for (e.g., 'Compare Mac vs PC laptops under $1,200') and I'll find the best options for you!",
+  text: "Hello! I am your ZGenie AI Assistant, powered by local AI. Tell me what you're looking for (e.g., 'Compare Mac vs PC laptops under ₹80,000') and I'll find the best options for you!",
 };
 
 export function useOllamaChat(): UseOllamaChatReturn {

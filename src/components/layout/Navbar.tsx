@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import logoUrl from "@/assets/compare-logo.svg";
+import logoUrl from "@/assets/zgenie-logo.png";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 import {
   Bell,
   Heart,
@@ -43,40 +45,34 @@ const primaryLinks = [
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { openTwinModal } = useDigitalTwin();
+  const { requireAuth, currentUser, logout } = useAuth();
   const [wishlistCount] = useState(2);
-  const [cartCount] = useState(3);
   const [navSearch, setNavSearch] = useState("");
   const navigate = useNavigate();
 
   const handleNavSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const query = navSearch.trim();
-    if (query) {
-      navigate({ to: "/compare", search: { q: query } });
-    } else {
-      navigate({ to: "/compare", search: { q: "" } });
-    }
+    requireAuth(() => {
+      const query = navSearch.trim();
+      if (query) {
+        navigate({ to: "/compare", search: { q: query } });
+      } else {
+        navigate({ to: "/compare", search: { q: "" } });
+      }
+    }, "Sign in to use the AI-powered search and comparison engine.");
   };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-xl transition-all">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         
-        {/* Brand Logo & Name */}
+        {/* Brand Logo */}
         <Link to="/home" className="flex items-center gap-3 shrink-0 group">
           <img
             src={logoUrl}
             alt="ZGenie Logo"
-            className="h-9 w-9 rounded-xl shadow-sm transition-transform group-hover:scale-105"
+            className="h-10 sm:h-12 w-auto transition-transform group-hover:scale-105 drop-shadow-sm"
           />
-          <div className="flex flex-col">
-            <span className="text-xl font-black tracking-tight text-foreground leading-none">
-              Z<span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Genie</span>
-            </span>
-            <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase hidden sm:block mt-0.5">
-              Your Smart Shopping AI
-            </span>
-          </div>
         </Link>
 
         {/* Primary Navigation - Categorized & Streamlined */}
@@ -109,7 +105,7 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           {/* Digital Twin Button */}
           <button
-            onClick={() => openTwinModal()}
+            onClick={() => requireAuth(() => openTwinModal(), "Sign in to access your AI Digital Twin.")}
             aria-label="AI Digital Twin"
             className="relative flex h-9 items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-500/20"
           >
@@ -118,8 +114,8 @@ export function Navbar() {
           </button>
 
           {/* Wishlist Button with Badge */}
-          <Link
-            to="/wishlist"
+          <button
+            onClick={() => requireAuth(() => navigate({ to: "/wishlist" }), "Sign in to view your saved products.")}
             aria-label="Wishlist"
             className="relative flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
@@ -129,80 +125,74 @@ export function Navbar() {
                 {wishlistCount}
               </span>
             )}
-          </Link>
+          </button>
 
-          {/* Cart Button with Badge */}
-          <Link
-            to="/cart"
-            aria-label="Shopping Cart"
-            className="relative flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            {cartCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-purple-600 text-[10px] font-bold text-white shadow-xs">
-                {cartCount}
-              </span>
-            )}
-          </Link>
 
-          {/* Account Dropdown Menu (Consolidates Profile, Orders, Notifications, Settings) */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 gap-1.5 rounded-full px-2.5 hover:bg-muted text-muted-foreground hover:text-foreground font-medium"
-              >
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 text-white text-xs font-bold">
-                  U
-                </div>
-                <span className="text-xs font-semibold hidden sm:inline">Account</span>
-                <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52 rounded-xl p-1.5 shadow-lg border-border">
-              <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                My Account
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
-                <Link to="/profile" className="flex items-center gap-2 text-xs font-medium">
-                  <User className="h-4 w-4 text-blue-500" />
-                  <span>Profile Overview</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
-                <Link to="/orders" className="flex items-center gap-2 text-xs font-medium">
-                  <Package className="h-4 w-4 text-purple-500" />
-                  <span>Orders & Purchases</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
-                <Link to="/notifications" className="flex items-center gap-2 text-xs font-medium">
-                  <Bell className="h-4 w-4 text-amber-500" />
-                  <span>Notifications & Alerts</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
-                <Link to="/settings" className="flex items-center gap-2 text-xs font-medium">
-                  <Settings className="h-4 w-4 text-slate-500" />
-                  <span>Account Settings</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild className="rounded-lg cursor-pointer text-brand font-semibold">
-                <Link to="/" className="flex items-center gap-2 text-xs">
-                  <LogOut className="h-4 w-4" />
-                  <span>Sign In / Switch Account</span>
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
-          {/* Primary Sign In Button */}
-          <Button asChild size="sm" className="hidden rounded-full md:inline-flex font-bold shadow-xs text-xs px-4">
-            <Link to="/">Sign In</Link>
-          </Button>
+          {/* Conditional Auth Rendering */}
+          {currentUser ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 gap-1.5 rounded-full px-2.5 hover:bg-muted text-muted-foreground hover:text-foreground font-medium"
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 text-white text-xs font-bold">
+                    {currentUser.email?.charAt(0).toUpperCase() || "U"}
+                  </div>
+                  <span className="text-xs font-semibold hidden sm:inline">Account</span>
+                  <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52 rounded-xl p-1.5 shadow-lg border-border">
+                <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                  My Account
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                  <Link to="/profile" className="flex items-center gap-2 text-xs font-medium">
+                    <User className="h-4 w-4 text-blue-500" />
+                    <span>Profile Overview</span>
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                  <Link to="/notifications" className="flex items-center gap-2 text-xs font-medium">
+                    <Bell className="h-4 w-4 text-amber-500" />
+                    <span>Notifications & Alerts</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                  <Link to="/settings" className="flex items-center gap-2 text-xs font-medium">
+                    <Settings className="h-4 w-4 text-slate-500" />
+                    <span>Account Settings</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild className="rounded-lg cursor-pointer text-brand font-semibold">
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await logout();
+                        toast.success("Successfully signed out.");
+                      } catch (error) {
+                        toast.error("Failed to sign out.");
+                      }
+                    }} 
+                    className="flex items-center gap-2 text-xs w-full"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button size="sm" onClick={() => requireAuth(() => {})} className="hidden rounded-full md:inline-flex font-bold shadow-xs text-xs px-4">
+              Sign In
+            </Button>
+          )}
 
           {/* Mobile Menu Toggle */}
           <button
@@ -246,27 +236,35 @@ export function Navbar() {
           <div className="space-y-1 pt-2 border-t border-border/60">
             <p className="px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Account & Tools</p>
             <div className="grid grid-cols-2 gap-1.5">
-              <button onClick={() => { openTwinModal(); setMobileMenuOpen(false); }} className="flex items-center gap-2 rounded-xl bg-blue-500/10 border border-blue-500/20 px-3.5 py-2.5 text-xs font-bold text-blue-600">
+              <button onClick={() => requireAuth(() => { openTwinModal(); setMobileMenuOpen(false); }, "Sign in to access your AI Digital Twin.")} className="flex items-center gap-2 rounded-xl bg-blue-500/10 border border-blue-500/20 px-3.5 py-2.5 text-xs font-bold text-blue-600">
                 <Bot className="h-4 w-4" /> Digital Twin
               </button>
-              <Link to="/wishlist" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3.5 py-2.5 text-xs font-medium">
+              <button onClick={() => requireAuth(() => { navigate({ to: "/wishlist" }); setMobileMenuOpen(false); }, "Sign in to view your saved products.")} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3.5 py-2.5 text-xs font-medium text-left">
                 <Heart className="h-4 w-4 text-rose-500" /> Wishlist ({wishlistCount})
-              </Link>
-              <Link to="/cart" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3.5 py-2.5 text-xs font-medium">
-                <ShoppingCart className="h-4 w-4 text-purple-500" /> Cart ({cartCount})
-              </Link>
-              <Link to="/orders" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3.5 py-2.5 text-xs font-medium">
-                <Package className="h-4 w-4 text-blue-500" /> Orders
-              </Link>
-              <Link to="/settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3.5 py-2.5 text-xs font-medium">
+              </button>
+
+              <button onClick={() => requireAuth(() => { navigate({ to: "/settings" }); setMobileMenuOpen(false); }, "Sign in to access account settings.")} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3.5 py-2.5 text-xs font-medium text-left">
                 <Settings className="h-4 w-4 text-slate-500" /> Settings
-              </Link>
+              </button>
             </div>
           </div>
 
-          <Button asChild className="w-full rounded-full font-bold text-xs h-10">
-            <Link to="/">Sign In / Register</Link>
-          </Button>
+          {!currentUser ? (
+            <Button onClick={() => { requireAuth(() => {}); setMobileMenuOpen(false); }} className="w-full rounded-full font-bold text-xs h-10">
+              Sign In / Register
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              onClick={async () => { 
+                await logout(); 
+                setMobileMenuOpen(false); 
+              }} 
+              className="w-full rounded-full font-bold text-xs h-10"
+            >
+              Sign Out
+            </Button>
+          )}
         </div>
       )}
       <DigitalTwinModal />

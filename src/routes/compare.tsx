@@ -294,20 +294,7 @@ function ComparePage() {
                       <td key={p.id} className="p-4 text-foreground font-medium">{p.warranty}</td>
                     ))}
                   </tr>
-                  <tr>
-                    <td className="p-4 font-bold text-muted-foreground bg-muted/20">Actions</td>
-                    {products.map((p) => (
-                      <td key={p.id} className="p-4">
-                        <Button
-                          size="sm"
-                          onClick={() => toast.success(`Proceeding to buy ${p.name}`)}
-                          className="w-full rounded-xl text-xs font-bold"
-                        >
-                          Buy Now
-                        </Button>
-                      </td>
-                    ))}
-                  </tr>
+
                 </tbody>
               </table>
             </div>

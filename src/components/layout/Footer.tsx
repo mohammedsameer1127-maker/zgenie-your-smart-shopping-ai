@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import compareLogo from "@/assets/compare-logo.svg";
+import compareLogo from "@/assets/zgenie-logo.png";
 import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,11 +42,8 @@ export function Footer() {
     <footer className="border-t border-border bg-card">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-5 lg:px-8">
         <div className="lg:col-span-2">
-          <div className="flex items-center gap-3">
-            <img src={compareLogo} alt="ZGenie Logo" className="h-9 w-9 rounded-xl shadow-xs" />
-            <span className="text-xl font-black tracking-tight text-foreground">
-              Z<span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Genie</span>
-            </span>
+          <div className="flex items-center">
+            <img src={compareLogo} alt="ZGenie Logo" className="h-12 w-auto drop-shadow-sm" />
           </div>
           <p className="mt-4 max-w-sm text-xs text-muted-foreground leading-relaxed">
             Your smart shopping AI assistant. Compare prices, analyze specs side-by-side across Amazon, Flipkart, Meesho, & more.

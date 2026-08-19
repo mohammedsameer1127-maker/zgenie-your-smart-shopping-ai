@@ -6,7 +6,7 @@ import { auth } from "./firebase";
 
 export const handleProviderSignIn = async (provider: AuthProvider): Promise<void> => {
   if (provider.providerId === 'google.com') {
-    provider.setCustomParameters({
+    (provider as any).setCustomParameters({
       prompt: 'select_account'
     });
   }
