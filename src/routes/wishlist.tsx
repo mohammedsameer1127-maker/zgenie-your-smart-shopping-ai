@@ -44,7 +44,7 @@ function WishlistPage() {
             <Heart className="mx-auto h-12 w-12 text-muted-foreground/40" />
             <p className="mt-3 text-sm font-bold text-foreground">Your Wishlist is currently empty</p>
             <Button asChild size="sm" className="mt-4 rounded-xl text-xs font-bold">
-              <Link to="/home">Explore Products to Compare</Link>
+              <Link to="/">Explore Products to Compare</Link>
             </Button>
           </div>
         ) : (

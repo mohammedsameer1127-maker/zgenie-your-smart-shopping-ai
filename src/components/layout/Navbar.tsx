@@ -36,7 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const primaryLinks = [
-  { to: "/home", label: "Store", icon: LayoutGrid },
+  { to: "/", label: "Store", icon: LayoutGrid },
   { to: "/compare", label: "Compare", icon: Scale },
   { to: "/categories", label: "Categories", icon: LayoutGrid },
   { to: "/assistant", label: "AI Assistant", icon: Sparkles },
@@ -67,7 +67,7 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         
         {/* Brand Logo */}
-        <Link to="/home" className="flex items-center gap-3 shrink-0 group">
+        <Link to="/" className="flex items-center gap-3 shrink-0 group">
           <img
             src={logoUrl}
             alt="ZGenie Logo"
@@ -139,34 +139,36 @@ export function Navbar() {
                   className="h-9 gap-1.5 rounded-full px-2.5 hover:bg-muted text-muted-foreground hover:text-foreground font-medium"
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 text-white text-xs font-bold">
-                    {currentUser.email?.charAt(0).toUpperCase() || "U"}
+                    {currentUser.displayName?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
                   </div>
                   <span className="text-xs font-semibold hidden sm:inline">Account</span>
                   <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52 rounded-xl p-1.5 shadow-lg border-border">
-                <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                  My Account
+                <DropdownMenuLabel className="px-2 py-1.5 flex flex-col gap-0.5">
+                  <span className="text-sm font-semibold text-foreground">{currentUser.displayName || "User"}</span>
+                  <span className="text-xs text-muted-foreground">{currentUser.email}</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
                   <Link to="/profile" className="flex items-center gap-2 text-xs font-medium">
                     <User className="h-4 w-4 text-blue-500" />
-                    <span>Profile Overview</span>
+                    <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
-                  <Link to="/notifications" className="flex items-center gap-2 text-xs font-medium">
-                    <Bell className="h-4 w-4 text-amber-500" />
-                    <span>Notifications & Alerts</span>
+                  <Link to="/" className="flex items-center gap-2 text-xs font-medium">
+                    <Search className="h-4 w-4 text-amber-500" />
+                    <span>Search History</span>
                   </Link>
                 </DropdownMenuItem>
+                
                 <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
-                  <Link to="/settings" className="flex items-center gap-2 text-xs font-medium">
-                    <Settings className="h-4 w-4 text-slate-500" />
-                    <span>Account Settings</span>
+                  <Link to="/compare" search={{ q: "" }} className="flex items-center gap-2 text-xs font-medium">
+                    <Scale className="h-4 w-4 text-emerald-500" />
+                    <span>Comparison History</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

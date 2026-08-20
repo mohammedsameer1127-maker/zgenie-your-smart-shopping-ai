@@ -78,7 +78,7 @@ function SignUpPage() {
         await updateProfile(auth.currentUser, { displayName: name });
       }
       toast.success("Account created successfully! Welcome to ZGenie.");
-      navigate({ to: "/home" });
+      navigate({ to: "/" });
     } catch (error: any) {
       console.error(error);
       if (error.code === 'auth/email-already-in-use') {

@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CompareRouteImport } from './routes/compare'
-import { Route as HomeRouteImport } from './routes/home'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -41,11 +40,6 @@ const CategoriesRoute = CategoriesRouteImport.update({
 const CompareRoute = CompareRouteImport.update({
   id: '/compare',
   path: '/compare',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -94,7 +88,6 @@ export interface FileRoutesByFullPath {
   '/assistant': typeof AssistantRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
-  '/home': typeof HomeRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
@@ -109,7 +102,6 @@ export interface FileRoutesByTo {
   '/assistant': typeof AssistantRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
-  '/home': typeof HomeRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
@@ -125,7 +117,6 @@ export interface FileRoutesById {
   '/assistant': typeof AssistantRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
-  '/home': typeof HomeRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
@@ -142,7 +133,6 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/categories'
     | '/compare'
-    | '/home'
     | '/notifications'
     | '/profile'
     | '/settings'
@@ -157,7 +147,6 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/categories'
     | '/compare'
-    | '/home'
     | '/notifications'
     | '/profile'
     | '/settings'
@@ -172,7 +161,6 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/categories'
     | '/compare'
-    | '/home'
     | '/notifications'
     | '/profile'
     | '/settings'
@@ -188,7 +176,6 @@ export interface RootRouteChildren {
   AssistantRoute: typeof AssistantRoute
   CategoriesRoute: typeof CategoriesRoute
   CompareRoute: typeof CompareRoute
-  HomeRoute: typeof HomeRoute
   NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
@@ -227,13 +214,6 @@ declare module '@tanstack/react-router' {
       path: '/compare'
       fullPath: '/compare'
       preLoaderRoute: typeof CompareRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -300,7 +280,6 @@ const rootRouteChildren: RootRouteChildren = {
   AssistantRoute: AssistantRoute,
   CategoriesRoute: CategoriesRoute,
   CompareRoute: CompareRoute,
-  HomeRoute: HomeRoute,
   NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,

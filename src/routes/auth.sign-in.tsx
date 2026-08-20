@@ -60,7 +60,7 @@ function SignInPage() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       toast.success(`Welcome back to ZGenie! Logged in as ${userCredential.user.email}`);
-      navigate({ to: "/home" });
+      navigate({ to: "/" });
     } catch (error: any) {
       console.error(error);
       if (error.code === 'auth/invalid-credential') {
@@ -200,7 +200,7 @@ function SignInPage() {
 
         <div className="pt-2 text-center">
           <Link
-            to="/home"
+            to="/"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-brand transition-colors"
           >
             <Sparkles className="h-3.5 w-3.5 text-amber-500" />

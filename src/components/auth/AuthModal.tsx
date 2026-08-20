@@ -20,6 +20,7 @@ export function AuthModal() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -28,6 +29,7 @@ export function AuthModal() {
     if (isAuthModalOpen) {
       setMode("signIn");
       setPassword("");
+      setConfirmPassword("");
     }
   }, [isAuthModalOpen]);
 
@@ -47,6 +49,7 @@ export function AuthModal() {
         onAuthSuccess();
       } else if (mode === "signUp") {
         if (!name || !password) throw new Error("Name and password are required.");
+        if (password !== confirmPassword) throw new Error("Passwords do not match.");
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         if (auth.currentUser) {
           await updateProfile(auth.currentUser, { displayName: name });
@@ -59,11 +62,15 @@ export function AuthModal() {
         setMode("signIn");
       }
     } catch (error: any) {
-      console.error(error);
+      console.error("[Firebase Auth Error]", error.code, error.message);
       if (error.code === 'auth/invalid-credential') {
-        toast.error("Invalid email or password.");
+        toast.error("Incorrect email or password. Please try again.");
       } else if (error.code === 'auth/email-already-in-use') {
         toast.error("Email is already registered. Please sign in instead.");
+      } else if (error.code === 'auth/weak-password') {
+        toast.error("Password is too weak. Please use at least 6 characters.");
+      } else if (error.code === 'auth/invalid-email') {
+        toast.error("Invalid email address format.");
       } else {
         toast.error(error.message || "Authentication failed.");
       }
@@ -128,6 +135,16 @@ export function AuthModal() {
                   <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
+                </div>
+              </div>
+            )}
+
+            {mode === "signUp" && (
+              <div className="space-y-2">
+                <Label htmlFor="modal-confirm-password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="modal-confirm-password" type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••••••" className="h-11 rounded-xl pl-10 bg-slate-50 border-slate-200" required />
                 </div>
               </div>
             )}
