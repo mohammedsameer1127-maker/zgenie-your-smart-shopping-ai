@@ -7,9 +7,9 @@ const groups = [
   {
     title: "Company",
     links: [
-      { to: "/home", label: "About Us" },
-      { to: "/home", label: "Careers" },
-      { to: "/home", label: "Press & Media" },
+      { to: "/", label: "About Us" },
+      { to: "/", label: "Careers" },
+      { to: "/", label: "Press & Media" },
     ],
   },
   {
@@ -23,9 +23,9 @@ const groups = [
   {
     title: "Legal",
     links: [
-      { to: "/home", label: "Privacy Policy" },
-      { to: "/home", label: "Terms of Service" },
-      { to: "/home", label: "Cookie Policy" },
+      { to: "/", label: "Privacy Policy" },
+      { to: "/", label: "Terms of Service" },
+      { to: "/", label: "Cookie Policy" },
     ],
   },
 ];

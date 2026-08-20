@@ -36,7 +36,7 @@ export function PublicOnlyRoute({ children }: { children: ReactNode }) {
   }
 
   if (currentUser) {
-    return <Navigate to="/home" />;
+    return <Navigate to="/" />;
   }
 
   return <>{children}</>;

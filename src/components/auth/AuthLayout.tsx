@@ -37,7 +37,7 @@ export function AuthLayout({
         <div className="relative hidden overflow-hidden bg-background/40 backdrop-blur-sm p-12 lg:col-span-6 lg:flex lg:flex-col lg:justify-between xl:col-span-7">
           {/* Header Branding */}
           <div className="relative z-10">
-            <Link to="/home" className="inline-flex items-center">
+            <Link to="/" className="inline-flex items-center">
               <img src={compareLogo} alt="ZGenie Logo" className="h-14 sm:h-16 w-auto drop-shadow-md transition-transform hover:scale-105" />
             </Link>
           </div>
@@ -86,7 +86,7 @@ export function AuthLayout({
           {/* Footer note & link */}
           <div className="relative z-10 flex items-center justify-between border-t border-border pt-6 text-xs text-muted-foreground">
             <p>© {new Date().getFullYear()} ZGenie. All rights reserved.</p>
-            <Link to="/home" className="inline-flex items-center gap-1 font-semibold text-brand hover:underline">
+            <Link to="/" className="inline-flex items-center gap-1 font-semibold text-brand hover:underline">
               Explore Storefront <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -97,7 +97,7 @@ export function AuthLayout({
           <div className="mx-auto w-full max-w-md my-auto">
             {/* Mobile Header Logo */}
             <div className="mb-8 flex justify-center lg:hidden">
-              <Link to="/home" className="inline-flex items-center">
+              <Link to="/" className="inline-flex items-center">
                 <img src={compareLogo} alt="ZGenie Logo" className="h-12 w-auto drop-shadow-md" />
               </Link>
             </div>
@@ -123,7 +123,7 @@ export function AuthLayout({
 
           {/* Mobile Footer Guest Navigation */}
           <div className="mt-8 text-center text-xs text-muted-foreground lg:hidden">
-            <Link to="/home" className="font-semibold text-brand hover:underline">
+            <Link to="/" className="font-semibold text-brand hover:underline">
               Continue to ZGenie Storefront →
             </Link>
           </div>

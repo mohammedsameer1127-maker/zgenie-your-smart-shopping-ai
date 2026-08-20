@@ -108,6 +108,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Automatically close modal and run pending action if user state changes to authenticated
+  useEffect(() => {
+    if (currentUser && isAuthModalOpen) {
+      onAuthSuccess();
+    }
+  }, [currentUser, isAuthModalOpen]);
+
   const value = {
     currentUser,
     loading,
