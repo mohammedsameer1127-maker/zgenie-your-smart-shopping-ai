@@ -1,13 +1,22 @@
 /**
- * Ollama Chat Service
+ * Ollama Chat Service (Client Side)
  *
- * Handles communication with the local Ollama API (http://localhost:11434).
- * Includes the ZGenie system prompt that constrains the model to shopping-related topics only.
+ * Routes all Ollama requests through TanStack Start server functions,
+ * which run on the server and forward to Ollama at http://127.0.0.1:11434.
+ *
+ * Architecture:
+ *   Browser → TanStack Start Server Function → Ollama API
+ *
+ * This avoids CORS issues and Vite/Nitro proxy conflicts.
  */
 
-const OLLAMA_BASE_URL = typeof window !== "undefined" ? "/api/ollama" : "http://localhost:11434";
-const OLLAMA_MODEL = "Qwen3:8b";
+import {
+  checkOllamaHealthServer,
+  chatWithOllamaServer,
+  listOllamaModelsServer,
+} from "./ollama.server";
 
+const DEFAULT_MODEL = "Qwen3:8b";
 
 /**
  * System prompt that constrains the Qwen3:8b model to only answer
@@ -55,109 +64,66 @@ export interface ChatMessage {
   content: string;
 }
 
-export interface OllamaStreamChunk {
-  model: string;
-  created_at: string;
-  message: {
-    role: string;
-    content: string;
-  };
-  done: boolean;
-  done_reason?: string;
-}
-
 /**
- * Check if the Ollama server is reachable.
+ * Check if the Ollama server is reachable via server function.
  */
 export async function checkOllamaHealth(): Promise<boolean> {
   try {
-    const response = await fetch(OLLAMA_BASE_URL, {
-      method: "GET",
-      signal: AbortSignal.timeout(3000),
-    });
-    return response.ok;
-  } catch {
+    const result = await checkOllamaHealthServer();
+    if (!result.online) {
+      console.warn("[Ollama Client] Health check failed:", result.error);
+    }
+    return result.online;
+  } catch (err) {
+    console.error("[Ollama Client] Health check exception:", err);
     return false;
   }
 }
 
 /**
- * Stream a chat response from Ollama.
- * Yields individual content tokens as they arrive.
+ * Send a chat message to Ollama via server function.
+ * Returns the full response text (non-streaming).
  */
-export async function* streamOllamaChat(
-  userMessages: ChatMessage[],
-  signal?: AbortSignal
-): AsyncGenerator<string, void, unknown> {
+export async function sendOllamaChat(
+  userMessages: ChatMessage[]
+): Promise<string> {
   // Prepend the system prompt to the conversation
   const messages: ChatMessage[] = [
     { role: "system", content: ZGENIE_SYSTEM_PROMPT },
     ...userMessages,
   ];
 
-  const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: OLLAMA_MODEL,
+  console.log(`[Ollama Client] Sending chat request with ${messages.length} messages (model: ${DEFAULT_MODEL})`);
+
+  const result = await chatWithOllamaServer({
+    data: {
+      model: DEFAULT_MODEL,
       messages,
-      stream: true,
-    }),
-    signal,
+    },
   });
 
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => "Unknown error");
-    throw new Error(`Ollama API error (${response.status}): ${errorText}`);
+  if (!result.success) {
+    console.error("[Ollama Client] Chat failed:", result.error);
+    throw new Error(result.error || "Ollama chat request failed");
   }
 
-  const reader = response.body?.getReader();
-  if (!reader) throw new Error("No response body from Ollama");
+  const responseText = result.message?.content || "";
+  console.log(`[Ollama Client] Response received (${responseText.length} chars)`);
+  return responseText;
+}
 
-  const decoder = new TextDecoder();
-  let buffer = "";
-
+/**
+ * List available Ollama models.
+ */
+export async function listOllamaModels(): Promise<Array<{ name: string }>> {
   try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-
-      // Ollama sends newline-delimited JSON
-      const lines = buffer.split("\n");
-      // Keep the last (potentially incomplete) line in the buffer
-      buffer = lines.pop() || "";
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-
-        try {
-          const chunk: OllamaStreamChunk = JSON.parse(trimmed);
-          if (chunk.message?.content) {
-            yield chunk.message.content;
-          }
-          if (chunk.done) return;
-        } catch {
-          // Skip malformed JSON lines
-          console.warn("Skipping malformed Ollama chunk:", trimmed);
-        }
-      }
+    const result = await listOllamaModelsServer();
+    if (!result.success) {
+      console.warn("[Ollama Client] Failed to list models:", result.error);
     }
-
-    // Process any remaining buffer
-    if (buffer.trim()) {
-      try {
-        const chunk: OllamaStreamChunk = JSON.parse(buffer.trim());
-        if (chunk.message?.content) {
-          yield chunk.message.content;
-        }
-      } catch {
-        // Ignore
-      }
-    }
-  } finally {
-    reader.releaseLock();
+    return result.models;
+  } catch (err) {
+    console.error("[Ollama Client] List models exception:", err);
+    return [];
   }
 }

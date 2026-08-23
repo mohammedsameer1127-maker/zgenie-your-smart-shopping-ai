@@ -47,10 +47,10 @@ function CategoriesPage() {
     <AppLayout>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
         <div>
-          <Badge className="rounded-full bg-purple-500/10 text-purple-600 border border-purple-500/20 text-xs font-bold">
+          <Badge className="rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20 text-xs font-semibold">
             <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Product Directory
           </Badge>
-          <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl mt-2">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mt-2">
             Browse All Product Categories
           </h1>
           <p className="text-xs text-muted-foreground mt-1 max-w-xl">
@@ -67,23 +67,23 @@ function CategoriesPage() {
               className="block"
             >
               <Card
-                className="group cursor-pointer rounded-2xl border-border/80 bg-card p-5 transition-all hover:-translate-y-1 hover:border-brand/40 hover:shadow-md h-full flex flex-col justify-between"
+                className="group cursor-pointer rounded-xl border border-border bg-card p-5 transition-all hover:border-brand/40 hover:shadow-sm h-full flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-start justify-between">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10 text-brand transition-transform group-hover:scale-110">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10 text-brand transition-transform group-hover:scale-105">
                       <cat.icon className="h-5 w-5" />
                     </span>
-                    <Badge variant="outline" className="text-[10px] font-bold rounded-lg">
+                    <Badge variant="outline" className="text-[10px] font-semibold rounded-md">
                       {cat.count}
                     </Badge>
                   </div>
-                  <h3 className="text-sm font-bold text-foreground mt-4 group-hover:text-brand transition-colors">
+                  <h3 className="text-sm font-semibold text-foreground mt-3.5 group-hover:text-brand transition-colors">
                     {cat.name}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{cat.desc}</p>
                 </div>
-                <div className="mt-4 flex items-center text-xs font-bold text-brand gap-1 group-hover:translate-x-1 transition-transform">
+                <div className="mt-4 flex items-center text-xs font-semibold text-brand gap-1 group-hover:translate-x-1 transition-transform">
                   <span>Compare Category Live Prices</span> <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </Card>

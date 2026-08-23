@@ -147,35 +147,39 @@ function AssistantPage() {
         )}
 
         {/* Chat Box */}
-        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-xs min-h-[420px] flex flex-col justify-between">
-          <div className="space-y-4 overflow-y-auto max-h-[480px] pr-2">
+        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-sm min-h-[460px] flex flex-col justify-between">
+          <div className="space-y-4 overflow-y-auto max-h-[500px] pr-2">
             {messages.map((m, idx) => (
               <div
                 key={idx}
                 className={`flex gap-3 ${m.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 {m.sender === "ai" && (
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 text-white shadow-xs">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs">
                     <Bot className="h-4 w-4" />
                   </span>
                 )}
                 <div
-                  className={`max-w-md rounded-2xl p-4 text-xs leading-relaxed whitespace-pre-wrap ${
+                  className={`max-w-lg rounded-2xl px-4 py-3 text-xs leading-relaxed whitespace-pre-wrap ${
                     m.sender === "user"
-                      ? "bg-brand text-white rounded-br-none"
-                      : "bg-muted/60 text-foreground border border-border/60 rounded-bl-none"
+                      ? "bg-brand text-white rounded-tr-xs shadow-xs"
+                      : "bg-muted/40 text-foreground border border-border/70 rounded-tl-xs"
                   }`}
                 >
                   {m.text}
-                  {/* Streaming cursor */}
+                  {/* Loading indicator */}
                   {isLoading &&
                     idx === messages.length - 1 &&
-                    m.sender === "ai" && (
-                      <span className="inline-block w-1.5 h-3.5 bg-blue-500 rounded-sm ml-0.5 animate-pulse" />
+                    m.sender === "ai" &&
+                    !m.text && (
+                      <span className="inline-flex items-center gap-1 text-muted-foreground text-xs">
+                        <Loader2 className="h-3 w-3 animate-spin text-brand" />
+                        <span>Searching deals & analyzing specs...</span>
+                      </span>
                     )}
                 </div>
                 {m.sender === "user" && (
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white shadow-xs">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-white shadow-xs">
                     <User className="h-4 w-4" />
                   </span>
                 )}
@@ -186,9 +190,9 @@ function AssistantPage() {
 
           {/* Quick Prompt Chips */}
           <div className="pt-4 border-t border-border/60 mt-4">
-            <div className="flex flex-wrap gap-2 text-xs mb-3">
-              <span className="text-muted-foreground font-semibold">
-                Try asking:
+            <div className="flex flex-wrap items-center gap-2 text-xs mb-3">
+              <span className="text-muted-foreground font-medium text-[11px]">
+                Suggested prompts:
               </span>
               {[
                 "Best wireless noise-canceling headphones under ₹25,000",
@@ -200,7 +204,7 @@ function AssistantPage() {
                   onClick={() => {
                     setInput(prompt);
                   }}
-                  className="rounded-full border border-border/70 bg-muted/40 px-3 py-1 text-[11px] font-medium text-muted-foreground hover:border-brand hover:text-foreground transition-colors"
+                  className="rounded-lg border border-border/80 bg-muted/30 px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:border-brand/40 hover:text-foreground hover:bg-muted/60 transition-all"
                 >
                   {prompt}
                 </button>
@@ -212,16 +216,18 @@ function AssistantPage() {
               <button
                 type="button"
                 onClick={handleVoiceSearch}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border/80 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 title="Voice Search"
+                aria-label="Voice Search"
               >
                 <Mic className="h-4 w-4" />
               </button>
               <button
                 type="button"
                 onClick={handleImageSearch}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border/80 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 title="Upload Product Image"
+                aria-label="Upload Product Image"
               >
                 <Camera className="h-4 w-4" />
               </button>
@@ -229,12 +235,12 @@ function AssistantPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask anything about products, prices, or comparisons..."
-                className="h-10 rounded-xl bg-background text-xs flex-1"
+                className="h-10 rounded-lg bg-background text-xs flex-1 border-border/80"
                 disabled={isLoading}
               />
               <Button
                 type="submit"
-                className="h-10 rounded-xl px-4 font-bold text-xs gap-1.5"
+                className="h-10 rounded-lg px-4 font-semibold text-xs gap-1.5 shadow-xs"
                 disabled={isLoading || !input.trim()}
               >
                 {isLoading ? (
@@ -247,9 +253,8 @@ function AssistantPage() {
             </form>
 
             {/* Model indicator */}
-            <p className="text-[10px] text-muted-foreground/60 text-center mt-2">
-              Powered by Qwen3:8b via local Ollama · Responses are
-              shopping-focused only
+            <p className="text-[10px] text-muted-foreground text-center mt-2.5">
+              Powered by Qwen3:8b via local Ollama · Confidential & on-device shopping intelligence
             </p>
           </div>
         </div>
