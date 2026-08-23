@@ -31,44 +31,45 @@ function WishlistPage() {
     <AppLayout>
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8 space-y-6">
         <div>
-          <Badge className="rounded-full bg-rose-500/10 text-rose-600 border border-rose-500/20 text-xs font-bold">
+          <Badge className="rounded-full bg-rose-500/10 text-rose-600 border border-rose-500/20 text-xs font-semibold">
             <Heart className="mr-1.5 h-3.5 w-3.5 fill-rose-500" /> Saved Items ({items.length})
           </Badge>
-          <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl mt-2">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mt-2">
             My Wishlist & Price Alerts
           </h1>
         </div>
 
         {items.length === 0 ? (
-          <div className="text-center py-16 rounded-2xl border border-dashed border-border/80 bg-muted/20">
+          <div className="text-center py-16 rounded-xl border border-dashed border-border bg-muted/20">
             <Heart className="mx-auto h-12 w-12 text-muted-foreground/40" />
-            <p className="mt-3 text-sm font-bold text-foreground">Your Wishlist is currently empty</p>
-            <Button asChild size="sm" className="mt-4 rounded-xl text-xs font-bold">
+            <p className="mt-3 text-sm font-semibold text-foreground">Your Wishlist is currently empty</p>
+            <Button asChild size="sm" className="mt-4 rounded-lg text-xs font-semibold">
               <Link to="/">Explore Products to Compare</Link>
             </Button>
           </div>
         ) : (
           <div className="space-y-3">
             {items.map((item) => (
-              <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border bg-card shadow-xs gap-4">
+              <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-card shadow-xs gap-4">
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">{item.name}</h3>
+                  <h3 className="text-sm font-semibold text-foreground">{item.name}</h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-base font-black text-foreground">{item.price}</span>
+                    <span className="text-base font-bold text-foreground">{item.price}</span>
                     <span className="text-xs text-muted-foreground line-through">{item.was}</span>
-                    <Badge className="rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[10px] font-bold">
+                    <Badge className="rounded-md bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[10px] font-semibold">
                       {item.status}
                     </Badge>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button asChild size="sm" className="rounded-xl text-xs font-bold gap-1 bg-brand text-white hover:bg-brand/90 hover:text-white">
+                  <Button asChild size="sm" className="rounded-lg text-xs font-semibold gap-1 bg-brand text-white hover:bg-brand/90 hover:text-white">
                     <Link to="/compare" search={{ q: item.name }}><Scale className="h-3.5 w-3.5" /> Compare</Link>
                   </Button>
                   <button
                     onClick={() => removeItem(item.id, item.name)}
-                    className="p-2 text-muted-foreground hover:text-rose-500 rounded-lg hover:bg-muted"
+                    className="p-2 text-muted-foreground hover:text-rose-500 rounded-lg hover:bg-muted transition-colors"
+                    aria-label="Remove item"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>

@@ -695,30 +695,33 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
             </div>
 
             {/* Sort & Filter Controls */}
-            <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-muted/40 p-1">
+            <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border bg-muted/40 p-1">
               <button
                 onClick={() => setSortOption("lowest_price")}
-                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
                   sortOption === "lowest_price" ? "bg-emerald-600 text-white shadow-xs" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                🏆 Price: Low to High (Ascending)
+                <TrendingDown className="h-3.5 w-3.5" />
+                <span>Price: Low to High</span>
               </button>
               <button
                 onClick={() => setSortOption("highest_quality")}
-                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
                   sortOption === "highest_quality" ? "bg-blue-600 text-white shadow-xs" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                ⭐ Quality Rating
+                <Star className="h-3.5 w-3.5" />
+                <span>Quality Rating</span>
               </button>
               <button
                 onClick={() => setSortOption("max_discount")}
-                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
                   sortOption === "max_discount" ? "bg-amber-600 text-white shadow-xs" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                🏷️ Max Savings
+                <Tag className="h-3.5 w-3.5" />
+                <span>Max Savings</span>
               </button>
             </div>
           </div>

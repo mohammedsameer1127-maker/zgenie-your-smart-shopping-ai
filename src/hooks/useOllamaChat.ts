@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import {
-  streamOllamaChat,
+  sendOllamaChat,
   checkOllamaHealth,
   type ChatMessage,
 } from "@/lib/ollama";
@@ -30,7 +30,7 @@ export function useOllamaChat(): UseOllamaChatReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [isOllamaOnline, setIsOllamaOnline] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const abortFlagRef = useRef(false);
 
   const checkConnection = useCallback(async () => {
     const online = await checkOllamaHealth();
@@ -47,14 +47,14 @@ export function useOllamaChat(): UseOllamaChatReturn {
       if (!text.trim() || isLoading) return;
 
       setError(null);
+      abortFlagRef.current = false;
 
       // Add user message
       const userMessage: DisplayMessage = { sender: "user", text: text.trim() };
       setMessages((prev) => [...prev, userMessage]);
 
-      // Add placeholder AI message that we'll stream into
-      const aiPlaceholder: DisplayMessage = { sender: "ai", text: "" };
-      setMessages((prev) => [...prev, aiPlaceholder]);
+      // Add placeholder AI message with loading indicator
+      setMessages((prev) => [...prev, { sender: "ai", text: "" }]);
 
       setIsLoading(true);
 
@@ -72,34 +72,22 @@ export function useOllamaChat(): UseOllamaChatReturn {
       }
 
       try {
-        // Cancel any previous in-flight request
-        if (abortControllerRef.current) {
-          abortControllerRef.current.abort();
-        }
-        const abortController = new AbortController();
-        abortControllerRef.current = abortController;
+        // Send request through server function (non-streaming)
+        const responseText = await sendOllamaChat(conversationHistory);
 
-        let fullResponse = "";
+        if (abortFlagRef.current) return; // User cleared chat during request
 
-        for await (const token of streamOllamaChat(
-          conversationHistory,
-          abortController.signal
-        )) {
-          fullResponse += token;
-          // Update the last AI message with the accumulated text
-          const currentText = fullResponse;
+        // Update the placeholder AI message with the full response
+        if (responseText.trim()) {
           setMessages((prev) => {
             const updated = [...prev];
             const lastIdx = updated.length - 1;
             if (updated[lastIdx]?.sender === "ai") {
-              updated[lastIdx] = { sender: "ai", text: currentText };
+              updated[lastIdx] = { sender: "ai", text: responseText };
             }
             return updated;
           });
-        }
-
-        // If the response is empty, show a fallback
-        if (!fullResponse.trim()) {
+        } else {
           setMessages((prev) => {
             const updated = [...prev];
             const lastIdx = updated.length - 1;
@@ -115,54 +103,50 @@ export function useOllamaChat(): UseOllamaChatReturn {
 
         setIsOllamaOnline(true);
       } catch (err) {
+        if (abortFlagRef.current) return; // User cleared chat during request
+
         const errorMessage =
           err instanceof Error ? err.message : "An unexpected error occurred";
 
-        // Check if it's a connection error
+        console.error("[useOllamaChat] Error:", errorMessage);
+
+        // Determine error type for better UX
         if (
-          errorMessage.includes("fetch") ||
-          errorMessage.includes("network") ||
-          errorMessage.includes("Failed to fetch") ||
-          errorMessage.includes("NetworkError")
+          errorMessage.includes("Cannot connect") ||
+          errorMessage.includes("ECONNREFUSED") ||
+          errorMessage.includes("fetch failed")
         ) {
           setError(
             "Cannot connect to Ollama. Make sure it's running on localhost:11434"
           );
           setIsOllamaOnline(false);
-        } else if (errorMessage.includes("aborted")) {
-          // User cancelled — not an error
         } else {
           setError(errorMessage);
         }
 
-        // Update the placeholder AI message with an error
-        if (!errorMessage.includes("aborted")) {
-          setMessages((prev) => {
-            const updated = [...prev];
-            const lastIdx = updated.length - 1;
-            if (updated[lastIdx]?.sender === "ai" && !updated[lastIdx].text) {
-              updated[lastIdx] = {
-                sender: "ai",
-                text: "⚠️ Sorry, I'm having trouble connecting right now. Please make sure Ollama is running and try again.",
-              };
-            }
-            return updated;
-          });
-        }
+        // Update the placeholder AI message with error
+        setMessages((prev) => {
+          const updated = [...prev];
+          const lastIdx = updated.length - 1;
+          if (updated[lastIdx]?.sender === "ai" && !updated[lastIdx].text) {
+            updated[lastIdx] = {
+              sender: "ai",
+              text: "⚠️ Sorry, I'm having trouble connecting right now. Please make sure Ollama is running and try again.",
+            };
+          }
+          return updated;
+        });
       } finally {
         setIsLoading(false);
-        abortControllerRef.current = null;
       }
     },
     [messages, isLoading]
   );
 
   const clearChat = useCallback(() => {
+    abortFlagRef.current = true;
     setMessages([WELCOME_MESSAGE]);
     setError(null);
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
   }, []);
 
   return {

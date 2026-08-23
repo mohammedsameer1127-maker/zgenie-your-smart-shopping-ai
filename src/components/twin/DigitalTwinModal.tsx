@@ -21,6 +21,7 @@ import {
   Sparkles,
   Sliders,
   TrendingUp,
+  TrendingDown,
   ShieldCheck,
   Zap,
   DollarSign,
@@ -29,17 +30,19 @@ import {
   AlertCircle,
   RefreshCw,
   Search,
+  Scale,
+  Award,
 } from "lucide-react";
 import { toast } from "sonner";
 
 const STORES = ["Amazon", "Flipkart", "Meesho", "Croma", "Reliance Digital"];
 const CATEGORIES = ["Tech & Electronics", "Fashion", "Home & Lifestyle", "Gaming"];
 
-const PERSONAS: { type: PersonaType; title: string; desc: string; icon: string }[] = [
-  { type: "value_seeker", title: "Value Seeker", desc: "Best balance of performance, rating & reasonable price", icon: "⚖️" },
-  { type: "tech_enthusiast", title: "Tech Enthusiast", desc: "Wants cutting-edge specs and high quality, flexible budget", icon: "🚀" },
-  { type: "budget_conscious", title: "Budget Conscious", desc: "Strict price focus, waits for high price drops & low deals", icon: "💰" },
-  { type: "premium_luxury", title: "Premium Luxury", desc: "Prioritizes top brand reputation, zero defect risk & premium service", icon: "💎" },
+const PERSONAS: { type: PersonaType; title: string; desc: string; icon: React.ElementType }[] = [
+  { type: "value_seeker", title: "Value Seeker", desc: "Best balance of performance, rating & reasonable price", icon: Scale },
+  { type: "tech_enthusiast", title: "Tech Enthusiast", desc: "Wants cutting-edge specs and high quality, flexible budget", icon: Zap },
+  { type: "budget_conscious", title: "Budget Conscious", desc: "Strict price focus, waits for high price drops & low deals", icon: TrendingDown },
+  { type: "premium_luxury", title: "Premium Luxury", desc: "Prioritizes top brand reputation, zero defect risk & premium service", icon: Award },
 ];
 
 const SAMPLE_RECOMMENDATIONS = [
@@ -183,14 +186,17 @@ export function DigitalTwinModal() {
             <TabsContent value="results" className="space-y-6 mt-6 focus-visible:outline-none">
               {/* Twin Avatar Overview Card */}
               <div className="grid gap-4 sm:grid-cols-3">
-                <Card className="sm:col-span-2 border border-blue-500/20 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-background p-5 rounded-2xl shadow-xs">
+                <Card className="sm:col-span-2 border border-blue-500/20 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-background p-5 rounded-xl shadow-xs">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-lg">
-                        {PERSONAS.find((p) => p.type === profile.personaType)?.icon || "🤖"}
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white font-semibold">
+                        {(() => {
+                          const IconComp = PERSONAS.find((p) => p.type === profile.personaType)?.icon || Bot;
+                          return <IconComp className="h-5 w-5" />;
+                        })()}
                       </div>
                       <div>
-                        <h3 className="text-base font-extrabold text-foreground">{profile.name}</h3>
+                        <h3 className="text-base font-bold text-foreground">{profile.name}</h3>
                         <Badge variant="outline" className="mt-1 bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs font-semibold capitalize">
                           {profile.personaType.replace("_", " ")} Persona
                         </Badge>
@@ -406,25 +412,28 @@ export function DigitalTwinModal() {
 
                 {/* Persona Type Grid */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-foreground">Select Primary Shopping Persona</Label>
+                  <Label className="text-xs font-semibold text-foreground">Select Primary Shopping Persona</Label>
                   <div className="grid gap-3 sm:grid-cols-2">
                     {PERSONAS.map((p) => {
                       const selected = formData.personaType === p.type;
+                      const IconComp = p.icon;
                       return (
                         <div
                           key={p.type}
                           onClick={() => setFormData({ ...formData, personaType: p.type })}
-                          className={`cursor-pointer rounded-2xl border p-4 transition-all ${
+                          className={`cursor-pointer rounded-xl border p-4 transition-all ${
                             selected
-                              ? "border-blue-600 bg-blue-500/10 shadow-sm"
+                              ? "border-blue-600 bg-blue-500/10 shadow-xs"
                               : "border-border bg-card hover:border-blue-500/40"
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-xl">{p.icon}</span>
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+                              <IconComp className="h-4 w-4" />
+                            </span>
                             {selected && <CheckCircle2 className="h-4 w-4 text-blue-600" />}
                           </div>
-                          <h4 className="mt-2 text-xs font-bold text-foreground">{p.title}</h4>
+                          <h4 className="mt-2.5 text-xs font-semibold text-foreground">{p.title}</h4>
                           <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">{p.desc}</p>
                         </div>
                       );

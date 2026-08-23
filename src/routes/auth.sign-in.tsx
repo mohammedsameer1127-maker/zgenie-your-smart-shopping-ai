@@ -87,12 +87,12 @@ function SignInPage() {
       }
     >
       <form className="space-y-4" onSubmit={handleSignIn}>
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Email Address
           </Label>
           <div className="relative">
-            <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Mail className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="email"
               type="email"
@@ -100,26 +100,26 @@ function SignInPage() {
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               placeholder="name@company.com"
-              className="h-11 rounded-xl pl-10"
+              className="h-9.5 rounded-lg pl-9 text-xs border-border/80 bg-background"
               required
             />
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Label htmlFor="password" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Password
             </Label>
             <Link
               to="/auth/forgot-password"
-              className="text-xs font-semibold text-brand hover:underline"
+              className="text-[11px] font-semibold text-brand hover:underline"
             >
               Forgot Password?
             </Link>
           </div>
           <div className="relative">
-            <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Lock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
@@ -127,23 +127,23 @@ function SignInPage() {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               placeholder="••••••••••••"
-              className="h-11 rounded-xl px-10"
+              className="h-9.5 rounded-lg pl-9 pr-9 text-xs border-border/80 bg-background"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
             </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 pt-1">
+        <div className="flex items-center gap-2 pt-0.5">
           <Checkbox id="remember" defaultChecked />
-          <Label htmlFor="remember" className="text-xs font-medium text-muted-foreground cursor-pointer">
+          <Label htmlFor="remember" className="text-xs font-normal text-muted-foreground cursor-pointer">
             Remember me on this device
           </Label>
         </div>
@@ -151,9 +151,9 @@ function SignInPage() {
         <Button
           type="submit"
           disabled={loading}
-          className="h-11 w-full rounded-xl text-sm font-bold shadow-md gap-2"
+          className="h-9.5 w-full rounded-lg text-xs font-semibold shadow-xs gap-2"
         >
-          {loading ? "Signing in..." : <>Sign In <ArrowRight className="h-4 w-4" /></>}
+          {loading ? "Signing in..." : <>Sign In <ArrowRight className="h-3.5 w-3.5" /></>}
         </Button>
 
         <div className="relative py-1">
@@ -161,13 +161,13 @@ function SignInPage() {
             <span className="w-full border-t border-border/70" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-background px-3 font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="bg-background px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               or continue with
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <Button 
             variant="outline" 
             type="button" 
@@ -178,7 +178,7 @@ function SignInPage() {
                 toast.error(`Login failed: ${error.message}`);
               }
             }} 
-            className="h-11 rounded-xl gap-2 font-semibold text-xs"
+            className="h-9 rounded-lg gap-2 font-medium text-xs border-border bg-card hover:bg-muted"
           >
             <GoogleIcon /> Google
           </Button>
@@ -192,7 +192,7 @@ function SignInPage() {
                 toast.error(`Login failed: ${error.message}`);
               }
             }} 
-            className="h-11 rounded-xl gap-2 font-semibold text-xs"
+            className="h-9 rounded-lg gap-2 font-medium text-xs border-border bg-card hover:bg-muted"
           >
             <AppleIcon /> Apple
           </Button>
@@ -201,7 +201,7 @@ function SignInPage() {
         <div className="pt-2 text-center">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-brand transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-brand transition-colors"
           >
             <Sparkles className="h-3.5 w-3.5 text-amber-500" />
             Continue as Guest to Storefront →

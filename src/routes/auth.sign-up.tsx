@@ -105,12 +105,12 @@ function SignUpPage() {
       }
     >
       <form className="space-y-4" onSubmit={handleSignUp}>
-        <div className="space-y-2">
-          <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="space-y-1.5">
+          <Label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Full Name
           </Label>
           <div className="relative">
-            <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <User className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="name"
               type="text"
@@ -118,18 +118,18 @@ function SignUpPage() {
               onChange={(e) => setName(e.target.value)}
               autoComplete="name"
               placeholder="Alex Morgan"
-              className="h-11 rounded-xl pl-10"
+              className="h-9.5 rounded-lg pl-9 text-xs border-border/80 bg-background"
               required
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Email Address
           </Label>
           <div className="relative">
-            <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Mail className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="email"
               type="email"
@@ -137,19 +137,19 @@ function SignUpPage() {
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               placeholder="name@company.com"
-              className="h-11 rounded-xl pl-10"
+              className="h-9.5 rounded-lg pl-9 text-xs border-border/80 bg-background"
               required
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Password
             </Label>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
@@ -157,27 +157,27 @@ function SignUpPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
                 placeholder="8+ characters"
-                className="h-11 rounded-xl px-10"
+                className="h-9.5 rounded-lg pl-9 pr-9 text-xs border-border/80 bg-background"
                 required
                 minLength={8}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
               </button>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="confirm" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="space-y-1.5">
+            <Label htmlFor="confirm" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Confirm Password
             </Label>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="confirm"
                 type={showConfirm ? "text" : "password"}
@@ -185,23 +185,23 @@ function SignUpPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
                 placeholder="Repeat password"
-                className="h-11 rounded-xl px-10"
+                className="h-9.5 rounded-lg pl-9 pr-9 text-xs border-border/80 bg-background"
                 required
                 minLength={8}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirm((v) => !v)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 aria-label={showConfirm ? "Hide" : "Show"}
               >
-                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showConfirm ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
               </button>
             </div>
           </div>
         </div>
 
-        <div className="flex items-start gap-2 pt-1">
+        <div className="flex items-start gap-2 pt-0.5">
           <Checkbox
             id="terms"
             checked={agreed}
@@ -211,18 +211,18 @@ function SignUpPage() {
           />
           <Label htmlFor="terms" className="text-xs font-normal leading-relaxed text-muted-foreground cursor-pointer">
             I agree to the{" "}
-            <a href="#" className="font-semibold text-brand hover:underline">Terms of Service</a>{" "}
+            <a href="#" className="font-medium text-brand hover:underline">Terms of Service</a>{" "}
             and{" "}
-            <a href="#" className="font-semibold text-brand hover:underline">Privacy Policy</a> of ZGenie.
+            <a href="#" className="font-medium text-brand hover:underline">Privacy Policy</a>.
           </Label>
         </div>
 
         <Button
           type="submit"
           disabled={loading}
-          className="h-11 w-full rounded-xl text-sm font-bold shadow-md gap-2"
+          className="h-9.5 w-full rounded-lg text-xs font-semibold shadow-xs gap-2"
         >
-          {loading ? "Creating Account..." : <>Create Account <ArrowRight className="h-4 w-4" /></>}
+          {loading ? "Creating Account..." : <>Create Account <ArrowRight className="h-3.5 w-3.5" /></>}
         </Button>
 
         <div className="relative py-1">
@@ -230,13 +230,13 @@ function SignUpPage() {
             <span className="w-full border-t border-border/70" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-background px-3 font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="bg-background px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               or sign up with
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <Button 
             variant="outline" 
             type="button" 
@@ -247,7 +247,7 @@ function SignUpPage() {
                 toast.error(`Sign up failed: ${error.message}`);
               }
             }} 
-            className="h-11 rounded-xl gap-2 font-semibold text-xs"
+            className="h-9 rounded-lg gap-2 font-medium text-xs border-border bg-card hover:bg-muted"
           >
             <GoogleIcon /> Google
           </Button>
@@ -261,7 +261,7 @@ function SignUpPage() {
                 toast.error(`Sign up failed: ${error.message}`);
               }
             }} 
-            className="h-11 rounded-xl gap-2 font-semibold text-xs"
+            className="h-9 rounded-lg gap-2 font-medium text-xs border-border bg-card hover:bg-muted"
           >
             <AppleIcon /> Apple
           </Button>

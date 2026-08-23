@@ -90,95 +90,95 @@ export function AuthModal() {
 
   return (
     <Dialog open={isAuthModalOpen} onOpenChange={(open) => !open && closeAuthModal()}>
-      <DialogContent className="sm:max-w-[425px] border-border bg-background/90 backdrop-blur-xl p-0 overflow-hidden shadow-2xl">
-        <div className="p-6 pt-8 text-center space-y-4">
-          <img src={compareLogo} alt="ZGenie Logo" className="h-12 w-auto mx-auto mb-4 drop-shadow-md" />
+      <DialogContent className="sm:max-w-[400px] border-border bg-card p-0 overflow-hidden shadow-lg rounded-2xl">
+        <div className="p-6 pt-7 text-center space-y-4">
+          <img src={compareLogo} alt="ZGenie Logo" className="h-10 w-auto mx-auto mb-2" />
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black text-center text-foreground">
+            <DialogTitle className="text-xl font-bold text-center text-foreground">
               {mode === "signIn" ? "Welcome Back" : mode === "signUp" ? "Create Account" : "Reset Password"}
             </DialogTitle>
-            <DialogDescription className="text-center text-muted-foreground pt-2">
+            <DialogDescription className="text-center text-muted-foreground text-xs pt-1">
               {authModalMessage || "Sign in to unlock ZGenie's AI-powered features."}
             </DialogDescription>
           </DialogHeader>
 
-          <form className="space-y-4 text-left mt-4" onSubmit={handleSubmit}>
+          <form className="space-y-3.5 text-left mt-3" onSubmit={handleSubmit}>
             {mode === "signUp" && (
-              <div className="space-y-2">
-                <Label htmlFor="modal-name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Full Name</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="modal-name" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Full Name</Label>
                 <div className="relative">
-                  <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input id="modal-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="h-11 rounded-xl pl-10 bg-slate-50 border-slate-200" required />
+                  <User className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="modal-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="h-9.5 rounded-lg pl-9 text-xs border-border/80 bg-background" required />
                 </div>
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="modal-email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email Address</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="modal-email" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Email Address</Label>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="modal-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" className="h-11 rounded-xl pl-10 bg-slate-50 border-slate-200" required />
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input id="modal-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" className="h-9.5 rounded-lg pl-9 text-xs border-border/80 bg-background" required />
               </div>
             </div>
 
             {mode !== "forgotPassword" && (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="modal-password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Password</Label>
+                  <Label htmlFor="modal-password" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Password</Label>
                   {mode === "signIn" && (
-                    <button type="button" onClick={() => setMode("forgotPassword")} className="text-xs font-semibold text-brand hover:underline">Forgot Password?</button>
+                    <button type="button" onClick={() => setMode("forgotPassword")} className="text-[11px] font-semibold text-brand hover:underline">Forgot Password?</button>
                   )}
                 </div>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input id="modal-password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••••" className="h-11 rounded-xl px-10 bg-slate-50 border-slate-200" required />
-                  <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="modal-password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••••" className="h-9.5 rounded-lg pl-9 pr-9 text-xs border-border/80 bg-background" required />
+                  <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   </button>
                 </div>
               </div>
             )}
 
             {mode === "signUp" && (
-              <div className="space-y-2">
-                <Label htmlFor="modal-confirm-password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Confirm Password</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="modal-confirm-password" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Confirm Password</Label>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input id="modal-confirm-password" type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••••••" className="h-11 rounded-xl pl-10 bg-slate-50 border-slate-200" required />
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input id="modal-confirm-password" type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••••••" className="h-9.5 rounded-lg pl-9 text-xs border-border/80 bg-background" required />
                 </div>
               </div>
             )}
 
-            <Button type="submit" disabled={loading} className="h-11 w-full rounded-xl text-sm font-bold shadow-md gap-2 mt-6">
-              {loading ? "Please wait..." : mode === "signIn" ? "Sign In" : mode === "signUp" ? "Sign Up" : "Send Reset Link"} <ArrowRight className="h-4 w-4" />
+            <Button type="submit" disabled={loading} className="h-9.5 w-full rounded-lg text-xs font-semibold shadow-xs gap-2 mt-4">
+              {loading ? "Please wait..." : mode === "signIn" ? "Sign In" : mode === "signUp" ? "Create Account" : "Send Reset Link"} <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </form>
 
           {mode !== "forgotPassword" && (
             <>
-              <div className="relative py-4">
+              <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/70" /></div>
-                <div className="relative flex justify-center text-xs"><span className="bg-background px-3 font-semibold uppercase tracking-wider text-muted-foreground">or continue with</span></div>
+                <div className="relative flex justify-center text-xs"><span className="bg-card px-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">or continue with</span></div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" type="button" onClick={() => handleProvider(googleProvider)} className="h-11 rounded-xl gap-2 font-semibold text-xs border-border bg-card">
+              <div className="grid grid-cols-2 gap-2.5">
+                <Button variant="outline" type="button" onClick={() => handleProvider(googleProvider)} className="h-9 rounded-lg gap-2 font-medium text-xs border-border bg-background hover:bg-muted">
                   <GoogleIcon /> Google
                 </Button>
-                <Button variant="outline" type="button" onClick={() => handleProvider(appleProvider)} className="h-11 rounded-xl gap-2 font-semibold text-xs border-border bg-card">
+                <Button variant="outline" type="button" onClick={() => handleProvider(appleProvider)} className="h-9 rounded-lg gap-2 font-medium text-xs border-border bg-background hover:bg-muted">
                   <AppleIcon /> Apple
                 </Button>
               </div>
             </>
           )}
 
-          <div className="pt-4 text-center text-xs text-muted-foreground">
+          <div className="pt-2 text-center text-xs text-muted-foreground">
             {mode === "signIn" ? (
-              <>Don't have an account? <button type="button" onClick={() => setMode("signUp")} className="font-bold text-brand hover:underline">Create one</button></>
+              <>Don't have an account? <button type="button" onClick={() => setMode("signUp")} className="font-semibold text-brand hover:underline">Create one</button></>
             ) : mode === "signUp" ? (
-              <>Already have an account? <button type="button" onClick={() => setMode("signIn")} className="font-bold text-brand hover:underline">Sign in</button></>
+              <>Already have an account? <button type="button" onClick={() => setMode("signIn")} className="font-semibold text-brand hover:underline">Sign in</button></>
             ) : (
-              <button type="button" onClick={() => setMode("signIn")} className="font-bold text-brand hover:underline">← Back to Sign In</button>
+              <button type="button" onClick={() => setMode("signIn")} className="font-semibold text-brand hover:underline">← Back to Sign In</button>
             )}
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
+import { getFirestore, Firestore } from "firebase/firestore";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 // Uses Vite environment variables
@@ -58,6 +59,11 @@ isSupported().then((supported) => {
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
 
+// Explicitly set persistence so sessions survive browser close/refresh
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.warn("[Firebase Auth] Could not set persistence:", err);
+});
+
 // Configure Providers
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
@@ -65,3 +71,12 @@ googleProvider.setCustomParameters({
 });
 
 export const appleProvider = new OAuthProvider('apple.com');
+
+// Initialize Firestore (gracefully skip if the database isn't provisioned yet)
+export let db: Firestore | null = null;
+try {
+  db = getFirestore(app);
+  console.log("[Firebase Firestore] Firestore initialized successfully.");
+} catch (error) {
+  console.warn("[Firebase Firestore] Firestore not available — database may not be provisioned in this project.", error);
+}
