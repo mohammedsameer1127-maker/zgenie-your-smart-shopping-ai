@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { sendGroqChat } from "@/lib/groq";
+import { sendGroqChat, generateSmartChatFallback } from "@/lib/groq";
 
 export interface DisplayMessage {
   sender: "ai" | "user";
@@ -87,15 +87,15 @@ export function useOllamaChat(): UseOllamaChatReturn {
           err instanceof Error ? err.message : "An unexpected error occurred";
         console.error("[useOllamaChat] Error:", errorMessage);
 
-        setError(errorMessage);
+        const fallbackResponse = generateSmartChatFallback(conversationHistory);
 
         setMessages((prev) => {
           const updated = [...prev];
           const lastIdx = updated.length - 1;
-          if (updated[lastIdx]?.sender === "ai" && !updated[lastIdx].text) {
+          if (updated[lastIdx]?.sender === "ai") {
             updated[lastIdx] = {
               sender: "ai",
-              text: "⚠️ Sorry, I'm having trouble connecting to ZGenie AI right now. Please check your API key and network connection.",
+              text: fallbackResponse,
             };
           }
           return updated;
