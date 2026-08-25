@@ -8,22 +8,19 @@ logger = logging.getLogger(__name__)
 
 # Initialize Firebase Admin SDK
 def init_firebase():
-    # Only initialize if it hasn't been initialized yet
     if not firebase_admin._apps:
         try:
             if os.path.exists(settings.FIREBASE_CREDENTIALS_PATH):
                 cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_PATH)
                 firebase_admin.initialize_app(cred)
-                logger.info("Firebase Admin SDK initialized successfully.")
+                logger.info("Firebase Admin SDK initialized successfully with certificate.")
             else:
-                logger.warning(
-                    f"Firebase credentials not found at {settings.FIREBASE_CREDENTIALS_PATH}. "
-                    "Authentication will fail unless this is configured."
-                )
+                proj_id = os.getenv("VITE_FIREBASE_PROJECT_ID", "zgenie")
+                firebase_admin.initialize_app(options={"projectId": proj_id})
+                logger.info(f"Firebase Admin SDK initialized with project ID: {proj_id}")
         except Exception as e:
-            logger.error(f"Error initializing Firebase Admin SDK: {e}")
+            logger.warning(f"Firebase Admin initialization note: {e}")
 
-# Call init immediately so it's ready when the app starts
 init_firebase()
 
 def verify_token(id_token: str) -> dict:

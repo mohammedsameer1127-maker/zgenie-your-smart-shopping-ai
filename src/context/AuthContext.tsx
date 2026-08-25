@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "../lib/firebase";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "../lib/firebase";
 import api from "../lib/api";
 
 interface AuthContextType {
@@ -47,8 +48,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       unsubscribe = onAuthStateChanged(auth, async (user) => {
         setCurrentUser(user);
         
-        // If a user logs in, immediately sync them with our MongoDB backend
         if (user) {
+          // Ensure Firestore user document exists in 'users' collection
+          try {
+            const userDocRef = doc(db, "users", user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            if (!userDocSnap.exists()) {
+              await setDoc(userDocRef, {
+                name: user.displayName || "User",
+                email: user.email || "",
+                createdAt: serverTimestamp(),
+              });
+            }
+          } catch (firestoreErr) {
+            console.error("[Firestore] Error checking/creating user document:", firestoreErr);
+          }
+
+          // If a user logs in, immediately sync them with our MongoDB backend
           try {
             // Token is automatically injected by the Axios interceptor in api.ts
             await api.post('/users/sync', {

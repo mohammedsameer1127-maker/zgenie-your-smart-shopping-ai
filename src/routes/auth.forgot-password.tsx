@@ -83,7 +83,7 @@ function ForgotPasswordPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="h-11 w-full rounded-xl text-sm font-bold shadow-md gap-2 mt-4"
+            className="h-11 w-full rounded-full text-sm font-bold shadow-md gap-2 mt-4"
           >
             {loading ? "Sending..." : <>Send Reset Link <ArrowRight className="h-4 w-4" /></>}
           </Button>

@@ -31,6 +31,18 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment Variables
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Environment Variables & Secrets
 .env
 .env.*
+*.env
+**/.env
+**/.env.*
+backend/.env
+backend/.env.*
+firebase-adminsdk*.json
