@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, setPersistence, browserLocalPersistence, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
+import { getAuth, setPersistence, browserSessionPersistence, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
@@ -50,19 +50,25 @@ const app = !getApps().length ? initializeApp(config) : getApp();
 
 // Initialize Analytics conditionally (it requires a browser environment)
 export let analytics: any = null;
-isSupported().then((supported) => {
-  if (supported) {
-    analytics = getAnalytics(app);
-  }
-});
+if (typeof window !== "undefined") {
+  isSupported()
+    .then((supported) => {
+      if (supported) {
+        analytics = getAnalytics(app);
+      }
+    })
+    .catch(() => {});
+}
 
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
 
-// Explicitly set persistence so sessions survive browser close/refresh
-setPersistence(auth, browserLocalPersistence).catch((err) => {
-  console.warn("[Firebase Auth] Could not set persistence:", err);
-});
+// Set session persistence so auth state is cleared when the browser/tab is closed
+if (typeof window !== "undefined") {
+  setPersistence(auth, browserSessionPersistence).catch((err) => {
+    console.warn("[Firebase Auth] Could not set session persistence:", err);
+  });
+}
 
 // Configure Providers
 export const googleProvider = new GoogleAuthProvider();
@@ -72,11 +78,6 @@ googleProvider.setCustomParameters({
 
 export const appleProvider = new OAuthProvider('apple.com');
 
-// Initialize Firestore (gracefully skip if the database isn't provisioned yet)
-export let db: Firestore | null = null;
-try {
-  db = getFirestore(app);
-  console.log("[Firebase Firestore] Firestore initialized successfully.");
-} catch (error) {
-  console.warn("[Firebase Firestore] Firestore not available — database may not be provisioned in this project.", error);
-}
+// Initialize Firestore
+export const db = getFirestore(app);
+

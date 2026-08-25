@@ -30,7 +30,7 @@ export const Route = createFileRoute("/compare")({
       {
         name: "description",
         content:
-          "Compare product prices and specs across Amazon, Flipkart, Meesho, Croma, and Reliance Digital in real-time.",
+          "Compare product prices and specs across Amazon, Flipkart, Meesho, Myntra, and Blinkit in real-time.",
       },
     ],
   }),
@@ -40,63 +40,146 @@ export const Route = createFileRoute("/compare")({
 const INITIAL_PRODUCTS = [
   {
     id: "p1",
-    name: "Aether Pro 14 Laptop",
-    brand: "Aether",
-    price: "₹1,09,990",
-    wasPrice: "₹1,24,990",
-    rating: 4.8,
-    reviews: 1240,
-    regretScore: "Low (8%)",
+    name: "Apple MacBook Pro 14 (M3 Pro)",
+    brand: "Apple",
+    price: "₹1,79,990",
+    wasPrice: "₹1,99,900",
+    rating: 4.9,
+    reviews: 3100,
+    regretScore: "Very Low (1%)",
     regretColor: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
-    display: '14.2" Mini-LED 120Hz',
-    processor: "M3 Pro 11-Core CPU",
+    display: '14.2" Liquid Retina XDR (120Hz)',
+    processor: "Apple M3 Pro (11-core CPU)",
     ram: "18GB Unified",
     storage: "512GB NVMe SSD",
     battery: "Up to 18 hours",
     weight: "3.5 lbs (1.6 kg)",
-    warranty: "2 Years Full Coverage",
-    verdict: "Winner: Power & Display",
+    warranty: "1 Year Limited AppleCare",
+    verdict: "Top Overall Power & Battery",
+    image: "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/mbp14-spaceblack-select-202310?wid=600&hei=600&fmt=png-alpha",
   },
   {
     id: "p2",
-    name: "ZenBook Ultra 14",
+    name: "ASUS ROG Zephyrus G14 (RTX 4060)",
     brand: "Asus",
-    price: "₹94,990",
-    wasPrice: "₹1,09,990",
-    rating: 4.6,
-    reviews: 890,
-    regretScore: "Moderate (12%)",
-    regretColor: "text-amber-600 bg-amber-500/10 border-amber-500/20",
-    display: '14.0" OLED 90Hz',
-    processor: "Intel Core Ultra 7",
+    price: "₹1,49,990",
+    wasPrice: "₹1,79,990",
+    rating: 4.8,
+    reviews: 2800,
+    regretScore: "Low (4%)",
+    regretColor: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
+    display: '14.0" 3K OLED 120Hz',
+    processor: "AMD Ryzen 9 8945HS",
     ram: "16GB LPDDR5X",
     storage: "1TB PCIe 4.0 SSD",
-    battery: "Up to 14 hours",
-    weight: "2.8 lbs (1.3 kg)",
+    battery: "Up to 12 hours",
+    weight: "3.3 lbs (1.5 kg)",
     warranty: "1 Year Standard",
-    verdict: "Winner: Storage & Portability",
+    verdict: "Winner: Gaming & OLED Display",
+    image: "https://dlcdnwebimgs.asus.com/gain/9712a8a8-3563-4b67-a8b2-b1ee0f913d33/w800",
   },
 ];
 
-const AVAILABLE_ADDITIONS = [
+const AVAILABLE_SPECS_DATABASE = [
   {
     id: "p3",
-    name: "Dell XPS 14 Touch",
+    name: "Dell XPS 13 Plus Ultrabook",
     brand: "Dell",
-    price: "₹1,19,990",
-    wasPrice: "₹1,34,990",
-    rating: 4.5,
-    reviews: 620,
-    regretScore: "Low (9%)",
+    price: "₹1,29,990",
+    wasPrice: "₹1,49,900",
+    rating: 4.7,
+    reviews: 1900,
+    regretScore: "Minimal (5%)",
     regretColor: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
-    display: '14.5" 3.2K OLED Touch',
-    processor: "Intel Core Ultra 7",
+    display: '13.4" 3.5K OLED Touch',
+    processor: "Intel Core i7 13th Gen",
     ram: "16GB LPDDR5X",
-    storage: "512GB SSD",
-    battery: "Up to 12 hours",
-    weight: "3.7 lbs (1.7 kg)",
+    storage: "1TB SSD",
+    battery: "Up to 13 hours",
+    weight: "2.7 lbs (1.23 kg)",
     warranty: "1 Year Onsite",
-    verdict: "Winner: Touch Display",
+    verdict: "Winner: Touch OLED & Portability",
+    image: "https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/xps-notebooks/xps-13-9320/media-gallery/notebook-xps-9320-platinum-gallery-1.psd?fmt=png-alpha&pscan=auto&scl=1&hei=600&wid=600",
+  },
+  {
+    id: "p4",
+    name: "Apple MacBook Air M3 (16GB RAM)",
+    brand: "Apple",
+    price: "₹1,24,990",
+    wasPrice: "₹1,34,900",
+    rating: 4.9,
+    reviews: 5200,
+    regretScore: "Ultra Safe (1%)",
+    regretColor: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
+    display: '13.6" Liquid Retina (60Hz)',
+    processor: "Apple M3 (8-core CPU)",
+    ram: "16GB Unified",
+    storage: "512GB SSD",
+    battery: "Up to 18 hours",
+    weight: "2.7 lbs (1.24 kg)",
+    warranty: "1 Year AppleCare",
+    verdict: "Best Ultrabook Value",
+    image: "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/mba13-midnight-select-202402?wid=600&hei=600&fmt=png-alpha",
+  },
+  {
+    id: "p5",
+    name: "Apple iPhone 16 Pro (128GB)",
+    brand: "Apple",
+    price: "₹1,19,490",
+    wasPrice: "₹1,19,900",
+    rating: 4.9,
+    reviews: 8900,
+    regretScore: "Very Low (1%)",
+    regretColor: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
+    display: '6.3" Super Retina XDR OLED (120Hz)',
+    processor: "A18 Pro (6-core CPU)",
+    ram: "8GB RAM",
+    storage: "128GB NVMe",
+    battery: "Up to 27 hours video",
+    weight: "199 g (0.44 lbs)",
+    warranty: "1 Year Apple Warranty",
+    verdict: "Top Flagship Smartphone",
+    image: "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-deserttitanium?wid=600&hei=600&fmt=png-alpha",
+  },
+  {
+    id: "p6",
+    name: "Samsung Galaxy S24 Ultra (5G)",
+    brand: "Samsung",
+    price: "₹1,09,999",
+    wasPrice: "₹1,29,999",
+    rating: 4.8,
+    reviews: 12400,
+    regretScore: "Low (3%)",
+    regretColor: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
+    display: '6.8" Dynamic LTPO AMOLED 2X (120Hz)',
+    processor: "Snapdragon 8 Gen 3 (For Galaxy)",
+    ram: "12GB LPDDR5X",
+    storage: "256GB UFS 4.0",
+    battery: "5000 mAh (Up to 30 hrs)",
+    weight: "232 g (0.51 lbs)",
+    warranty: "1 Year Brand Warranty",
+    verdict: "Best Android Flagship",
+    image: "https://m.media-amazon.com/images/I/71RVu88nx6L._SL1500_.jpg",
+  },
+  {
+    id: "p7",
+    name: "Sony WH-1000XM5 ANC Headphones",
+    brand: "Sony",
+    price: "₹24,990",
+    wasPrice: "₹34,990",
+    rating: 4.8,
+    reviews: 22400,
+    regretScore: "Low (3%)",
+    regretColor: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
+    display: "N/A (Over-Ear Wireless Audio)",
+    processor: "HD Noise Canceling Processor QN1 + V1",
+    ram: "N/A",
+    storage: "N/A",
+    battery: "Up to 30 hours (ANC On)",
+    weight: "250 g (0.55 lbs)",
+    warranty: "1 Year Sony India",
+    verdict: "Top Noise Canceling Audio",
+    image: "https://www.sony.co.in/image/6145c1d32e6ac8e63a46c912dc33d5bb?fmt=png-alpha&wid=600",
   },
 ];
 
@@ -106,39 +189,63 @@ function ComparePage() {
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const handleAddProduct = (prod: (typeof AVAILABLE_SPECS_DATABASE)[0]) => {
+    if (products.length >= 4) {
+      toast.error("Maximum 4 products can be compared side-by-side simultaneously.");
+      return;
+    }
+    if (products.some((p) => p.id === prod.id)) {
+      toast.info(`${prod.name} is already in the comparison table.`);
+      return;
+    }
+    setProducts((prev) => [...prev, prod]);
+    toast.success(`Added ${prod.name} to comparison table.`);
+  };
+
+  const handleSearchAndAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return;
+
+    const match = AVAILABLE_SPECS_DATABASE.find(
+      (p) =>
+        p.name.toLowerCase().includes(query) ||
+        p.brand.toLowerCase().includes(query) ||
+        query.includes(p.name.toLowerCase())
+    );
+
+    if (match) {
+      handleAddProduct(match);
+      setSearchQuery("");
+    } else {
+      toast.error(`No results found for "${searchQuery}". Only verified catalog products can be added.`);
+    }
+  };
+
   const handleRemoveProduct = (id: string) => {
-    if (products.length <= 1) {
-      toast.error("You must keep at least 1 product in the comparison grid.");
+    if (products.length <= 2) {
+      toast.error("At least 2 products must remain in comparison table.");
       return;
     }
     setProducts((prev) => prev.filter((p) => p.id !== id));
-    toast.info("Product removed from comparison grid.");
-  };
-
-  const handleAddProduct = (item: (typeof AVAILABLE_ADDITIONS)[0]) => {
-    if (products.some((p) => p.id === item.id)) {
-      toast.info("Item is already in comparison grid!");
-      return;
-    }
-    setProducts((prev) => [...prev, item]);
-    toast.success(`Added ${item.name} to comparison!`);
+    toast.info("Product removed from comparison.");
   };
 
   return (
     <AppLayout>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
         
-        {/* Main Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/70 pb-6">
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/70 pb-6">
           <div>
-            <Badge className="rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20 text-xs font-bold">
+            <Badge className="rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20 text-xs font-semibold">
               <Scale className="mr-1.5 h-3.5 w-3.5" /> Product & Price Compare Engine
             </Badge>
             <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl mt-2">
               Multi-Platform Price & Spec Comparison
             </h1>
             <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-              Compare live prices across Amazon, Flipkart, Meesho, Croma, & Reliance Digital or evaluate technical specs side-by-side.
+              Compare live prices across Amazon, Flipkart, Meesho, Myntra, & Blinkit or evaluate technical specs side-by-side.
             </p>
           </div>
 
@@ -175,54 +282,72 @@ function ComparePage() {
         ) : (
           /* Tab 2: Specs Matrix */
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <form onSubmit={handleSearchAndAdd} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="relative max-w-md flex-1">
                 <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Type product name to add to specs grid..."
-                  className="h-9.5 rounded-lg pl-9 text-xs border-border/80"
+                  placeholder="Type verified product name (e.g. MacBook Air, iPhone 15 Pro, Dell XPS)..."
+                  className="h-10 rounded-full pl-9.5 text-xs border-border/80"
                 />
               </div>
 
               <Button
+                type="submit"
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  if (AVAILABLE_ADDITIONS[0]) handleAddProduct(AVAILABLE_ADDITIONS[0]);
-                }}
-                className="rounded-lg text-xs font-semibold gap-1.5"
+                className="rounded-full text-xs font-semibold gap-1.5 h-10 px-4"
               >
                 <Plus className="h-3.5 w-3.5" /> Add Product to Matrix
               </Button>
-            </div>
+            </form>
 
-            <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
+            <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-xs">
               <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
                     <th className="p-4 text-xs font-semibold text-muted-foreground uppercase w-48">Feature / Metric</th>
                     {products.map((p) => (
-                      <th key={p.id} className="p-4 min-w-[240px] relative">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <span className="text-[10px] font-semibold uppercase text-brand tracking-wider">{p.brand}</span>
-                            <h3 className="text-sm font-semibold text-foreground line-clamp-1">{p.name}</h3>
-                          </div>
+                      <th key={p.id} className="p-4 min-w-[240px] relative align-top">
+                        {/* Zoomed-in Product Cutout Image */}
+                        <div className="relative aspect-[16/11] w-full rounded-2xl bg-white dark:bg-slate-900/90 border border-border/60 p-3 mb-3 flex items-center justify-center overflow-hidden shadow-2xs group">
+                          {p.image ? (
+                            <img
+                              src={p.image}
+                              alt={p.name}
+                              loading="lazy"
+                              className="h-full w-full object-contain scale-110 group-hover:scale-125 transition-transform duration-300 drop-shadow-sm"
+                              onError={(e) => {
+                                const target = e.target as HTMLElement;
+                                target.style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            <div className="h-10 w-10 text-muted-foreground/30 flex items-center justify-center">
+                              <ShoppingBag className="h-8 w-8" />
+                            </div>
+                          )}
                           <button
                             onClick={() => handleRemoveProduct(p.id)}
-                            className="text-muted-foreground hover:text-rose-500 p-1 rounded-md hover:bg-muted transition-colors"
+                            className="absolute top-2 right-2 text-muted-foreground hover:text-rose-500 p-1.5 rounded-full bg-background/80 backdrop-blur-xs border border-border/50 hover:bg-muted transition-colors cursor-pointer shadow-2xs"
                             title="Remove product"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
-                        <div className="mt-2.5 flex items-baseline gap-2">
+
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="text-[10px] font-semibold uppercase text-brand tracking-wider">{p.brand}</span>
+                            <h3 className="text-sm font-semibold text-foreground line-clamp-1">{p.name}</h3>
+                          </div>
+                        </div>
+                        <div className="mt-2 flex items-baseline gap-2">
                           <span className="text-xl font-bold text-foreground">{p.price}</span>
                           <span className="text-xs text-muted-foreground line-through">{p.wasPrice}</span>
                         </div>
-                        <Badge className="mt-2 text-[10px] font-semibold rounded-md bg-blue-500/10 text-blue-600 border border-blue-500/20">
+                        <Badge className="mt-2 text-[10px] font-semibold rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20">
                           {p.verdict}
                         </Badge>
                       </th>
@@ -246,7 +371,7 @@ function ComparePage() {
                     <td className="p-4 font-bold text-muted-foreground bg-muted/20">AI Regret Score</td>
                     {products.map((p) => (
                       <td key={p.id} className="p-4 font-bold">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs ${p.regretColor}`}>
+                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border text-xs ${p.regretColor}`}>
                           <ShieldCheck className="h-3.5 w-3.5" /> {p.regretScore}
                         </span>
                       </td>

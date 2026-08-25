@@ -2,10 +2,8 @@
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 /*
- * Design system definition.
+ * Design system definition - Light Theme Only.
  *
  * Clean, production-ready SaaS palette:
  * - Background: #F8FAFC (oklch: 0.984 0.003 247.858)
@@ -22,13 +20,13 @@
  */
 
 @theme inline {
-  --radius-xs: 0.25rem;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.25rem;
-  --radius-3xl: 1.5rem;
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
   --radius-full: 9999px;
 
   --color-background: var(--background);
@@ -67,7 +65,7 @@
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 1rem;
 
   /* #F8FAFC - Main Background */
   --background: oklch(0.984 0.003 247.858);
@@ -111,32 +109,6 @@
   --brand-dark: oklch(0.35 0.15 260);
 }
 
-.dark {
-  --background: oklch(0.14 0.03 260);
-  --foreground: oklch(0.98 0.005 250);
-  --card: oklch(0.20 0.035 260);
-  --card-foreground: oklch(0.98 0.005 250);
-  --popover: oklch(0.20 0.035 260);
-  --popover-foreground: oklch(0.98 0.005 250);
-  --primary: oklch(0.65 0.2 260);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.26 0.03 260);
-  --secondary-foreground: oklch(0.98 0.005 250);
-  --muted: oklch(0.26 0.03 260);
-  --muted-foreground: oklch(0.7 0.03 255);
-  --accent: oklch(0.26 0.03 260);
-  --accent-foreground: oklch(0.98 0.005 250);
-  --destructive: oklch(0.65 0.22 25);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.3 0.025 260);
-  --input: oklch(0.3 0.025 260);
-  --ring: oklch(0.65 0.2 260);
-  --brand: oklch(0.65 0.2 260);
-  --brand-foreground: oklch(1 0 0);
-  --brand-soft: oklch(0.28 0.04 260);
-  --brand-dark: oklch(0.85 0.08 260);
-}
-
 @layer base {
   * {
     border-color: var(--color-border);
@@ -150,4 +122,3 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
-

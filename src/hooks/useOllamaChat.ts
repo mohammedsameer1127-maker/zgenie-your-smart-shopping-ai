@@ -1,9 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import {
-  sendOllamaChat,
-  checkOllamaHealth,
-  type ChatMessage,
-} from "@/lib/ollama";
+import { sendGroqChat } from "@/lib/groq";
 
 export interface DisplayMessage {
   sender: "ai" | "user";
@@ -13,34 +9,21 @@ export interface DisplayMessage {
 interface UseOllamaChatReturn {
   messages: DisplayMessage[];
   isLoading: boolean;
-  isOllamaOnline: boolean | null;
   error: string | null;
   sendMessage: (text: string) => Promise<void>;
-  checkConnection: () => Promise<void>;
   clearChat: () => void;
 }
 
 const WELCOME_MESSAGE: DisplayMessage = {
   sender: "ai",
-  text: "Hello! I am your ZGenie AI Assistant, powered by local AI. Tell me what you're looking for (e.g., 'Compare Mac vs PC laptops under ₹80,000') and I'll find the best options for you!",
+  text: "Hello! I am your ZGenie AI Shopping Assistant. Tell me what you're looking for (e.g., 'Best wireless headphones under ₹25,000' or 'Compare iPhone 15 Pro vs Samsung S24 Ultra') and I'll find the best real-time deals across verified stores for you!",
 };
 
 export function useOllamaChat(): UseOllamaChatReturn {
   const [messages, setMessages] = useState<DisplayMessage[]>([WELCOME_MESSAGE]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isOllamaOnline, setIsOllamaOnline] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const abortFlagRef = useRef(false);
-
-  const checkConnection = useCallback(async () => {
-    const online = await checkOllamaHealth();
-    setIsOllamaOnline(online);
-    if (!online) {
-      setError("Ollama is not running. Please start it with: ollama serve");
-    } else {
-      setError(null);
-    }
-  }, []);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -58,12 +41,11 @@ export function useOllamaChat(): UseOllamaChatReturn {
 
       setIsLoading(true);
 
-      // Build the conversation history for Ollama (excluding the welcome message)
-      const conversationHistory: ChatMessage[] = [];
-      const allMessages = [...messages, userMessage]; // current messages + the new user msg
+      // Build the conversation history (excluding the welcome message)
+      const conversationHistory: { role: string; content: string }[] = [];
+      const allMessages = [...messages, userMessage];
 
       for (const msg of allMessages) {
-        // Skip the welcome message from context (it's UI-only)
         if (msg === WELCOME_MESSAGE) continue;
         conversationHistory.push({
           role: msg.sender === "user" ? "user" : "assistant",
@@ -72,13 +54,11 @@ export function useOllamaChat(): UseOllamaChatReturn {
       }
 
       try {
-        // Send request through server function (non-streaming)
-        const responseText = await sendOllamaChat(conversationHistory);
+        const responseText = await sendGroqChat(conversationHistory);
 
-        if (abortFlagRef.current) return; // User cleared chat during request
+        if (abortFlagRef.current) return;
 
-        // Update the placeholder AI message with the full response
-        if (responseText.trim()) {
+        if (responseText && responseText.trim()) {
           setMessages((prev) => {
             const updated = [...prev];
             const lastIdx = updated.length - 1;
@@ -94,44 +74,28 @@ export function useOllamaChat(): UseOllamaChatReturn {
             if (updated[lastIdx]?.sender === "ai") {
               updated[lastIdx] = {
                 sender: "ai",
-                text: "I couldn't generate a response. Please try again!",
+                text: "I couldn't generate a response. Please try asking again!",
               };
             }
             return updated;
           });
         }
-
-        setIsOllamaOnline(true);
-      } catch (err) {
-        if (abortFlagRef.current) return; // User cleared chat during request
+      } catch (err: any) {
+        if (abortFlagRef.current) return;
 
         const errorMessage =
           err instanceof Error ? err.message : "An unexpected error occurred";
-
         console.error("[useOllamaChat] Error:", errorMessage);
 
-        // Determine error type for better UX
-        if (
-          errorMessage.includes("Cannot connect") ||
-          errorMessage.includes("ECONNREFUSED") ||
-          errorMessage.includes("fetch failed")
-        ) {
-          setError(
-            "Cannot connect to Ollama. Make sure it's running on localhost:11434"
-          );
-          setIsOllamaOnline(false);
-        } else {
-          setError(errorMessage);
-        }
+        setError(errorMessage);
 
-        // Update the placeholder AI message with error
         setMessages((prev) => {
           const updated = [...prev];
           const lastIdx = updated.length - 1;
           if (updated[lastIdx]?.sender === "ai" && !updated[lastIdx].text) {
             updated[lastIdx] = {
               sender: "ai",
-              text: "⚠️ Sorry, I'm having trouble connecting right now. Please make sure Ollama is running and try again.",
+              text: "⚠️ Sorry, I'm having trouble connecting to ZGenie AI right now. Please check your API key and network connection.",
             };
           }
           return updated;
@@ -152,10 +116,8 @@ export function useOllamaChat(): UseOllamaChatReturn {
   return {
     messages,
     isLoading,
-    isOllamaOnline,
     error,
     sendMessage,
-    checkConnection,
     clearChat,
   };
 }

@@ -6,21 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Flame,
-  TrendingDown,
   Scale,
-  Sparkles,
-  ShoppingBag,
-  ExternalLink,
   ShieldCheck,
   Star,
   Clock,
-  ArrowRight,
   Package,
   ShoppingCart,
-  Store,
-  Building2,
+  ShoppingBag,
+  Shirt,
+  Zap,
 } from "lucide-react";
-import { toast } from "sonner";
 
 export const Route = createFileRoute("/deals")({
   head: () => ({
@@ -28,7 +23,7 @@ export const Route = createFileRoute("/deals")({
       { title: "Hot Live Deals & Price Drops — ZGenie" },
       {
         name: "description",
-        content: "Discover verified real-time price drops across Amazon, Flipkart, Meesho, Croma, & Reliance Digital.",
+        content: "Discover verified real-time price drops across Amazon, Flipkart, Meesho, Myntra, & Blinkit.",
       },
     ],
   }),
@@ -47,7 +42,7 @@ const LIVE_DEALS = [
     rating: 4.8,
     category: "Audio & Headphones",
     icon: Package,
-    badgeColor: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    badgeColor: "bg-amber-500/10 text-amber-600 border-amber-500/20",
     regretScore: "Low (4%)",
     endsIn: "4 hours left",
   },
@@ -62,37 +57,37 @@ const LIVE_DEALS = [
     rating: 4.7,
     category: "Smartphones",
     icon: ShoppingBag,
-    badgeColor: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    badgeColor: "bg-blue-500/10 text-blue-600 border-blue-500/20",
     regretScore: "Low (6%)",
     endsIn: "Today only",
   },
   {
     id: "d3",
-    title: "Samsung Galaxy Watch6 LTE (44mm, Graphite)",
-    store: "Croma",
-    currentPrice: 18499,
-    originalPrice: 36999,
-    discount: "50% OFF",
-    predictedTrend: "Mega Price Drop",
-    rating: 4.6,
-    category: "Wearables",
-    icon: Store,
-    badgeColor: "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20",
-    regretScore: "Low (8%)",
+    title: "Nike Air Max Pulse Lifestyle Sneakers",
+    store: "Myntra",
+    currentPrice: 7499,
+    originalPrice: 12999,
+    discount: "42% OFF",
+    predictedTrend: "Flash Brand Discount",
+    rating: 4.8,
+    category: "Fashion & Footwear",
+    icon: Shirt,
+    badgeColor: "bg-rose-500/10 text-rose-600 border-rose-500/20",
+    regretScore: "Low (5%)",
     endsIn: "Limited Stock",
   },
   {
     id: "d4",
     title: "Aether Pro 14 M3 Workstation Laptop",
-    store: "Reliance Digital",
+    store: "Blinkit",
     currentPrice: 105000,
     originalPrice: 124990,
     discount: "16% OFF",
-    predictedTrend: "Price Drop Alert",
+    predictedTrend: "10-Min Fast Track Deal",
     rating: 4.9,
     category: "Laptops",
-    icon: Building2,
-    badgeColor: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
+    icon: Zap,
+    badgeColor: "bg-yellow-500/10 text-yellow-800 border-yellow-500/20",
     regretScore: "Low (3%)",
     endsIn: "Ends in 2 days",
   },
@@ -107,7 +102,7 @@ const LIVE_DEALS = [
     rating: 4.8,
     category: "Gaming & Displays",
     icon: Package,
-    badgeColor: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    badgeColor: "bg-amber-500/10 text-amber-600 border-amber-500/20",
     regretScore: "Low (5%)",
     endsIn: "6 hours left",
   },
@@ -122,7 +117,7 @@ const LIVE_DEALS = [
     rating: 4.5,
     category: "Home & Lifestyle",
     icon: ShoppingCart,
-    badgeColor: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20",
+    badgeColor: "bg-pink-500/10 text-pink-600 border-pink-500/20",
     regretScore: "Low (9%)",
     endsIn: "Flash Deal",
   },
@@ -150,7 +145,7 @@ function DealsPage() {
               Verified Deals & Price Drops
             </h1>
             <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-              Live price drops synchronized directly across Amazon, Flipkart, Meesho, Croma, and Reliance Digital.
+              Live price drops synchronized directly across Amazon, Flipkart, Meesho, Myntra, and Blinkit.
             </p>
           </div>
 
@@ -168,7 +163,7 @@ function DealsPage() {
                 variant={selectedFilter === tab.id ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedFilter(tab.id)}
-                className={`rounded-lg text-xs font-semibold h-8.5 ${
+                className={`rounded-full text-xs font-semibold h-8.5 px-3.5 ${
                   selectedFilter === tab.id
                     ? "bg-brand text-white shadow-xs"
                     : "border-border/80 bg-card text-muted-foreground hover:text-foreground"
@@ -187,11 +182,11 @@ function DealsPage() {
             return (
               <Card
                 key={deal.id}
-                className="group rounded-xl border border-border bg-card overflow-hidden shadow-xs hover:border-brand/40 hover:shadow-md transition-all flex flex-col justify-between"
+                className="group rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:border-brand/40 hover:shadow-md transition-all flex flex-col justify-between"
               >
                 <div>
                   <div className="p-4 bg-muted/20 border-b border-border/50 flex items-center justify-between">
-                    <Badge variant="outline" className={`rounded-md text-[11px] font-semibold gap-1 ${deal.badgeColor}`}>
+                    <Badge variant="outline" className={`rounded-full text-[11px] font-semibold gap-1 ${deal.badgeColor}`}>
                       <StoreIcon className="h-3 w-3" />
                       <span>{deal.store}</span>
                     </Badge>
@@ -215,9 +210,9 @@ function DealsPage() {
                           <span className="text-xl font-bold text-foreground">₹{deal.currentPrice.toLocaleString("en-IN")}</span>
                           <span className="text-xs text-muted-foreground line-through">₹{deal.originalPrice.toLocaleString("en-IN")}</span>
                         </div>
-                        <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">{deal.predictedTrend}</p>
+                        <p className="text-[11px] font-semibold text-emerald-600">{deal.predictedTrend}</p>
                       </div>
-                      <Badge className="rounded-md bg-rose-500 text-white text-xs font-bold px-2 py-0.5">
+                      <Badge className="rounded-full bg-rose-500 text-white text-xs font-bold px-2.5 py-0.5">
                         {deal.discount}
                       </Badge>
                     </div>
@@ -229,14 +224,14 @@ function DealsPage() {
                       </div>
                       <div className="flex items-center justify-end gap-1.5 text-muted-foreground">
                         <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                        <span>Regret: <strong className="text-emerald-600 dark:text-emerald-400 font-semibold">{deal.regretScore}</strong></span>
+                        <span>Regret: <strong className="text-emerald-600 font-semibold">{deal.regretScore}</strong></span>
                       </div>
                     </div>
                   </CardContent>
                 </div>
 
                 <div className="p-4 pt-0">
-                  <Button asChild className="w-full rounded-lg text-xs font-semibold gap-1.5 h-9 bg-brand hover:bg-brand/90 text-white shadow-xs">
+                  <Button asChild className="w-full rounded-full text-xs font-semibold gap-1.5 h-9 bg-brand hover:bg-brand/90 text-white shadow-xs">
                     <Link to="/compare" search={{ q: deal.title }}>
                       <Scale className="h-3.5 w-3.5" /> Compare Across All Stores
                     </Link>

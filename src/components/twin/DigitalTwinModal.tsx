@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const STORES = ["Amazon", "Flipkart", "Meesho", "Croma", "Reliance Digital"];
+const STORES = ["Amazon", "Flipkart", "Meesho", "Myntra", "Blinkit"];
 const CATEGORIES = ["Tech & Electronics", "Fashion", "Home & Lifestyle", "Gaming"];
 
 const PERSONAS: { type: PersonaType; title: string; desc: string; icon: React.ElementType }[] = [
@@ -72,15 +72,15 @@ const SAMPLE_RECOMMENDATIONS = [
   },
   {
     id: "3",
-    title: "Samsung Galaxy Watch6 LTE (44mm)",
-    price: 18499,
-    originalPrice: 36999,
-    store: "Croma",
-    rating: 4.5,
-    category: "Gaming",
-    matchScore: 89,
+    title: "Nike Air Max Pulse Lifestyle Sneakers",
+    price: 7499,
+    originalPrice: 12999,
+    store: "Myntra",
+    rating: 4.8,
+    category: "Fashion",
+    matchScore: 94,
     verdict: "High Savings Value",
-    savings: 18500,
+    savings: 5500,
   },
 ];
 
@@ -245,7 +245,7 @@ export function DigitalTwinModal() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="mt-4 w-full rounded-xl text-xs font-bold border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
+                    className="mt-4 w-full rounded-xl text-xs font-bold border-emerald-500/30 text-emerald-700 hover:bg-emerald-500/10"
                     onClick={() => toast.info("Twin Savings engine is actively monitoring 14 items.")}
                   >
                     View Savings Log

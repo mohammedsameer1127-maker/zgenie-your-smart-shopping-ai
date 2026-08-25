@@ -41,7 +41,7 @@ const DEFAULT_PROFILE: TwinProfile = {
   personaType: "value_seeker",
   minBudget: 5000,
   maxBudget: 120000,
-  preferredStores: ["Amazon", "Flipkart", "Meesho", "Croma", "Reliance Digital"],
+  preferredStores: ["Amazon", "Flipkart", "Meesho", "Myntra", "Blinkit"],
   preferredCategories: ["Tech & Electronics", "Fashion", "Home & Lifestyle", "Gaming"],
   riskTolerance: 4,
   priceDropThreshold: 15,
@@ -56,26 +56,32 @@ const STORAGE_KEY = "zgenie_digital_twin_profile";
 const DigitalTwinContext = createContext<DigitalTwinContextType | undefined>(undefined);
 
 export const DigitalTwinProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [profile, setProfile] = useState<TwinProfile>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {
-      console.error("Failed to load digital twin profile", e);
-    }
-    return DEFAULT_PROFILE;
-  });
-
+  const [profile, setProfile] = useState<TwinProfile>(DEFAULT_PROFILE);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"collect" | "results">("results");
 
+  // Load from localStorage on client-side mount
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-    } catch (e) {
-      console.error("Failed to save digital twin profile", e);
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          setProfile(JSON.parse(saved));
+        }
+      } catch (e) {
+        console.error("Failed to load digital twin profile", e);
+      }
+    }
+  }, []);
+
+  // Save to localStorage when profile changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+      } catch (e) {
+        console.error("Failed to save digital twin profile", e);
+      }
     }
   }, [profile]);
 

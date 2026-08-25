@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { createUserWithEmailAndPassword, updateProfile, getRedirectResult } from "firebase/auth";
-import { auth, googleProvider, appleProvider } from "@/lib/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db, googleProvider, appleProvider } from "@/lib/firebase";
 import { handleProviderSignIn } from "@/lib/auth-helpers";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { AuthLayout } from "@/components/auth/AuthLayout";
@@ -77,6 +78,14 @@ function SignUpPage() {
       if (auth.currentUser) {
         await updateProfile(auth.currentUser, { displayName: name });
       }
+
+      // Automatically create a document in the 'users' Firestore collection using UID as document ID
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        name: name.trim(),
+        email: userCredential.user.email || email.trim(),
+        createdAt: serverTimestamp(),
+      });
+
       toast.success("Account created successfully! Welcome to ZGenie.");
       navigate({ to: "/" });
     } catch (error: any) {
@@ -118,7 +127,7 @@ function SignUpPage() {
               onChange={(e) => setName(e.target.value)}
               autoComplete="name"
               placeholder="Alex Morgan"
-              className="h-9.5 rounded-lg pl-9 text-xs border-border/80 bg-background"
+              className="h-10 rounded-xl pl-9 text-xs border-border/80 bg-background"
               required
             />
           </div>
@@ -137,7 +146,7 @@ function SignUpPage() {
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               placeholder="name@company.com"
-              className="h-9.5 rounded-lg pl-9 text-xs border-border/80 bg-background"
+              className="h-10 rounded-xl pl-9 text-xs border-border/80 bg-background"
               required
             />
           </div>
@@ -157,7 +166,7 @@ function SignUpPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
                 placeholder="8+ characters"
-                className="h-9.5 rounded-lg pl-9 pr-9 text-xs border-border/80 bg-background"
+                className="h-10 rounded-xl pl-9 pr-9 text-xs border-border/80 bg-background"
                 required
                 minLength={8}
               />
@@ -185,7 +194,7 @@ function SignUpPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
                 placeholder="Repeat password"
-                className="h-9.5 rounded-lg pl-9 pr-9 text-xs border-border/80 bg-background"
+                className="h-10 rounded-xl pl-9 pr-9 text-xs border-border/80 bg-background"
                 required
                 minLength={8}
               />
@@ -220,7 +229,7 @@ function SignUpPage() {
         <Button
           type="submit"
           disabled={loading}
-          className="h-9.5 w-full rounded-lg text-xs font-semibold shadow-xs gap-2"
+          className="h-10 w-full rounded-full text-xs font-semibold shadow-xs gap-2"
         >
           {loading ? "Creating Account..." : <>Create Account <ArrowRight className="h-3.5 w-3.5" /></>}
         </Button>
@@ -247,7 +256,7 @@ function SignUpPage() {
                 toast.error(`Sign up failed: ${error.message}`);
               }
             }} 
-            className="h-9 rounded-lg gap-2 font-medium text-xs border-border bg-card hover:bg-muted"
+            className="h-9.5 rounded-full gap-2 font-medium text-xs border-border bg-card hover:bg-muted"
           >
             <GoogleIcon /> Google
           </Button>
@@ -261,7 +270,7 @@ function SignUpPage() {
                 toast.error(`Sign up failed: ${error.message}`);
               }
             }} 
-            className="h-9 rounded-lg gap-2 font-medium text-xs border-border bg-card hover:bg-muted"
+            className="h-9.5 rounded-full gap-2 font-medium text-xs border-border bg-card hover:bg-muted"
           >
             <AppleIcon /> Apple
           </Button>

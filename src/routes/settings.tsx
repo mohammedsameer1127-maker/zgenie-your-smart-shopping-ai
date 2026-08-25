@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Settings, Shield, Bell, Moon } from "lucide-react";
+import { Settings, Shield, Bell } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({

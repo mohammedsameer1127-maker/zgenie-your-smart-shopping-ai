@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { auth, googleProvider, appleProvider } from "@/lib/firebase";
+import { auth, db, googleProvider, appleProvider } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { handleProviderSignIn } from "@/lib/auth-helpers";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, User } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -54,6 +55,12 @@ export function AuthModal() {
         if (auth.currentUser) {
           await updateProfile(auth.currentUser, { displayName: name });
         }
+        // Automatically create a document in the 'users' Firestore collection using UID as document ID
+        await setDoc(doc(db, "users", userCredential.user.uid), {
+          name: name.trim(),
+          email: userCredential.user.email || email.trim(),
+          createdAt: serverTimestamp(),
+        });
         toast.success("Account created successfully!");
         onAuthSuccess();
       } else if (mode === "forgotPassword") {
@@ -108,7 +115,7 @@ export function AuthModal() {
                 <Label htmlFor="modal-name" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Full Name</Label>
                 <div className="relative">
                   <User className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                  <Input id="modal-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="h-9.5 rounded-lg pl-9 text-xs border-border/80 bg-background" required />
+                  <Input id="modal-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="h-10 rounded-xl pl-9 text-xs border-border/80 bg-background" required />
                 </div>
               </div>
             )}
@@ -117,7 +124,7 @@ export function AuthModal() {
               <Label htmlFor="modal-email" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Email Address</Label>
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input id="modal-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" className="h-9.5 rounded-lg pl-9 text-xs border-border/80 bg-background" required />
+                <Input id="modal-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" className="h-10 rounded-xl pl-9 text-xs border-border/80 bg-background" required />
               </div>
             </div>
 
@@ -131,7 +138,7 @@ export function AuthModal() {
                 </div>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                  <Input id="modal-password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••••" className="h-9.5 rounded-lg pl-9 pr-9 text-xs border-border/80 bg-background" required />
+                  <Input id="modal-password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••••" className="h-10 rounded-xl pl-9 pr-9 text-xs border-border/80 bg-background" required />
                   <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   </button>
@@ -144,12 +151,12 @@ export function AuthModal() {
                 <Label htmlFor="modal-confirm-password" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Confirm Password</Label>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                  <Input id="modal-confirm-password" type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••••••" className="h-9.5 rounded-lg pl-9 text-xs border-border/80 bg-background" required />
+                  <Input id="modal-confirm-password" type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••••••" className="h-10 rounded-xl pl-9 text-xs border-border/80 bg-background" required />
                 </div>
               </div>
             )}
 
-            <Button type="submit" disabled={loading} className="h-9.5 w-full rounded-lg text-xs font-semibold shadow-xs gap-2 mt-4">
+            <Button type="submit" disabled={loading} className="h-10 w-full rounded-full text-xs font-semibold shadow-xs gap-2 mt-4">
               {loading ? "Please wait..." : mode === "signIn" ? "Sign In" : mode === "signUp" ? "Create Account" : "Send Reset Link"} <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </form>
@@ -162,10 +169,10 @@ export function AuthModal() {
               </div>
 
               <div className="grid grid-cols-2 gap-2.5">
-                <Button variant="outline" type="button" onClick={() => handleProvider(googleProvider)} className="h-9 rounded-lg gap-2 font-medium text-xs border-border bg-background hover:bg-muted">
+                <Button variant="outline" type="button" onClick={() => handleProvider(googleProvider)} className="h-9.5 rounded-full gap-2 font-medium text-xs border-border bg-background hover:bg-muted">
                   <GoogleIcon /> Google
                 </Button>
-                <Button variant="outline" type="button" onClick={() => handleProvider(appleProvider)} className="h-9 rounded-lg gap-2 font-medium text-xs border-border bg-background hover:bg-muted">
+                <Button variant="outline" type="button" onClick={() => handleProvider(appleProvider)} className="h-9.5 rounded-full gap-2 font-medium text-xs border-border bg-background hover:bg-muted">
                   <AppleIcon /> Apple
                 </Button>
               </div>

@@ -1,34 +1,24 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import logoUrl from "@/assets/zgenie-logo.png";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import {
-  Bell,
   Heart,
   LogOut,
   Menu,
-  Package,
-  Search,
-  Settings,
-  ShoppingCart,
-  Sparkles,
+  Scale,
   User,
   X,
   ChevronDown,
-  Scale,
-  LayoutGrid,
   Bot,
-  Sun,
-  Moon,
-  TrendingDown,
-  Flame,
-  ArrowRight,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useDigitalTwin } from "@/context/DigitalTwinContext";
+import { useLikes } from "@/context/LikesContext";
 import { DigitalTwinModal } from "@/components/twin/DigitalTwinModal";
+import { ComparisonHistoryModal } from "@/components/compare/ComparisonHistoryModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +27,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 
 const primaryLinks = [
   { to: "/", label: "Home" },
@@ -50,34 +39,20 @@ const primaryLinks = [
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isDark, setIsDark] = useState(false);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const { openTwinModal } = useDigitalTwin();
   const { requireAuth, currentUser, logout } = useAuth();
-  const [wishlistCount] = useState(2);
+  const { likesCount } = useLikes();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Sync theme state on load
-    const savedTheme = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
-      document.documentElement.classList.add("dark");
-      setIsDark(true);
-    } else {
-      document.documentElement.classList.remove("dark");
-      setIsDark(false);
-    }
-  }, []);
-
-  const toggleDarkMode = () => {
-    if (isDark) {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-      setIsDark(false);
-    } else {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-      setIsDark(true);
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      navigate({ to: "/" });
+      toast.success("Successfully signed out.");
+    } catch (error) {
+      console.error("Sign out error:", error);
+      toast.error("Failed to sign out.");
     }
   };
 
@@ -85,12 +60,12 @@ export function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-xl transition-all">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         
-        {/* Brand Logo - EXACT ORIGINAL UNCHANGED */}
+        {/* Brand Logo */}
         <Link to="/" className="flex items-center gap-3 shrink-0 group">
           <img
             src={logoUrl}
             alt="ZGenie Logo"
-            className="h-10 sm:h-12 w-auto transition-transform group-hover:scale-105 drop-shadow-sm"
+            className="h-10 sm:h-12 w-auto transition-transform group-hover:scale-105 drop-shadow-xs"
           />
         </Link>
 
@@ -100,8 +75,8 @@ export function Navbar() {
             <Link
               key={link.to}
               to={link.to}
-              activeProps={{ className: "text-blue-600 dark:text-blue-400 font-semibold bg-blue-50/80 dark:bg-blue-950/40" }}
-              className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+              activeProps={{ className: "text-blue-600 font-semibold bg-blue-50/80" }}
+              className="rounded-full px-3.5 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
             >
               {link.label}
             </Link>
@@ -110,49 +85,50 @@ export function Navbar() {
 
         {/* Right Action Icons & Buttons */}
         <div className="flex items-center gap-2 sm:gap-2.5">
-          {/* Dark Mode Toggle */}
-          <button
-            onClick={toggleDarkMode}
-            aria-label="Toggle dark mode"
-            className="flex h-8.5 w-8.5 items-center justify-center rounded-lg border border-border/70 bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground shadow-xs"
-          >
-            {isDark ? <Sun className="h-4 w-4 text-amber-500" /> : <Moon className="h-4 w-4 text-slate-600" />}
-          </button>
-
-          {/* Digital Twin Button (Accessible anytime) */}
+          {/* Digital Twin Button */}
           <button
             onClick={() => requireAuth(() => openTwinModal(), "Sign in to access your AI Digital Twin.")}
             aria-label="AI Digital Twin"
-            className="hidden sm:flex h-8.5 items-center gap-1.5 rounded-lg border border-blue-500/20 bg-blue-500/5 px-2.5 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-500/10 dark:bg-blue-950/30 dark:text-blue-400"
+            className="hidden sm:flex h-9 items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/5 px-3.5 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-500/10 shadow-xs"
           >
             <Bot className="h-3.5 w-3.5" />
             <span>Digital Twin</span>
           </button>
 
+          {/* Comparison History Quick Button (Desktop) */}
+          <button
+            onClick={() => setHistoryModalOpen(true)}
+            aria-label="Comparison History"
+            title="View Comparison History"
+            className="hidden sm:flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card text-muted-foreground transition-all hover:bg-muted hover:text-foreground shadow-xs hover:border-emerald-300"
+          >
+            <History className="h-4 w-4 text-emerald-500" />
+          </button>
+
+          {/* Wishlist Button with Badge */}
+          <Link
+            to="/wishlist"
+            aria-label="Wishlist"
+            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card text-muted-foreground transition-all hover:bg-muted hover:text-foreground shadow-xs hover:border-rose-300"
+          >
+            <Heart className={`h-4 w-4 ${likesCount > 0 ? "fill-rose-500 text-rose-500" : ""}`} />
+            {likesCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white shadow-xs animate-in zoom-in-75 duration-200">
+                {likesCount}
+              </span>
+            )}
+          </Link>
+
           {/* Conditional Auth Rendering */}
           {currentUser ? (
             <>
-              {/* Wishlist Button with Badge */}
-              <button
-                onClick={() => requireAuth(() => navigate({ to: "/wishlist" }), "Sign in to view your saved products.")}
-                aria-label="Wishlist"
-                className="relative flex h-8.5 w-8.5 items-center justify-center rounded-lg border border-border/70 bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground shadow-xs"
-              >
-                <Heart className="h-4 w-4" />
-                {wishlistCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[9px] font-bold text-white shadow-xs">
-                    {wishlistCount}
-                  </span>
-                )}
-              </button>
-
               {/* User Account Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8.5 gap-1.5 rounded-lg px-2 hover:bg-muted text-muted-foreground hover:text-foreground font-medium text-xs border-border/70 shadow-xs"
+                    className="h-9 gap-1.5 rounded-full px-2.5 hover:bg-muted text-muted-foreground hover:text-foreground font-medium text-xs border-border/70 shadow-xs"
                   >
                     <div className="flex h-5.5 w-5.5 items-center justify-center rounded-full bg-brand text-white text-[11px] font-semibold">
                       {currentUser.displayName?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || "U"}
@@ -161,27 +137,29 @@ export function Navbar() {
                     <ChevronDown className="h-3 w-3 opacity-60" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52 rounded-xl p-1.5 shadow-lg border-border">
-                  <DropdownMenuLabel className="px-2 py-1.5 flex flex-col gap-0.5">
+                <DropdownMenuContent align="end" className="w-52 rounded-2xl p-1.5 shadow-lg border-border">
+                  <DropdownMenuLabel className="px-3 py-2 flex flex-col gap-0.5">
                     <span className="text-sm font-semibold text-foreground">{currentUser.displayName || "User"}</span>
                     <span className="text-xs text-muted-foreground">{currentUser.email}</span>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
                     <Link to="/profile" className="flex items-center gap-2 text-xs font-medium">
                       <User className="h-4 w-4 text-blue-500" />
                       <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
                   
-                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
-                    <Link to="/compare" search={{ q: "" }} className="flex items-center gap-2 text-xs font-medium">
-                      <Scale className="h-4 w-4 text-emerald-500" />
-                      <span>Comparison History</span>
-                    </Link>
+                  {/* Comparison History Modal Trigger */}
+                  <DropdownMenuItem 
+                    onClick={() => setHistoryModalOpen(true)}
+                    className="rounded-xl cursor-pointer flex items-center gap-2 text-xs font-medium"
+                  >
+                    <Scale className="h-4 w-4 text-emerald-500" />
+                    <span>Comparison History</span>
                   </DropdownMenuItem>
 
-                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
                     <Link to="/wishlist" className="flex items-center gap-2 text-xs font-medium">
                       <Heart className="h-4 w-4 text-rose-500" />
                       <span>Saved Wishlist</span>
@@ -189,21 +167,12 @@ export function Navbar() {
                   </DropdownMenuItem>
                   
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer text-brand font-semibold">
-                    <button 
-                      onClick={async () => {
-                        try {
-                          await logout();
-                          toast.success("Successfully signed out.");
-                        } catch (error) {
-                          toast.error("Failed to sign out.");
-                        }
-                      }} 
-                      className="flex items-center gap-2 text-xs w-full"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>Sign Out</span>
-                    </button>
+                  <DropdownMenuItem 
+                    onClick={handleSignOut}
+                    className="rounded-xl cursor-pointer text-brand font-semibold flex items-center gap-2 text-xs w-full"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign Out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -214,14 +183,14 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={() => requireAuth(() => {})}
-                className="hidden sm:inline-flex rounded-lg font-semibold text-xs h-8.5 px-3 text-foreground hover:bg-muted"
+                className="hidden sm:inline-flex rounded-full font-semibold text-xs h-9 px-3.5 text-foreground hover:bg-muted"
               >
                 Sign In
               </Button>
               <Button
                 size="sm"
                 onClick={() => requireAuth(() => {})}
-                className="rounded-lg font-semibold text-xs h-8.5 px-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-xs"
+                className="rounded-full font-semibold text-xs h-9 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-xs"
               >
                 Get Started
               </Button>
@@ -230,7 +199,7 @@ export function Navbar() {
 
           {/* Mobile Menu Toggle */}
           <button
-            className="inline-flex h-8.5 w-8.5 items-center justify-center rounded-lg text-foreground lg:hidden border border-border/70 bg-card hover:bg-muted shadow-xs"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-foreground lg:hidden border border-border/70 bg-card hover:bg-muted shadow-xs"
             onClick={() => setMobileMenuOpen((v) => !v)}
             aria-label="Toggle menu"
           >
@@ -250,7 +219,7 @@ export function Navbar() {
                   key={link.to}
                   to={link.to}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 rounded-lg bg-card border border-border/60 px-3.5 py-2.5 text-xs font-semibold text-foreground hover:bg-muted"
+                  className="flex items-center gap-2 rounded-xl bg-card border border-border/60 px-3.5 py-2.5 text-xs font-semibold text-foreground hover:bg-muted"
                 >
                   {link.label}
                 </Link>
@@ -265,18 +234,39 @@ export function Navbar() {
                 onClick={() => { 
                   requireAuth(() => { openTwinModal(); setMobileMenuOpen(false); }, "Sign in to access your AI Digital Twin.");
                 }} 
-                className="flex items-center gap-2 rounded-lg bg-blue-500/10 border border-blue-500/20 px-3.5 py-2.5 text-xs font-semibold text-blue-600"
+                className="flex items-center gap-2 rounded-xl bg-blue-500/10 border border-blue-500/20 px-3.5 py-2.5 text-xs font-semibold text-blue-600"
               >
                 <Bot className="h-4 w-4" /> Digital Twin
               </button>
+
+              <button 
+                onClick={() => { 
+                  setHistoryModalOpen(true); 
+                  setMobileMenuOpen(false); 
+                }} 
+                className="flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-2.5 text-xs font-semibold text-emerald-600"
+              >
+                <Scale className="h-4 w-4" /> History
+              </button>
+
               <button 
                 onClick={() => { 
                   requireAuth(() => { navigate({ to: "/wishlist" }); setMobileMenuOpen(false); }, "Sign in to view your saved products.");
                 }} 
-                className="flex items-center gap-2 rounded-lg bg-card border border-border/60 px-3.5 py-2.5 text-xs font-medium text-left"
+                className="flex items-center gap-2 rounded-xl bg-card border border-border/60 px-3.5 py-2.5 text-xs font-medium text-left"
               >
-                <Heart className="h-4 w-4 text-rose-500" /> Wishlist ({wishlistCount})
+                <Heart className="h-4 w-4 text-rose-500" /> Wishlist ({likesCount})
               </button>
+
+              {currentUser && (
+                <Link
+                  to="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 rounded-xl bg-card border border-border/60 px-3.5 py-2.5 text-xs font-medium text-left"
+                >
+                  <User className="h-4 w-4 text-blue-500" /> Profile
+                </Link>
+              )}
             </div>
           </div>
 
@@ -285,13 +275,13 @@ export function Navbar() {
               <Button 
                 variant="outline" 
                 onClick={() => { requireAuth(() => {}); setMobileMenuOpen(false); }} 
-                className="w-full rounded-lg font-semibold text-xs h-9.5"
+                className="w-full rounded-full font-semibold text-xs h-10"
               >
                 Sign In
               </Button>
               <Button 
                 onClick={() => { requireAuth(() => {}); setMobileMenuOpen(false); }} 
-                className="w-full rounded-lg font-semibold text-xs h-9.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                className="w-full rounded-full font-semibold text-xs h-10 bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
               >
                 Get Started
               </Button>
@@ -300,17 +290,19 @@ export function Navbar() {
             <Button 
               variant="outline" 
               onClick={async () => { 
-                await logout(); 
+                await handleSignOut(); 
                 setMobileMenuOpen(false); 
               }} 
-              className="w-full rounded-lg font-semibold text-xs h-9.5"
+              className="w-full rounded-full font-semibold text-xs h-10 text-brand border-brand/20"
             >
               Sign Out
             </Button>
           )}
         </div>
       )}
+      
       <DigitalTwinModal />
+      <ComparisonHistoryModal open={historyModalOpen} onOpenChange={setHistoryModalOpen} />
     </header>
   );
 }

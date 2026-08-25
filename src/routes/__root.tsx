@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DigitalTwinProvider } from "../context/DigitalTwinContext";
 import { AuthProvider } from "../context/AuthContext";
+import { LikesProvider } from "../context/LikesContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AuthModal } from "@/components/auth/AuthModal";
 import {
@@ -10,8 +11,6 @@ import {
   useRouter,
   HeadContent,
   Scripts,
-  ScrollRestoration,
-  useLocation,
 } from "@tanstack/react-router";
 import * as React from "react";
 import { useEffect, type ReactNode } from "react";
@@ -88,7 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "ZGenie is your smart shopping AI assistant that compares products side-by-side across Amazon, Flipkart, Meesho, Croma, and Reliance Digital.",
+          "ZGenie is your smart shopping AI assistant that compares products side-by-side across Amazon, Flipkart, Meesho, Myntra, and Blinkit.",
       },
       { name: "author", content: "ZGenie" },
       { property: "og:title", content: "ZGenie — Your Smart Shopping AI" },
@@ -115,13 +114,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
     ],
   }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
 
-function RootShell({ children }: { children: ReactNode }) {
+function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -136,7 +134,6 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RouteWrapper({ children }: { children: React.ReactNode }) {
-  // Bypassing auth protection as requested
   return <>{children}</>;
 }
 
@@ -144,16 +141,20 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <DigitalTwinProvider>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <RouteWrapper>
-            <Outlet />
-            <AuthModal />
-          </RouteWrapper>
-        </DigitalTwinProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <RootDocument>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <LikesProvider>
+            <DigitalTwinProvider>
+              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+              <RouteWrapper>
+                <Outlet />
+                <AuthModal />
+              </RouteWrapper>
+            </DigitalTwinProvider>
+          </LikesProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </RootDocument>
   );
 }
