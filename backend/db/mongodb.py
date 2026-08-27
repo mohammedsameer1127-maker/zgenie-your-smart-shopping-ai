@@ -38,6 +38,9 @@ async def connect_to_mongo():
             await db.db["shopping_orders"].create_index([("user_id", 1), ("order_date", -1), ("created_at", -1)])
             await db.db["shopping_orders"].create_index([("user_id", 1), ("retailer", 1), ("order_number", 1)])
             await db.db["shopping_orders"].create_index([("user_id", 1), ("email_message_id", 1)])
+            # Shopping Connectors Cache index with 1-hour TTL
+            await db.db["products_cache"].create_index([("query_hash", 1), ("source", 1)], unique=True)
+            await db.db["products_cache"].create_index("expires_at", expireAfterSeconds=0)
         except Exception as idx_err:
             logger.info(f"MongoDB index setup notice: {idx_err}")
     except Exception as e:

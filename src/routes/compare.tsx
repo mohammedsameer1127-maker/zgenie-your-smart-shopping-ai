@@ -30,8 +30,12 @@ import {
   Watch,
   Check,
   RotateCcw,
+  ExternalLink,
 } from "lucide-react";
+
 import { toast } from "sonner";
+import { getPlatformSearchUrl } from "@/lib/groq";
+
 
 export const Route = createFileRoute("/compare")({
   validateSearch: (search: Record<string, unknown>) => {
@@ -904,7 +908,55 @@ function ProductHeaderTh({
       <Badge className="mt-2 text-[10px] font-semibold rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20">
         {product.verdict}
       </Badge>
+
+      {/* Direct Store Links */}
+      <div className="mt-3 pt-3 border-t border-border/60 space-y-1.5">
+        <div className="flex items-center gap-1.5">
+          <Button
+            asChild
+            size="sm"
+            className="flex-1 rounded-xl text-[11px] font-bold h-7.5 px-2 bg-amber-500/15 text-amber-700 dark:text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 gap-1 shadow-2xs"
+          >
+            <a
+              href={getPlatformSearchUrl("Amazon", product.name)}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`View ${product.name} on Amazon`}
+            >
+              <span>Amazon</span>
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </Button>
+          <Button
+            asChild
+            size="sm"
+            className="flex-1 rounded-xl text-[11px] font-bold h-7.5 px-2 bg-blue-500/15 text-blue-700 dark:text-blue-300 hover:bg-blue-500/25 border border-blue-500/30 gap-1 shadow-2xs"
+          >
+            <a
+              href={getPlatformSearchUrl("Flipkart", product.name)}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`View ${product.name} on Flipkart`}
+            >
+              <span>Flipkart</span>
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </Button>
+        </div>
+
+        <Button
+          asChild
+          size="sm"
+          className="w-full rounded-xl text-[11px] font-bold h-7.5 bg-brand text-white hover:bg-brand/90 gap-1 shadow-2xs cursor-pointer"
+        >
+          <Link to="/compare" search={{ q: product.name }}>
+            <Scale className="h-3 w-3" />
+            <span>Compare All Stores</span>
+          </Link>
+        </Button>
+      </div>
     </th>
+
   );
 }
 

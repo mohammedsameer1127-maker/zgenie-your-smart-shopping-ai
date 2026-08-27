@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:8082"
     GMAIL_ENCRYPTION_KEY: str = ""
     
+    # Shopping Search Connectors
+    SERPAPI_KEY: str = ""
+    SERPER_API_KEY: str = ""
+    CONNECTOR_FALLBACK_ORDER: str = "serper,serpapi"
+    ENABLE_DEBUG_ROUTES: bool = True
+    
     model_config = SettingsConfigDict(
         env_file=(str(BASE_DIR / ".env"), str(ROOT_DIR / ".env"), ".env"),
         env_file_encoding="utf-8",
@@ -47,3 +53,8 @@ if not settings.FRONTEND_URL:
     settings.FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:8082")
 if not settings.GMAIL_ENCRYPTION_KEY:
     settings.GMAIL_ENCRYPTION_KEY = os.getenv("GMAIL_ENCRYPTION_KEY", "zgenie_secure_token_encryption_key_2025")
+if not settings.SERPAPI_KEY:
+    settings.SERPAPI_KEY = os.getenv("SERPAPI_KEY", "") or os.getenv("VITE_SERPAPI_KEY", "")
+if not settings.SERPER_API_KEY:
+    settings.SERPER_API_KEY = os.getenv("SERPER_API_KEY", "") or os.getenv("VITE_SERPER_API_KEY", "")
+
