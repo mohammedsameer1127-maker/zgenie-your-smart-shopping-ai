@@ -15,9 +15,11 @@ import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as DealsRouteImport } from './routes/deals'
 import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as ShoppingHistoryRouteImport } from './routes/shopping-history'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthSignInRouteImport } from './routes/auth.sign-in'
@@ -53,6 +55,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrdersRoute = OrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -66,6 +73,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
   path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShoppingHistoryRoute = ShoppingHistoryRouteImport.update({
+  id: '/shopping-history',
+  path: '/shopping-history',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WishlistRoute = WishlistRouteImport.update({
@@ -96,9 +108,11 @@ export interface FileRoutesByFullPath {
   '/compare': typeof CompareRoute
   '/deals': typeof DealsRoute
   '/notifications': typeof NotificationsRoute
+  '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
+  '/shopping-history': typeof ShoppingHistoryRoute
   '/wishlist': typeof WishlistRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
@@ -111,9 +125,11 @@ export interface FileRoutesByTo {
   '/compare': typeof CompareRoute
   '/deals': typeof DealsRoute
   '/notifications': typeof NotificationsRoute
+  '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
+  '/shopping-history': typeof ShoppingHistoryRoute
   '/wishlist': typeof WishlistRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
@@ -127,9 +143,11 @@ export interface FileRoutesById {
   '/compare': typeof CompareRoute
   '/deals': typeof DealsRoute
   '/notifications': typeof NotificationsRoute
+  '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
+  '/shopping-history': typeof ShoppingHistoryRoute
   '/wishlist': typeof WishlistRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
@@ -144,9 +162,11 @@ export interface FileRouteTypes {
     | '/compare'
     | '/deals'
     | '/notifications'
+    | '/orders'
     | '/profile'
     | '/settings'
     | '/shop'
+    | '/shopping-history'
     | '/wishlist'
     | '/auth/forgot-password'
     | '/auth/sign-in'
@@ -159,9 +179,11 @@ export interface FileRouteTypes {
     | '/compare'
     | '/deals'
     | '/notifications'
+    | '/orders'
     | '/profile'
     | '/settings'
     | '/shop'
+    | '/shopping-history'
     | '/wishlist'
     | '/auth/forgot-password'
     | '/auth/sign-in'
@@ -174,9 +196,11 @@ export interface FileRouteTypes {
     | '/compare'
     | '/deals'
     | '/notifications'
+    | '/orders'
     | '/profile'
     | '/settings'
     | '/shop'
+    | '/shopping-history'
     | '/wishlist'
     | '/auth/forgot-password'
     | '/auth/sign-in'
@@ -190,9 +214,11 @@ export interface RootRouteChildren {
   CompareRoute: typeof CompareRoute
   DealsRoute: typeof DealsRoute
   NotificationsRoute: typeof NotificationsRoute
+  OrdersRoute: typeof OrdersRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
   ShopRoute: typeof ShopRoute
+  ShoppingHistoryRoute: typeof ShoppingHistoryRoute
   WishlistRoute: typeof WishlistRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthSignInRoute: typeof AuthSignInRoute
@@ -243,6 +269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/orders': {
+      id: '/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof OrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -262,6 +295,13 @@ declare module '@tanstack/react-router' {
       path: '/shop'
       fullPath: '/shop'
       preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shopping-history': {
+      id: '/shopping-history'
+      path: '/shopping-history'
+      fullPath: '/shopping-history'
+      preLoaderRoute: typeof ShoppingHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wishlist': {
@@ -302,9 +342,11 @@ const rootRouteChildren: RootRouteChildren = {
   CompareRoute: CompareRoute,
   DealsRoute: DealsRoute,
   NotificationsRoute: NotificationsRoute,
+  OrdersRoute: OrdersRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
   ShopRoute: ShopRoute,
+  ShoppingHistoryRoute: ShoppingHistoryRoute,
   WishlistRoute: WishlistRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthSignInRoute: AuthSignInRoute,

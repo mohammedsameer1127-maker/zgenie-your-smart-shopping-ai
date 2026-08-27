@@ -4,7 +4,7 @@ import { auth, db, googleProvider, appleProvider } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { handleProviderSignIn } from "@/lib/auth-helpers";
-import { Eye, EyeOff, Mail, Lock, ArrowRight, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, User, AlertCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ export function AuthModal() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<{ type: "not_found" | "general"; text: string } | null>(null);
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -31,11 +32,13 @@ export function AuthModal() {
       setMode("signIn");
       setPassword("");
       setConfirmPassword("");
+      setErrorMessage(null);
     }
   }, [isAuthModalOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     if (!email) {
       toast.error("Please enter your email.");
       return;
@@ -70,16 +73,30 @@ export function AuthModal() {
       }
     } catch (error: any) {
       console.error("[Firebase Auth Error]", error.code, error.message);
-      if (error.code === 'auth/invalid-credential') {
-        toast.error("Incorrect email or password. Please try again.");
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+        const msg = "No account is found with this email. Please create an account or log in with Google or Apple.";
+        setErrorMessage({ type: "not_found", text: msg });
+        toast.error("No account is found with this email.");
+      } else if (error.code === 'auth/wrong-password') {
+        const msg = "Incorrect password. Please try again or reset your password.";
+        setErrorMessage({ type: "general", text: msg });
+        toast.error(msg);
       } else if (error.code === 'auth/email-already-in-use') {
-        toast.error("Email is already registered. Please sign in instead.");
+        const msg = "Email is already registered. Please sign in instead.";
+        setErrorMessage({ type: "general", text: msg });
+        toast.error(msg);
       } else if (error.code === 'auth/weak-password') {
-        toast.error("Password is too weak. Please use at least 6 characters.");
+        const msg = "Password is too weak. Please use at least 6 characters.";
+        setErrorMessage({ type: "general", text: msg });
+        toast.error(msg);
       } else if (error.code === 'auth/invalid-email') {
-        toast.error("Invalid email address format.");
+        const msg = "Invalid email address format.";
+        setErrorMessage({ type: "general", text: msg });
+        toast.error(msg);
       } else {
-        toast.error(error.message || "Authentication failed.");
+        const msg = error.message || "Authentication failed.";
+        setErrorMessage({ type: "general", text: msg });
+        toast.error(msg);
       }
     } finally {
       setLoading(false);
@@ -110,6 +127,34 @@ export function AuthModal() {
           </DialogHeader>
 
           <form className="space-y-3.5 text-left mt-3" onSubmit={handleSubmit}>
+            {errorMessage && (
+              <div className="flex items-start gap-2.5 rounded-xl border border-red-200/80 bg-red-50/90 p-3 text-xs text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200 shadow-xs animate-in fade-in slide-in-from-top-1 duration-200">
+                <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-1">
+                  {errorMessage.type === "not_found" ? (
+                    <>
+                      <p className="font-semibold text-red-700 dark:text-red-300">No account is found</p>
+                      <p className="text-[11px] leading-relaxed text-red-600 dark:text-red-300/90">
+                        No account is registered with this email. Please{" "}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMode("signUp");
+                            setErrorMessage(null);
+                          }}
+                          className="font-bold underline hover:text-red-800 dark:hover:text-red-100"
+                        >
+                          create an account
+                        </button>{" "}
+                        or log in with Google / Apple below.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs font-medium">{errorMessage.text}</p>
+                  )}
+                </div>
+              </div>
+            )}
             {mode === "signUp" && (
               <div className="space-y-1.5">
                 <Label htmlFor="modal-name" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Full Name</Label>

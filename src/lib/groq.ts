@@ -1037,11 +1037,38 @@ Keep it punchy, sharp, highly trustworthy, and under 250 words.`;
 /**
  * Built-in Intelligent Shopping Assistant Fallback for instant responses
  */
+/**
+ * Built-in Intelligent Shopping Assistant Fallback for instant responses
+ */
 export function generateSmartChatFallback(
   messages: { role: string; content: string }[]
 ): string {
   const lastMsg = messages[messages.length - 1]?.content || "";
-  const lower = lastMsg.toLowerCase();
+  const lower = lastMsg.toLowerCase().trim();
+
+  // Check for unrelated non-shopping topics (coding, math, general trivia, politics, recipes, medical, etc.)
+  const nonShoppingPatterns = [
+    /\b(write code|python|javascript|typescript|c\+\+|java|html|css|sql|function|algorithm|class |def |var |const )\b/i,
+    /\b(solve|math|equation|calculate|derivative|integral|\d+\s*[\+\-\*\/]\s*\d+)\b/i,
+    /\b(who is the president|who was the king|prime minister|capital of|geography|history of|world war|population of)\b/i,
+    /\b(recipe for|how to cook|bake a cake|ingredients for)\b/i,
+    /\b(medical advice|diagnose|symptoms of|disease|treatment for)\b/i,
+    /\b(write an essay|write a poem|tell me a joke|write a story)\b/i,
+    /\b(who created you|what is your name|who are you|how do you work)\b/i,
+  ];
+
+  const isExplicitShoppingQuery =
+    /\b(price|buy|cost|deal|discount|shop|compare|phone|mobile|laptop|shoe|sneaker|watch|headphone|earbud|tv|camera|dress|shirt|tshirt|jeans|amazon|flipkart|croma|meesho|myntra|reliance|swiggy|zepto|blinkit|specs|rating|review|under \d+|budget)\b/i.test(lower);
+
+  // If asking about the bot identity
+  if (/\b(who created you|what is your name|who are you)\b/i.test(lower)) {
+    return "I am **ZGenie AI**, your dedicated smart shopping intelligence assistant. I help you find verified live prices, multi-store comparisons, and the best deals across Amazon, Flipkart, Croma, Reliance Digital, and more!";
+  }
+
+  // Refuse if query matches unrelated topic and has no shopping intent
+  if (nonShoppingPatterns.some((pattern) => pattern.test(lower)) && !isExplicitShoppingQuery) {
+    return "I am **ZGenie AI**, your dedicated smart shopping assistant. I only answer questions related to products, prices, comparisons, and deals across verified stores (Amazon, Flipkart, Croma, Reliance Digital, etc.). How can I help you find the best shopping deal today?";
+  }
 
   // 1. Phone Comparisons & Specific Phone Models
   if (lower.includes("iqoo") || lower.includes("neo 9")) {
@@ -1133,13 +1160,18 @@ export function generateSmartChatFallback(
   }
 
   // 6. General Smart Shopping Advice & Price Comparison
-  return `### 🛒 ZGenie Smart Shopping Intelligence
+  if (isExplicitShoppingQuery || lower.includes("best") || lower.includes("top") || lower.includes("recommend") || lower.includes("which")) {
+    return `### 🛒 ZGenie Smart Shopping Intelligence
 I monitor real-time Indian retail prices across **Amazon**, **Flipkart**, **Croma**, **Reliance Digital**, **Blinkit**, **Myntra**, **Meesho**, and **Tata CLiQ**.
 
 - **Top Live Recommendation:** Head over to **[Compare Live Prices](/compare)** to analyze multi-store pricing side-by-side with verified seller ratings and regret risk analysis.
 - **Pro Tip:** Look for active bank card offers (HDFC/ICICI/Axis/SBI) for an extra 5-10% instant discount at checkout.
 
 Ask me about any smartphone, laptop, shoes, clothing, or budget (e.g. *"Best phone under ₹30,000"*, *"iPhone 16 vs S24 Ultra"*, *"Best sneakers"*), and I'll give you instant pricing breakdowns!`;
+  }
+
+  // Default fallback for any query without shopping intent
+  return "I am **ZGenie AI**, your dedicated smart shopping assistant. I only answer questions related to products, prices, comparisons, and deals across verified stores (Amazon, Flipkart, Croma, Reliance Digital, etc.). How can I help you find the best shopping deal today?";
 }
 
 /**
@@ -1152,6 +1184,16 @@ export async function sendGroqChat(
     (typeof import.meta !== "undefined" && import.meta.env?.VITE_GROQ_API_KEY) ||
     "";
 
+  const systemPrompt = `You are ZGenie AI, the dedicated smart shopping intelligence assistant for the ZGenie platform.
+Your task is to help Indian shoppers compare prices across verified authorized retailers: Amazon, Flipkart, Croma, Reliance Digital, Blinkit, Myntra, Meesho, and Tata CLiQ.
+
+STRICT DOMAIN RESTRICTIONS & GUARDRAILS:
+1. ONLY answer questions strictly related to shopping, products, prices, electronics, fashion, groceries, specifications, deals, discounts, and order tracking on the ZGenie platform.
+2. If the user asks ANY question unrelated to shopping or this website (e.g. coding/programming, math, history, science, geography, general trivia, politics, essays, recipes, personal advice, etc.), DO NOT ANSWER IT.
+3. When an unrelated query is asked, refuse politely in 1-2 sentences:
+   "I am ZGenie AI, your dedicated smart shopping assistant. I only answer questions related to products, prices, and deals across verified stores (Amazon, Flipkart, Croma, Reliance Digital, etc.). How can I help you find the best shopping deal today?"
+4. For valid shopping questions: Provide concise, direct, helpful answers under 120 words with live prices in ₹ (INR), recommended store, key specs, and regret score. Avoid fluff.`;
+
   if (envApiKey && envApiKey !== "your_groq_api_key_here") {
     try {
       const groqRes = await axios.post(
@@ -1161,12 +1203,11 @@ export async function sendGroqChat(
           messages: [
             {
               role: "system",
-              content:
-                "You are ZGenie AI, an ultra-fast smart shopping assistant for Indian shoppers. Compare prices across verified authorized retailers: Amazon, Flipkart, Croma, Reliance Digital, Blinkit, Myntra, Meesho, and Tata CLiQ. Provide concise, direct, helpful answers under 120 words. Give top 1-2 product recommendations with live prices in ₹ (INR), recommended store, key specs, and regret score. Avoid fluff.",
+              content: systemPrompt,
             },
             ...messages,
           ],
-          temperature: 0.5,
+          temperature: 0.3,
           max_tokens: 1500,
         },
         {
@@ -1201,3 +1242,4 @@ export async function sendGroqChat(
   // Built-in intelligent shopping assistant fallback
   return generateSmartChatFallback(messages);
 }
+

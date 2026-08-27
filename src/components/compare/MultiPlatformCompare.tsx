@@ -2966,7 +2966,7 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
 
           {compareResults.map((result, rIdx) => {
             if (!result.product) {
-              const sugs = result.suggestions || activeSuggestions;
+              const sugs: string[] = (result as any).suggestions || activeSuggestions;
               return (
                 <div key={rIdx} className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 sm:p-8 text-center space-y-3">
                   <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
@@ -2979,7 +2979,7 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                   {sugs && sugs.length > 0 && (
                     <div className="pt-2 flex items-center justify-center gap-2 flex-wrap">
                       <span className="text-xs text-muted-foreground font-medium">Recommended:</span>
-                      {sugs.map((s) => (
+                      {sugs.map((s: string) => (
                         <button
                           key={s}
                           type="button"

@@ -19,6 +19,13 @@ class Settings(BaseSettings):
     GROQ_MODEL: str = "openai/gpt-oss-120b"
     GROQ_API_URL: str = "https://api.groq.com/openai/v1/chat/completions"
     
+    # Google OAuth & Gmail Integration
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/gmail/callback"
+    FRONTEND_URL: str = "http://localhost:8082"
+    GMAIL_ENCRYPTION_KEY: str = ""
+    
     model_config = SettingsConfigDict(
         env_file=(str(BASE_DIR / ".env"), str(ROOT_DIR / ".env"), ".env"),
         env_file_encoding="utf-8",
@@ -27,6 +34,16 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Ensure fallback if set as VITE_GROQ_API_KEY or via os.environ
+# Ensure fallbacks if set via os.environ directly
 if not settings.GROQ_API_KEY:
     settings.GROQ_API_KEY = os.getenv("GROQ_API_KEY", "") or os.getenv("VITE_GROQ_API_KEY", "")
+if not settings.GOOGLE_CLIENT_ID:
+    settings.GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+if not settings.GOOGLE_CLIENT_SECRET:
+    settings.GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
+if not settings.GOOGLE_REDIRECT_URI:
+    settings.GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/gmail/callback")
+if not settings.FRONTEND_URL:
+    settings.FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:8082")
+if not settings.GMAIL_ENCRYPTION_KEY:
+    settings.GMAIL_ENCRYPTION_KEY = os.getenv("GMAIL_ENCRYPTION_KEY", "zgenie_secure_token_encryption_key_2025")

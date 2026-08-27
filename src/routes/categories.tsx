@@ -31,7 +31,7 @@ import { useLikes } from "@/context/LikesContext";
 import { getRealBrandSuggestions, inferBrand } from "@/lib/groq";
 
 export const Route = createFileRoute("/categories")({
-  validateSearch: (search: Record<string, unknown>) => {
+  validateSearch: (search: Record<string, unknown>): { category?: string } => {
     return {
       category: typeof search.category === "string" ? search.category : undefined,
     };

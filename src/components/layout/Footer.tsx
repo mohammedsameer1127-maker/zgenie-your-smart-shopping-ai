@@ -1,7 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import compareLogo from "@/assets/zgenie-logo.png";
-import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
-import { toast } from "sonner";
 
 const groups = [
   {
@@ -16,7 +14,7 @@ const groups = [
     title: "Support",
     links: [
       { to: "/assistant", label: "Help Center & AI" },
-      { to: "/assistant", label: "Contact Us" },
+      { href: "https://mail.google.com/mail/?view=cm&fs=1&to=zgeniecompany@gmail.com", label: "Contact Us", isExternal: true },
       { to: "/orders", label: "Track Order" },
     ],
   },
@@ -30,14 +28,9 @@ const groups = [
   },
 ];
 
-const SOCIAL_LINKS = [
-  { name: "Twitter", icon: Twitter },
-  { name: "Instagram", icon: Instagram },
-  { name: "Facebook", icon: Facebook },
-  { name: "YouTube", icon: Youtube },
-];
-
 export function Footer() {
+  const gmailUrl = "https://mail.google.com/mail/?view=cm&fs=1&to=zgeniecompany@gmail.com";
+
   return (
     <footer className="border-t border-border bg-card">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-5 lg:px-8">
@@ -48,37 +41,52 @@ export function Footer() {
           <p className="mt-4 max-w-sm text-xs text-muted-foreground leading-relaxed">
             Your smart shopping AI assistant. Compare prices, analyze specs side-by-side across Amazon, Flipkart, Meesho, & more.
           </p>
+
+          {/* Contact / Gmail Symbol */}
           <div className="mt-6 flex items-center gap-2">
-            {SOCIAL_LINKS.map(({ name, icon: Icon }) => (
-              <button
-                key={name}
-                onClick={() => toast.info(`Opening ZGenie on ${name}...`)}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-brand hover:text-brand hover:bg-muted"
-                aria-label={name}
-              >
-                <Icon className="h-4 w-4" />
-              </button>
-            ))}
+            <a
+              href={gmailUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border/80 bg-background transition-all hover:border-red-500/50 hover:bg-red-50/50 dark:hover:bg-red-950/20 hover:scale-105 shadow-2xs"
+              aria-label="Contact ZGenie on Gmail"
+              title="Contact us via Gmail"
+            >
+              <GmailIcon className="h-4 w-4" />
+            </a>
           </div>
         </div>
+
         {groups.map((g) => (
           <div key={g.title}>
             <p className="text-xs font-bold uppercase tracking-wider text-foreground">{g.title}</p>
             <ul className="mt-4 space-y-2.5">
               {g.links.map((l, idx) => (
                 <li key={idx}>
-                  <Link
-                    to={l.to}
-                    className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {l.label}
-                  </Link>
+                  {l.isExternal && l.href ? (
+                    <a
+                      href={l.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {l.label}
+                    </a>
+                  ) : l.to ? (
+                    <Link
+                      to={l.to}
+                      className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {l.label}
+                    </Link>
+                  ) : null}
                 </li>
               ))}
             </ul>
           </div>
         ))}
       </div>
+
       <div className="border-t border-border/70">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
           <p>© {new Date().getFullYear()} ZGenie. All rights reserved.</p>
@@ -86,5 +94,16 @@ export function Footer() {
         </div>
       </div>
     </footer>
+  );
+}
+
+function GmailIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg">
+      <path fill="#4285F4" d="M2 7.5V18a2 2 0 0 0 2 2h3V11.5L2 7.5z" />
+      <path fill="#34A853" d="M17 20h3a2 2 0 0 0 2-2V7.5L17 11.5V20z" />
+      <path fill="#EA4335" d="M17 4H7L12 8.5 17 4z" />
+      <path fill="#FBBC05" d="M2 7.5L12 15l10-7.5V6a2 2 0 0 0-2-2h-3L12 8.5 7 4H4a2 2 0 0 0-2 2v1.5z" />
+    </svg>
   );
 }

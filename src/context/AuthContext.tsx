@@ -45,45 +45,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let unsubscribe = () => {};
     
     try {
-      unsubscribe = onAuthStateChanged(auth, async (user) => {
-        setCurrentUser(user);
-        
-        if (user) {
-          // Ensure Firestore user document exists in 'users' collection
-          try {
-            const userDocRef = doc(db, "users", user.uid);
-            const userDocSnap = await getDoc(userDocRef);
-            if (!userDocSnap.exists()) {
-              await setDoc(userDocRef, {
-                name: user.displayName || "User",
-                email: user.email || "",
-                createdAt: serverTimestamp(),
-              });
-            }
-          } catch (firestoreErr) {
-            console.error("[Firestore] Error checking/creating user document:", firestoreErr);
-          }
+      unsubscribe = onAuthStateChanged(
+        auth,
+        (user) => {
+          // Instant state update to unblock UI render
+          setCurrentUser(user);
+          setLoading(false);
 
-          // If a user logs in, immediately sync them with our MongoDB backend
-          try {
-            // Token is automatically injected by the Axios interceptor in api.ts
-            await api.post('/users/sync', {
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              photoURL: user.photoURL,
-              providerId: user.providerData[0]?.providerId || "password"
-            });
-          } catch (error) {
-            console.error("Failed to sync user with backend:", error);
+          if (user) {
+            // Asynchronous, non-blocking background sync
+            (async () => {
+              try {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                if (!userDocSnap.exists()) {
+                  await setDoc(userDocRef, {
+                    name: user.displayName || "User",
+                    email: user.email || "",
+                    createdAt: serverTimestamp(),
+                  });
+                }
+              } catch (firestoreErr) {
+                console.debug("[Firestore] Notice:", firestoreErr);
+              }
+
+              try {
+                await api.post("/users/sync", {
+                  uid: user.uid,
+                  email: user.email,
+                  displayName: user.displayName,
+                  photoURL: user.photoURL,
+                  providerId: user.providerData[0]?.providerId || "password",
+                });
+              } catch (error) {
+                console.debug("[Backend User Sync] Notice:", error);
+              }
+            })();
           }
+        },
+        (error) => {
+          console.error("Firebase auth error:", error);
+          setLoading(false);
         }
-        
-        setLoading(false);
-      }, (error) => {
-        console.error("Firebase auth error:", error);
-        setLoading(false);
-      });
+      );
     } catch (error) {
       console.error("Failed to initialize auth listener:", error);
       setLoading(false);
