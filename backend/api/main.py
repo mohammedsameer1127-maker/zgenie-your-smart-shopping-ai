@@ -13,35 +13,40 @@ if str(BASE_DIR) not in sys.path:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.core.config import settings
-from backend.api.routes import users, likes, ai
+from backend.api.routes import users, likes, ai, gmail, orders
 from backend.db.mongodb import connect_to_mongo, close_mongo_connection
 import uvicorn
 
 app = FastAPI(title=settings.PROJECT_NAME)
 
-# CORS configuration
+# CORS configuration supporting all dev ports (8080-8089, 5173, 3000)
+ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
+    "http://localhost:8082",
+    "http://127.0.0.1:8082",
+    "http://localhost:8083",
+    "http://127.0.0.1:8083",
+    "http://localhost:8084",
+    "http://127.0.0.1:8084",
+    "http://localhost:8085",
+    "http://127.0.0.1:8085",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-        "http://localhost:8081",
-        "http://127.0.0.1:8081",
-        "http://localhost:8082",
-        "http://127.0.0.1:8082",
-        "http://localhost:8083",
-        "http://127.0.0.1:8083",
-        "http://localhost:8084",
-        "http://127.0.0.1:8084",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 @app.on_event("startup")
@@ -55,10 +60,12 @@ async def shutdown_db_client():
 app.include_router(users.router, prefix="/api")
 app.include_router(likes.router, prefix="/api")
 app.include_router(ai.router, prefix="/api")
+app.include_router(gmail.router, prefix="/api")
+app.include_router(orders.router, prefix="/api")
 
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok"}
 
 if __name__ == "__main__":
-    uvicorn.run("backend.api.main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("backend.api.main:app", host="0.0.0.0", port=8000, reload=True)

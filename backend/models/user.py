@@ -1,21 +1,31 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
 class UserBase(BaseModel):
     uid: str = Field(..., description="Firebase UID")
-    email: EmailStr
-    name: Optional[str] = None
-    photo_url: Optional[str] = None
-    provider_id: Optional[str] = None
+    email: Optional[str] = Field(None, description="User email")
+    name: Optional[str] = Field(None, alias="displayName")
+    photo_url: Optional[str] = Field(None, alias="photoURL")
+    provider_id: Optional[str] = Field(None, alias="providerId")
+
+    model_config = {
+        "populate_by_name": True,
+        "extra": "ignore",
+    }
 
 class UserSync(UserBase):
     pass
 
 class UserProfile(UserBase):
-    created_at: datetime
-    last_login: datetime
+    created_at: Optional[datetime] = None
+    last_login: Optional[datetime] = None
 
 class UserUpdate(BaseModel):
-    name: Optional[str] = None
-    photo_url: Optional[str] = None
+    name: Optional[str] = Field(None, alias="displayName")
+    photo_url: Optional[str] = Field(None, alias="photoURL")
+
+    model_config = {
+        "populate_by_name": True,
+        "extra": "ignore",
+    }

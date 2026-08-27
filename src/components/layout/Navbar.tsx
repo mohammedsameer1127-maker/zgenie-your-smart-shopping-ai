@@ -13,6 +13,7 @@ import {
   ChevronDown,
   Bot,
   History,
+  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDigitalTwin } from "@/context/DigitalTwinContext";
@@ -150,6 +151,13 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
+                    <Link to="/orders" className="flex items-center gap-2 text-xs font-medium">
+                      <Package className="h-4 w-4 text-indigo-500" />
+                      <span>Shopping History</span>
+                    </Link>
+                  </DropdownMenuItem>
+
                   {/* Comparison History Modal Trigger */}
                   <DropdownMenuItem 
                     onClick={() => setHistoryModalOpen(true)}
@@ -238,6 +246,14 @@ export function Navbar() {
               >
                 <Bot className="h-4 w-4" /> Digital Twin
               </button>
+
+              <Link
+                to="/orders"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 px-3.5 py-2.5 text-xs font-semibold text-indigo-600"
+              >
+                <Package className="h-4 w-4" /> Orders
+              </Link>
 
               <button 
                 onClick={() => { 
