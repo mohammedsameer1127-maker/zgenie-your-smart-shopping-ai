@@ -13,7 +13,7 @@ if str(BASE_DIR) not in sys.path:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.core.config import settings
-from backend.api.routes import users, likes, ai, gmail, orders
+from backend.api.routes import users, likes, ai, gmail, orders, compare, debug
 from backend.db.mongodb import connect_to_mongo, close_mongo_connection
 import uvicorn
 
@@ -62,6 +62,10 @@ app.include_router(likes.router, prefix="/api")
 app.include_router(ai.router, prefix="/api")
 app.include_router(gmail.router, prefix="/api")
 app.include_router(orders.router, prefix="/api")
+app.include_router(compare.router, prefix="/api")
+app.include_router(debug.router, prefix="/api")
+app.include_router(debug.router, prefix="") # Support /debug/test-serpapi directly
+
 
 @app.get("/api/health")
 async def health_check():

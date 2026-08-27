@@ -73,8 +73,9 @@ export function LikesProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (error: any) {
-      console.warn("Could not fetch user likes from backend:", error);
+      console.debug("Backend likes offline, using local cached likes:", error?.message || error);
     } finally {
+
       setLoading(false);
     }
   }, [currentUser]);
