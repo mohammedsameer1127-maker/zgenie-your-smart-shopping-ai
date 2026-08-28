@@ -22,8 +22,9 @@ class Settings(BaseSettings):
     # Google OAuth & Gmail Integration
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
-    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/gmail/callback"
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/auth/google/callback"
     FRONTEND_URL: str = "http://localhost:8082"
+    GMAIL_TOKEN_ENCRYPTION_KEY: str = ""
     GMAIL_ENCRYPTION_KEY: str = ""
     
     # Shopping Search Connectors
@@ -48,11 +49,13 @@ if not settings.GOOGLE_CLIENT_ID:
 if not settings.GOOGLE_CLIENT_SECRET:
     settings.GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 if not settings.GOOGLE_REDIRECT_URI:
-    settings.GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/gmail/callback")
+    settings.GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/auth/google/callback")
 if not settings.FRONTEND_URL:
     settings.FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:8082")
+if not settings.GMAIL_TOKEN_ENCRYPTION_KEY:
+    settings.GMAIL_TOKEN_ENCRYPTION_KEY = os.getenv("GMAIL_TOKEN_ENCRYPTION_KEY", "") or os.getenv("GMAIL_ENCRYPTION_KEY", "zgenie_secure_token_encryption_key_2025")
 if not settings.GMAIL_ENCRYPTION_KEY:
-    settings.GMAIL_ENCRYPTION_KEY = os.getenv("GMAIL_ENCRYPTION_KEY", "zgenie_secure_token_encryption_key_2025")
+    settings.GMAIL_ENCRYPTION_KEY = settings.GMAIL_TOKEN_ENCRYPTION_KEY
 if not settings.SERPAPI_KEY:
     settings.SERPAPI_KEY = os.getenv("SERPAPI_KEY", "") or os.getenv("VITE_SERPAPI_KEY", "")
 if not settings.SERPER_API_KEY:

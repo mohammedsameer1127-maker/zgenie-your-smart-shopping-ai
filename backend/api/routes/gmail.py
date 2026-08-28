@@ -107,9 +107,15 @@ async def get_status(current_user: dict = Depends(get_current_user)):
         status_info = await get_gmail_status(user_id)
         return GmailStatusResponse(**status_info)
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch Gmail status: {str(e)}",
+        logger.warning(f"Notice fetching Gmail status: {e}")
+        return GmailStatusResponse(
+            connected=False,
+            email=None,
+            connected_at=None,
+            last_synced_at=None,
+            sync_status="idle",
+            total_orders=0,
+            last_error=None,
         )
 
 @router.post("/sync", response_model=GmailSyncResponse)

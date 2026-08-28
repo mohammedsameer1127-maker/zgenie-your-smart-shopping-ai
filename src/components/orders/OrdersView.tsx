@@ -33,8 +33,9 @@ const RETAILER_CHIPS = [
   { id: "all", label: "All Stores" },
   { id: "Amazon", label: "Amazon", color: "text-amber-600 border-amber-500/20 bg-amber-500/10" },
   { id: "Flipkart", label: "Flipkart", color: "text-blue-600 border-blue-500/20 bg-blue-500/10" },
-  { id: "Meesho", label: "Meesho", color: "text-pink-600 border-pink-500/20 bg-pink-500/10" },
   { id: "Myntra", label: "Myntra", color: "text-rose-600 border-rose-500/20 bg-rose-500/10" },
+  { id: "Meesho", label: "Meesho", color: "text-pink-600 border-pink-500/20 bg-pink-500/10" },
+  { id: "Blinkit", label: "Blinkit", color: "text-yellow-600 border-yellow-500/20 bg-yellow-500/10" },
   { id: "Croma", label: "Croma", color: "text-emerald-600 border-emerald-500/20 bg-emerald-500/10" },
   { id: "Reliance Digital", label: "Reliance Digital", color: "text-red-600 border-red-500/20 bg-red-500/10" },
 ];
@@ -473,11 +474,16 @@ export function OrdersView({ gmailStatusParam, errorParam }: { gmailStatusParam?
                       )}
                     </div>
 
-                    {/* Title & Price */}
+                    {/* Title & Price & Items */}
                     <div className="flex-1 min-w-0 space-y-1">
                       <h4 className="text-xs font-bold text-foreground line-clamp-2 leading-snug">
                         {order.product_name}
                       </h4>
+                      {order.items && order.items.length > 1 && (
+                        <p className="text-[11px] text-muted-foreground font-medium line-clamp-1">
+                          Includes {order.items.length} items ({order.items.map((i) => i.name).join(", ")})
+                        </p>
+                      )}
                       {order.amount ? (
                         <p className="text-sm font-black text-foreground">
                           {order.currency === "INR" || order.currency === "₹" ? "₹" : "$"}

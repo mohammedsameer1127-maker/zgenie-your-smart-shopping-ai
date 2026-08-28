@@ -709,19 +709,42 @@ const CATEGORY_CONFIGS: CategoryConfig[] = [
   },
 ];
 
-// Memory cached master catalog of 10,000 products
-let _MASTER_10000_CATALOG: CatalogProduct[] | null = null;
+// Memory cached master catalog of 100,000 products
+let _MASTER_100000_CATALOG: CatalogProduct[] | null = null;
 
-export function getFull10000Catalog(): CatalogProduct[] {
-  if (_MASTER_10000_CATALOG && _MASTER_10000_CATALOG.length >= 10000) {
-    return _MASTER_10000_CATALOG;
+export function getFull100000Catalog(): CatalogProduct[] {
+  if (_MASTER_100000_CATALOG && _MASTER_100000_CATALOG.length >= 100000) {
+    return _MASTER_100000_CATALOG;
   }
 
   const catalog: CatalogProduct[] = [];
   let globalCounter = 1;
 
+  const editionVariants = [
+    "Special Edition",
+    "Pro Bundle",
+    "Retail Pack",
+    "Elite Kit",
+    "Official Release",
+    "Signature Series",
+    "Collector Pack",
+    "Performance Tier",
+    "Max Series",
+    "Studio Edition",
+    "Verified Partner Pack",
+    "Limited Release",
+    "Ultra Kit",
+    "Custom Edition",
+    "Master Class",
+    "Gold Series",
+    "Platinum Pack",
+    "Titanium Tier",
+    "Prime Selection",
+    "Express Drop",
+  ];
+
   for (const config of CATEGORY_CONFIGS) {
-    const targetCount = config.targetCount; // 1,000 distinct items per category
+    const targetCount = 10000; // 10,000 distinct items per category (100,000 total)
     const imagePool = CATEGORY_IMAGE_SETS[config.id] || CATEGORY_IMAGE_SETS.smartphones;
     const families = config.families;
 
@@ -731,19 +754,19 @@ export function getFull10000Catalog(): CatalogProduct[] {
     let generatedForCategory = 0;
     let iteration = 0;
 
-    while (generatedForCategory < targetCount && iteration < 15000) {
+    while (generatedForCategory < targetCount && iteration < 200000) {
       const famIndex = (generatedForCategory + iteration) % families.length;
       const fam = families[famIndex];
       const modelIndex = Math.floor(iteration / families.length) % fam.models.length;
       const rawModel = fam.models[modelIndex];
 
-      const specIndex = (iteration * 3) % fam.specs.length;
+      const specIndex = (iteration * 3 + Math.floor(iteration / 7)) % fam.specs.length;
       const spec = fam.specs[specIndex];
 
-      const colorIndex = (iteration * 7) % fam.colors.length;
+      const colorIndex = (iteration * 7 + Math.floor(iteration / 11)) % fam.colors.length;
       const color = fam.colors[colorIndex];
 
-      // Build clean product name (prevent duplicate brand prefix like "iQOO iQOO")
+      // Build clean product name
       let cleanModel = rawModel;
       if (cleanModel.toLowerCase().startsWith(fam.brand.toLowerCase())) {
         cleanModel = cleanModel.slice(fam.brand.length).trim();
@@ -754,9 +777,10 @@ export function getFull10000Catalog(): CatalogProduct[] {
 
       // If already generated with identical name, add unique variation index
       if (usedNames.has(fullProductName)) {
-        const editionVariants = ["Special Edition", "Pro Bundle", "Retail Pack", "Elite Kit", "Official Release"];
-        const variantSuffix = editionVariants[(iteration * 5) % editionVariants.length];
-        fullProductName = `${fam.brand} ${cleanModel} [${variantSuffix}] (${spec} - ${color})`;
+        const variantIndex = (iteration * 5 + generatedForCategory) % editionVariants.length;
+        const variantSuffix = editionVariants[variantIndex];
+        const tierNum = (Math.floor(iteration / editionVariants.length) % 50) + 1;
+        fullProductName = `${fam.brand} ${cleanModel} [${variantSuffix} Tier ${tierNum}] (${spec} - ${color})`;
       }
 
       if (usedNames.has(fullProductName)) {
@@ -808,6 +832,11 @@ export function getFull10000Catalog(): CatalogProduct[] {
     }
   }
 
-  _MASTER_10000_CATALOG = catalog;
-  return _MASTER_10000_CATALOG;
+  _MASTER_100000_CATALOG = catalog;
+  return _MASTER_100000_CATALOG;
+}
+
+// Backward compatible alias
+export function getFull10000Catalog(): CatalogProduct[] {
+  return getFull100000Catalog();
 }

@@ -7,7 +7,7 @@ from backend.core.config import settings
 
 def _get_fernet() -> Fernet:
     # Derive a 32-byte urlsafe base64 key deterministically from the configured encryption key
-    raw_key = settings.GMAIL_ENCRYPTION_KEY or "zgenie_default_secure_key_2025"
+    raw_key = settings.GMAIL_TOKEN_ENCRYPTION_KEY or settings.GMAIL_ENCRYPTION_KEY or "zgenie_default_secure_key_2025"
     key_bytes = hashlib.sha256(raw_key.encode()).digest()
     fernet_key = base64.urlsafe_b64encode(key_bytes)
     return Fernet(fernet_key)
