@@ -7,17 +7,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-.output
-.vinxi
-.tanstack/**
-.nitro
+# Dependencies & Build Outputs
+node_modules/
+**/node_modules/
+dist/
+dist-ssr/
+.output/
+**/.output/
+.vinxi/
+.tanstack/
+**/.tanstack/
+.nitro/
+**/.nitro/
 *.local
 
 # Wrangler / Cloudflare
 .wrangler/
+**/.wrangler/
 .dev.vars
 
 # Editor directories and files
@@ -33,9 +39,11 @@ dist-ssr
 
 # Python
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+**/.pytest_cache/
 
 # Environment Variables & Secrets
 .env
@@ -43,6 +51,9 @@ __pycache__/
 *.env
 **/.env
 **/.env.*
+frontend/.env
+frontend/.env.*
 backend/.env
 backend/.env.*
 firebase-adminsdk*.json
+**/firebase-adminsdk*.json
