@@ -44,6 +44,7 @@ __pycache__/
 *$py.class
 .pytest_cache/
 **/.pytest_cache/
+*.pyc
 
 # Environment Variables & Secrets
 .env
