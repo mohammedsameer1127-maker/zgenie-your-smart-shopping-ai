@@ -1,15 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import Optional
 import math
+import logging
 
 from backend.auth.dependencies import get_current_user
 from backend.db.mongodb import db
 from backend.models.order import ShoppingHistoryResponse, ShoppingOrder
 from backend.services.gmail_service import get_gmail_status
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="", tags=["Shopping History"])
 
 @router.get("/shopping-history", response_model=ShoppingHistoryResponse)
+@router.get("/orders", response_model=ShoppingHistoryResponse)
 async def get_shopping_history(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -22,8 +26,19 @@ async def get_shopping_history(
     Returns the authenticated user's imported shopping orders from MongoDB,
     sorted by newest order date first, with pagination and search filtering.
     """
-    user_id = current_user["uid"]
+    user_id = current_user.get("uid") or current_user.get("user_id") or ""
     
+    if db.db is None:
+        return ShoppingHistoryResponse(
+            orders=[],
+            total=0,
+            page=page,
+            limit=limit,
+            total_pages=1,
+            connected=False,
+            last_synced_at=None,
+        )
+
     # Base query constrained to authenticated user
     query: dict = {"user_id": user_id}
     
@@ -66,7 +81,10 @@ async def get_shopping_history(
             doc["id"] = str(doc["_id"])
             orders_list.append(ShoppingOrder(**doc))
             
-        gmail_status = await get_gmail_status(user_id)
+        try:
+            gmail_status = await get_gmail_status(user_id)
+        except Exception:
+            gmail_status = {"connected": False, "last_synced_at": None}
         
         return ShoppingHistoryResponse(
             orders=orders_list,
@@ -78,7 +96,13 @@ async def get_shopping_history(
             last_synced_at=gmail_status.get("last_synced_at"),
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch shopping history: {str(e)}",
+        logger.warning(f"Error fetching shopping history: {e}")
+        return ShoppingHistoryResponse(
+            orders=[],
+            total=0,
+            page=page,
+            limit=limit,
+            total_pages=1,
+            connected=False,
+            last_synced_at=None,
         )

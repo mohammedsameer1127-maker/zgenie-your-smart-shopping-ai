@@ -12,7 +12,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import { fetchGroqProductAnalysis, CompareAnalysisPayload } from "@/lib/groq";
+import {
+  fetchGroqProductAnalysis,
+  generateSmartCompareAnalysis,
+  CompareAnalysisPayload,
+} from "@/lib/groq";
 import { Link } from "@tanstack/react-router";
 import { RichAiMessageRenderer } from "@/components/ai/RichAiMessageRenderer";
 
@@ -40,11 +44,12 @@ export function GroqAnalysisCard({ products, userQuery }: GroqAnalysisCardProps)
 
       if (res.success && res.analysis) {
         setAnalysis(res.analysis);
+      } else {
+        setAnalysis(generateSmartCompareAnalysis({ products, userQuery }));
       }
     } catch (err: any) {
-      console.error("ZGenie AI Analysis Error:", err);
-      const msg = err.message || "Failed to analyze deals with ZGenie AI.";
-      setError(msg);
+      console.warn("ZGenie AI Analysis fallback active:", err);
+      setAnalysis(generateSmartCompareAnalysis({ products, userQuery }));
     } finally {
       setIsLoading(false);
     }

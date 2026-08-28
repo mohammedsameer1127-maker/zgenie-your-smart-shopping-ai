@@ -4,61 +4,89 @@ import re
 
 def parse_price_to_float(price_val: Any) -> Optional[float]:
     """
-    Safely strips currency symbols (₹, $, Rs, etc.), commas, and whitespace
-    to parse into a float value. Defaults to None if unable to parse.
+    Safely strips currency symbols (₹, $, Rs, Rs., INR, etc.), commas, and whitespace
+    to parse into a float value. Handles abbreviation dots (e.g. 'Rs. 54,999') and 
+    thousand separators properly. Validates that price is positive and non-zero.
     """
     if price_val is None:
         return None
     if isinstance(price_val, (int, float)):
-        return float(price_val)
+        val = float(price_val)
+        return val if val > 0 else None
     
     price_str = str(price_val).strip()
-    if not price_str:
+    if not price_str or "-" in price_str:
         return None
+
+    # 1. Remove text currency identifiers (Rs., Rs, INR, USD, EUR, etc.)
+    price_str = re.sub(r"(?i)\b(rs\.|rs|inr|usd|eur|gbp)\b", "", price_str).strip()
     
-    # Remove currency symbols, commas, and letters except numbers and decimal point
-    cleaned = re.sub(r"[^\d.]", "", price_str)
-    if not cleaned:
+    # 2. Remove currency symbols
+    price_str = re.sub(r"[₹$€£¥]", "", price_str).strip()
+
+    # 3. Check if there is a decimal cents/paise part at the end (e.g. .50 or .00)
+    # If the last separator is followed by exactly 2 digits at the end of the string
+    decimal_match = re.search(r"[.,](\d{2})$", price_str)
+    cents_part = ""
+    if decimal_match:
+        cents_part = "." + decimal_match.group(1)
+        price_str = price_str[:decimal_match.start()]
+
+    # 4. Remove all remaining non-digits (commas, dots, spaces)
+    clean_digits = re.sub(r"[^\d]", "", price_str)
+    if not clean_digits:
         return None
-    
+
+    full_num_str = clean_digits + cents_part
     try:
-        # Handle multiple dots if any (e.g. 1.299.00 -> 1299.00)
-        parts = cleaned.split(".")
-        if len(parts) > 2:
-            cleaned = "".join(parts[:-1]) + "." + parts[-1]
-        return float(cleaned)
+        val = float(full_num_str)
+        return val if val > 0 else None
     except (ValueError, TypeError):
         return None
+
+AUTHORIZED_STORES = {
+    "amazon": "Amazon",
+    "flipkart": "Flipkart",
+    "croma": "Croma",
+    "reliance": "Reliance Digital",
+    "blinkit": "Blinkit",
+    "myntra": "Myntra",
+    "meesho": "Meesho",
+    "tatacliq": "Tata CLiQ",
+    "tata cliq": "Tata CLiQ",
+    "ajio": "AJIO",
+    "zepto": "Zepto",
+    "swiggy": "Swiggy Instamart",
+    "instamart": "Swiggy Instamart",
+    "jiomart": "JioMart",
+    "vijay sales": "Vijay Sales",
+    "vijaysales": "Vijay Sales",
+    "apple": "Apple Official",
+    "samsung": "Samsung Store",
+    "oneplus": "OnePlus Store",
+}
+
+def get_authorized_platform_name(source: Optional[str]) -> Optional[str]:
+    """
+    Standardize platform / merchant names and verify if store is authorized.
+    Returns None if platform is not in the authorized platforms whitelist.
+    """
+    if not source:
+        return None
+    s_lower = source.strip().lower()
+    for key, name in AUTHORIZED_STORES.items():
+        if key in s_lower:
+            return name
+    return None
 
 def clean_platform_name(source: Optional[str]) -> str:
     """
     Standardize platform / merchant names to common display names.
     """
-    if not source:
-        return "Online Store"
-    s = source.strip()
-    s_lower = s.lower()
-    if "amazon" in s_lower:
-        return "Amazon"
-    if "flipkart" in s_lower:
-        return "Flipkart"
-    if "blinkit" in s_lower:
-        return "Blinkit"
-    if "croma" in s_lower:
-        return "Croma"
-    if "reliance" in s_lower:
-        return "Reliance Digital"
-    if "meesho" in s_lower:
-        return "Meesho"
-    if "myntra" in s_lower:
-        return "Myntra"
-    if "tata" in s_lower:
-        return "Tata CLiQ"
-    if "zepto" in s_lower:
-        return "Zepto"
-    if "swiggy" in s_lower or "instamart" in s_lower:
-        return "Swiggy Instamart"
-    return s
+    auth = get_authorized_platform_name(source)
+    if auth:
+        return auth
+    return (source or "Online Store").strip()
 
 class IntentPayload(BaseModel):
     query: str = Field(..., description="Main user search query or product name")
@@ -97,4 +125,6 @@ class ComparisonResponse(BaseModel):
     source_connector: str
     total_results: int
     from_cache: bool = False
+    status: str = Field("success", description="Status code: success, no_match_found")
+    message: Optional[str] = Field(None, description="Human-readable status or guidance message")
     products: List[NormalizedProduct]

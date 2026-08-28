@@ -26,6 +26,9 @@ import {
   fetchDynamicCompareProducts,
   inferBrand,
   getRealBrandSuggestions,
+  getAvailableProductSuggestions,
+  VERIFIED_AVAILABLE_SUGGESTIONS,
+  type AvailableProductSuggestion,
   getExactProductImage,
   type PlatformDeal,
   type CompareProduct,
@@ -33,8 +36,8 @@ import {
   getPlatformDomain,
 } from "@/lib/groq";
 
-export type { PlatformDeal, CompareProduct };
-export { getPlatformSearchUrl, getPlatformDomain, inferBrand, getRealBrandSuggestions, getExactProductImage };
+export type { PlatformDeal, CompareProduct, AvailableProductSuggestion };
+export { getPlatformSearchUrl, getPlatformDomain, inferBrand, getRealBrandSuggestions, getAvailableProductSuggestions, getExactProductImage };
 
 /**
  * Valid Products Database
@@ -2482,92 +2485,41 @@ export const VALID_PRODUCTS_DATABASE: CompareProduct[] = [
 // Backwards compatibility export
 export const SAMPLE_PRODUCTS = VALID_PRODUCTS_DATABASE;
 
+import { scoreProductMatch } from "@/lib/productMatcher";
+
 /**
  * Validates a single search term against the authentic product database.
- * Returns the matching CompareProduct or null if no valid product exists.
+ * Returns the matching CompareProduct ONLY if strict exact match passes.
  */
 export function findValidProduct(query: string): CompareProduct | null {
-  const clean = query.trim().toLowerCase();
+  const clean = query.trim();
   if (!clean) return null;
 
   // 1. Exact ID match
-  const byId = VALID_PRODUCTS_DATABASE.find((p) => p.id.toLowerCase() === clean);
+  const byId = VALID_PRODUCTS_DATABASE.find((p) => p.id.toLowerCase() === clean.toLowerCase());
   if (byId) return byId;
 
-  // 2. Exact name match
-  const byExactName = VALID_PRODUCTS_DATABASE.find(
-    (p) => p.name.toLowerCase() === clean
-  );
-  if (byExactName) return byExactName;
-
-  // 3. Exact alias match (highest alias priority)
-  const byExactAlias = VALID_PRODUCTS_DATABASE.find(
-    (p) => p.aliases && p.aliases.some((alias) => alias.toLowerCase() === clean)
-  );
-  if (byExactAlias) return byExactAlias;
-
-  // 4. Exact model name containment with longest prefix
-  const matchingAliases = VALID_PRODUCTS_DATABASE.filter(
-    (p) =>
-      p.name.toLowerCase().includes(clean) ||
-      (p.aliases &&
-        p.aliases.some(
-          (alias) =>
-            alias.toLowerCase().startsWith(clean) ||
-            clean.startsWith(alias.toLowerCase())
-        ))
-  );
-  if (matchingAliases.length === 1) return matchingAliases[0];
-  if (matchingAliases.length > 1) {
-    // Sort by most specific name match
-    matchingAliases.sort((a, b) => {
-      const aExact = a.aliases?.includes(clean) ? 1 : 0;
-      const bExact = b.aliases?.includes(clean) ? 1 : 0;
-      return bExact - aExact;
-    });
-    return matchingAliases[0];
+  // 2. Check strict multi-signal scoreProductMatch against each database item
+  for (const p of VALID_PRODUCTS_DATABASE) {
+    const candidatePrice = p.platforms[0]?.price || 1000;
+    const match = scoreProductMatch(clean, p.name, candidatePrice);
+    if (match.isMatch) {
+      return p;
+    }
   }
 
-  // 5. Keyword token match (all words in clean query exist in product name/aliases)
-  const words = clean.split(/\s+/).filter((w) => w.length > 1);
-  if (words.length > 0) {
-    const byWords = VALID_PRODUCTS_DATABASE.filter((p) => {
-      const fullText = (p.name + " " + p.category + " " + (p.aliases || []).join(" ")).toLowerCase();
-      return words.every((w) => fullText.includes(w));
-    });
-    if (byWords.length > 0) return byWords[0];
+  // 3. Strict match against aliases
+  for (const p of VALID_PRODUCTS_DATABASE) {
+    if (p.aliases) {
+      for (const alias of p.aliases) {
+        if (alias.toLowerCase() === clean.toLowerCase()) {
+          return p;
+        }
+      }
+    }
   }
 
-  // 6. Generic Category / Product Type Resolver (e.g. "men shoes", "shoes", "tshirt", "t-shirt", "jeans", "shirt", "trimmer", "perfume", "backpack")
-  if (clean.includes("shoe") || clean.includes("sneaker") || clean.includes("footwear")) {
-    return VALID_PRODUCTS_DATABASE.find((p) => p.id === "prod-air-jordan-1") || VALID_PRODUCTS_DATABASE.find((p) => p.category.toLowerCase().includes("footwear")) || null;
-  }
-  if (clean.includes("tshirt") || clean.includes("t-shirt") || clean.includes("t shirt")) {
-    return VALID_PRODUCTS_DATABASE.find((p) => p.id === "prod-levis-classic-tshirt") || null;
-  }
-  if (clean.includes("polo")) {
-    return VALID_PRODUCTS_DATABASE.find((p) => p.id === "prod-uspa-polo-tshirt") || null;
-  }
-  if (clean.includes("jeans") || clean.includes("denim")) {
-    return VALID_PRODUCTS_DATABASE.find((p) => p.id === "prod-levis-511-jeans") || null;
-  }
-  if (clean.includes("shirt") && !clean.includes("tshirt") && !clean.includes("t-shirt")) {
-    return VALID_PRODUCTS_DATABASE.find((p) => p.id === "prod-allen-solly-shirt") || null;
-  }
-  if (clean.includes("trimmer") || clean.includes("shaving") || clean.includes("grooming")) {
-    return VALID_PRODUCTS_DATABASE.find((p) => p.id === "prod-philips-trimmer-3000") || null;
-  }
-  if (clean.includes("perfume") || clean.includes("fragrance") || clean.includes("deodorant")) {
-    return VALID_PRODUCTS_DATABASE.find((p) => p.id === "prod-wild-stone-edge-edp") || null;
-  }
-  if (clean.includes("backpack") || clean.includes("bag")) {
-    return VALID_PRODUCTS_DATABASE.find((p) => p.id === "prod-american-tourister-backpack") || null;
-  }
-  if (clean.includes("watch")) {
-    return VALID_PRODUCTS_DATABASE.find((p) => p.id === "prod-apple-watch-ultra-2") || VALID_PRODUCTS_DATABASE.find((p) => p.id === "prod-galaxy-watch-6-classic") || null;
-  }
-
-  // Not found in authentic database
+  // No exact match in local DB -> return null to allow live connectors to search
   return null;
 }
 
@@ -2615,6 +2567,9 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
     }
     return [];
   });
+  const [availableSuggestions, setAvailableSuggestions] = useState<AvailableProductSuggestion[]>(() =>
+    getAvailableProductSuggestions(initialQuery)
+  );
   const [activeSuggestions, setActiveSuggestions] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<"lowest_price" | "highest_quality" | "fastest_delivery" | "max_discount">("lowest_price");
 
@@ -2629,9 +2584,10 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
     setHasSearched(true);
     setIsLoading(true);
 
-    // Initial fallback suggestions
-    const initialSugs = getRealBrandSuggestions(clean);
-    setActiveSuggestions(initialSugs);
+    // Dynamic verified available suggestions with exact pricing
+    const availSugs = getAvailableProductSuggestions(clean);
+    setAvailableSuggestions(availSugs);
+    setActiveSuggestions(availSugs.map((s) => s.query));
 
     // Immediate fast match from local DB if available
     const localParsed = parseComparisonQuery(clean);
@@ -2645,12 +2601,14 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
         setCompareResults(aiRes.results);
         if (aiRes.suggestions && aiRes.suggestions.length > 0) {
           setActiveSuggestions(aiRes.suggestions);
+          const updatedSugs = getAvailableProductSuggestions(clean);
+          setAvailableSuggestions(updatedSugs);
         }
         const hasValid = aiRes.results.some((r) => r.product !== null);
         if (hasValid) {
           toast.success(`Comparing live prices for "${clean}" across verified stores!`);
         } else {
-          toast.info(`No verified product named "${clean}". Check recommendations below.`);
+          toast.info(`No verified product named "${clean}". Check available recommendations below.`);
         }
       }
     } catch (e) {
@@ -2675,11 +2633,53 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
     performSearch(query);
   };
 
-  const copyShareLink = () => {
+  const copyShareLink = async () => {
     if (!submittedQuery) return;
     const shareUrl = `${window.location.origin}/compare?q=${encodeURIComponent(submittedQuery)}`;
-    navigator.clipboard.writeText(shareUrl);
-    toast.success("Live price comparison link copied to clipboard!");
+
+    const validProducts = compareResults
+      .filter((r) => r.product !== null)
+      .map((r) => r.product!);
+    const allDeals = validProducts.flatMap((p) => p.platforms);
+    const lowestDeal =
+      allDeals.length > 0
+        ? allDeals.reduce((min, d) => (d.price < min.price ? d : min), allDeals[0])
+        : undefined;
+
+    const lowestText = lowestDeal
+      ? ` • Lowest Price: ₹${lowestDeal.price.toLocaleString("en-IN")} on ${lowestDeal.platform}`
+      : "";
+    const shareTitle = `${submittedQuery} - Live Price Comparison | ZGenie`;
+    const shareText = `Compare live prices for ${submittedQuery} across Amazon, Flipkart, Croma, Reliance Digital & Blinkit on ZGenie!${lowestText}`;
+
+    // 1. Try Native OS Web Share API (WhatsApp, Telegram, Messages, AirDrop, etc.)
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        toast.success("Comparison shared successfully!");
+        return;
+      } catch (err: any) {
+        if (err?.name === "AbortError") return; // User cancelled the share dialog
+      }
+    }
+
+    // 2. Fallback to Clipboard Copy
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      toast.success("Price comparison link & details copied to clipboard!");
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = `${shareText}\n${shareUrl}`;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      toast.success("Price comparison link copied to clipboard!");
+    }
   };
 
   const allInvalid = hasSearched && !isLoading && compareResults.length > 0 && compareResults.every((r) => r.product === null);
@@ -2709,7 +2709,7 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
     }
   }, [hasSearched, isLoading, allInvalid, submittedQuery, compareResults]);
 
-  // Helper to sort platform deals for a valid product (strictly filters out out-of-stock or unavailable stores)
+  // Helper to sort platform deals for a valid product
   const getSortedDeals = (platforms: PlatformDeal[]): PlatformDeal[] => {
     let sorted = platforms.filter((d) => {
       const stockStr = (d.stock || "").toLowerCase();
@@ -2796,46 +2796,39 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
           </Button>
         </form>
 
-        {/* Dynamic Suggested Recommendations (Shown below search box) */}
-        {activeSuggestions.length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-border/40">
-            <span className="text-[11px] font-bold text-brand flex items-center gap-1">
+        {/* Dynamic Verified Available Product Suggestions */}
+        {availableSuggestions.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap pt-2.5 border-t border-border/40">
+            <span className="text-[11px] font-bold text-brand flex items-center gap-1 shrink-0">
               <Sparkles className="h-3.5 w-3.5 text-brand" />
-              Recommended Products:
+              Available Products:
             </span>
-            {activeSuggestions.map((sug) => (
-              <button
-                key={sug}
-                type="button"
-                onClick={() => handleChipClick(sug)}
-                className="rounded-full bg-brand/10 hover:bg-brand/20 text-brand text-[11px] font-bold px-3 py-1 border border-brand/20 transition-all cursor-pointer shadow-2xs hover:scale-105"
-              >
-                {sug}
-              </button>
-            ))}
+            <div className="flex items-center gap-2 flex-wrap">
+              {availableSuggestions.map((sug) => (
+                <button
+                  key={sug.query}
+                  type="button"
+                  onClick={() => handleChipClick(sug.query)}
+                  className="rounded-full bg-brand/10 hover:bg-brand/20 text-brand text-[11px] font-bold px-3 py-1 border border-brand/20 transition-all cursor-pointer shadow-2xs hover:scale-105"
+                >
+                  {sug.query}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
-        {/* Quick Sample Selector Chips */}
+        {/* Popular Available Comparisons */}
         <div className="flex flex-wrap items-center gap-2 text-xs pt-1 border-t border-border/60">
           <span className="font-semibold text-muted-foreground">Popular Comparisons:</span>
-          {[
-            "iQOO Neo 9 Pro",
-            "Infinix Note 40 Pro",
-            "Apple iPhone 16 Pro",
-            "Samsung Galaxy S24 Ultra",
-            "OnePlus 12",
-            "Google Pixel 9 Pro",
-            "Sony WH-1000XM5",
-            "MacBook Air M2",
-          ].map((chip) => (
+          {VERIFIED_AVAILABLE_SUGGESTIONS.slice(0, 8).map((chip) => (
             <button
-              key={chip}
+              key={chip.query}
               type="button"
-              onClick={() => handleChipClick(chip)}
+              onClick={() => handleChipClick(chip.query)}
               className="rounded-lg bg-muted/60 hover:bg-brand hover:text-white px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors cursor-pointer"
             >
-              {chip}
+              {chip.query}
             </button>
           ))}
         </div>
@@ -2892,34 +2885,34 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
         </div>
       )}
 
-      {/* State 2: Invalid Search ("No results found") with Recommended Similar Products */}
+      {/* State 2: Invalid Search ("No results found") with Verified Available Product Suggestions */}
       {hasSearched && !isLoading && allInvalid && (
-        <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-8 sm:p-12 text-center space-y-5">
+        <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-8 sm:p-12 text-center space-y-6">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
             <AlertCircle className="h-7 w-7" />
           </div>
           <div className="space-y-1.5 max-w-md mx-auto">
-            <h3 className="text-lg font-bold text-foreground">No product named "{submittedQuery}" found</h3>
+            <h3 className="text-lg font-bold text-foreground">No exact match for "{submittedQuery}"</h3>
             <p className="text-xs text-muted-foreground">
-              We couldn't find a verified commercial product matching <strong className="text-foreground">"{submittedQuery}"</strong> in Indian retailer catalogs.
+              We couldn't find an exact commercial match for <strong className="text-foreground">"{submittedQuery}"</strong> across connected retailers right now.
             </p>
           </div>
 
-          {activeSuggestions.length > 0 && (
+          {availableSuggestions.length > 0 && (
             <div className="pt-3 max-w-lg mx-auto space-y-3">
               <p className="text-xs font-semibold text-foreground flex items-center justify-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-brand" />
-                Did you mean one of these real products?
+                Available Verified Products to Compare:
               </p>
               <div className="flex items-center justify-center gap-2 flex-wrap">
-                {activeSuggestions.map((sug) => (
+                {availableSuggestions.slice(0, 6).map((sug) => (
                   <button
-                    key={sug}
+                    key={sug.query}
                     type="button"
-                    onClick={() => handleChipClick(sug)}
+                    onClick={() => handleChipClick(sug.query)}
                     className="rounded-full bg-brand/10 hover:bg-brand/20 text-brand text-xs font-bold px-3.5 py-1.5 border border-brand/20 transition-all cursor-pointer shadow-2xs hover:scale-105"
                   >
-                    {sug}
+                    {sug.query}
                   </button>
                 ))}
               </div>

@@ -90,7 +90,7 @@ async def get_compare_config():
     """
     return {
         "fallback_order": get_configured_fallback_order(),
-        "available_connectors": ["serper", "serpapi"]
+        "available_connectors": ["serpapi", "serper"]
     }
 
 @router.get("/search", response_model=ComparisonResponse)
@@ -100,8 +100,9 @@ async def search_and_compare(
     intent_body: Optional[IntentPayload] = None
 ):
     """
-    Searches for live product prices across online retailers using the
-    connector pipeline (Serper -> SerpApi -> Catalog Demo Data fallback).
+    Searches for exact-match live product prices across online retailers using the
+    connector pipeline (SerpApi -> Serper).
+    Never returns demo items or unrelated substitutes when no match is found.
     """
     query_str = (intent_body.query if intent_body else q) or ""
     if not query_str.strip():
@@ -110,26 +111,30 @@ async def search_and_compare(
             detail="Search query 'q' or intent payload is required."
         )
 
-    intent = intent_body or IntentPayload(query=query_str)
+    intent = intent_body or IntentPayload(query=query_str.strip())
 
-    # Execute search with fallback order
+    # Execute search with fallback order and strict exact matching
     products, connector_used = await connector_manager.search_with_fallback(intent)
 
     if products and len(products) > 0:
+        logger.info(f"Returning {len(products)} exact-match products from '{connector_used}' for query '{intent.query}'")
         return ComparisonResponse(
             query=intent.query,
             source_connector=connector_used,
             total_results=len(products),
             from_cache=False,
+            status="success",
             products=products
         )
 
-    # Fallback to demo catalog
-    logger.info(f"Using demo catalog fallback for comparison query '{intent.query}'")
+    # Explicit No Product Found State — NEVER substitute unrelated items
+    logger.warning(f"[Compare API] No exact-match product found for '{intent.query}' across all connectors.")
     return ComparisonResponse(
         query=intent.query,
-        source_connector="catalog_fallback",
-        total_results=len(DEMO_CATALOG),
+        source_connector="none",
+        total_results=0,
         from_cache=False,
-        products=DEMO_CATALOG
+        status="no_match_found",
+        message=f"We couldn't find an exact match for '{intent.query}' across connected retailers right now.",
+        products=[]
     )

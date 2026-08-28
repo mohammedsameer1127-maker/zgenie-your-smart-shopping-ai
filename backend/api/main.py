@@ -13,7 +13,7 @@ if str(BASE_DIR) not in sys.path:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.core.config import settings
-from backend.api.routes import users, likes, ai, gmail, orders, compare, debug
+from backend.api.routes import users, likes, ai, gmail, orders, compare, debug, auth_google
 from backend.db.mongodb import connect_to_mongo, close_mongo_connection
 import uvicorn
 
@@ -52,6 +52,19 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_db_client():
     await connect_to_mongo()
+    # Startup validation for Google OAuth configuration (never exposes Client Secret)
+    has_client_id = bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_ID.strip())
+    has_client_secret = bool(settings.GOOGLE_CLIENT_SECRET and settings.GOOGLE_CLIENT_SECRET.strip())
+    has_redirect_uri = bool(settings.GOOGLE_REDIRECT_URI and settings.GOOGLE_REDIRECT_URI.strip())
+
+    if has_client_id and has_client_secret and has_redirect_uri:
+        print(f"[Google OAuth] Configuration loaded successfully! Client ID: {settings.GOOGLE_CLIENT_ID} | Redirect URI: {settings.GOOGLE_REDIRECT_URI} | Secret: [SECURELY LOADED]", flush=True)
+    else:
+        missing = []
+        if not has_client_id: missing.append("GOOGLE_CLIENT_ID")
+        if not has_client_secret: missing.append("GOOGLE_CLIENT_SECRET")
+        if not has_redirect_uri: missing.append("GOOGLE_REDIRECT_URI")
+        print(f"[Google OAuth] WARNING: Missing OAuth config variables: {', '.join(missing)}. Gmail connection feature will require these in .env.", flush=True)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -65,8 +78,11 @@ app.include_router(orders.router, prefix="/api")
 app.include_router(compare.router, prefix="/api")
 app.include_router(debug.router, prefix="/api")
 app.include_router(debug.router, prefix="") # Support /debug/test-serpapi directly
+app.include_router(auth_google.router, prefix="/auth/google")
+app.include_router(auth_google.router, prefix="/api/auth/google")
 
 
+@app.get("/health")
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok"}

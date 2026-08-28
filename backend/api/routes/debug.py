@@ -44,3 +44,38 @@ async def test_serpapi(
         "query_hash": compute_query_hash(q, "serpapi"),
         "products": [p.model_dump() for p in results]
     }
+
+@router.get("/config-check")
+async def check_oauth_config():
+    """
+    Dev-only configuration check confirming Google OAuth & core settings.
+    Exposes Client ID and Redirect URI (non-secret), but NEVER exposes Client Secret.
+    """
+    if not getattr(settings, "ENABLE_DEBUG_ROUTES", True):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Debug routes are disabled in current environment."
+        )
+
+    has_client_id = bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_ID.strip())
+    has_client_secret = bool(settings.GOOGLE_CLIENT_SECRET and settings.GOOGLE_CLIENT_SECRET.strip())
+    has_redirect_uri = bool(settings.GOOGLE_REDIRECT_URI and settings.GOOGLE_REDIRECT_URI.strip())
+    has_encryption_key = bool(settings.GMAIL_TOKEN_ENCRYPTION_KEY or settings.GMAIL_ENCRYPTION_KEY)
+
+    is_oauth_ready = has_client_id and has_client_secret and has_redirect_uri and has_encryption_key
+
+    return {
+        "status": "ready" if is_oauth_ready else "incomplete",
+        "google_oauth": {
+            "client_id": settings.GOOGLE_CLIENT_ID if has_client_id else "NOT_CONFIGURED",
+            "redirect_uri": settings.GOOGLE_REDIRECT_URI if has_redirect_uri else "NOT_CONFIGURED",
+            "client_secret_configured": has_client_secret,
+            "encryption_key_configured": has_encryption_key,
+            "is_fully_configured": is_oauth_ready,
+        },
+        "connectors": {
+            "serpapi_configured": bool(settings.SERPAPI_KEY),
+            "serper_configured": bool(settings.SERPER_API_KEY),
+            "fallback_order": settings.CONNECTOR_FALLBACK_ORDER.split(","),
+        }
+    }

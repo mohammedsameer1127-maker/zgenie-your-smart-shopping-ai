@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 
 # Request only the required readonly Gmail scope
 GMAIL_SCOPES = [
+    "openid",
+    "email",
+    "profile",
     "https://www.googleapis.com/auth/gmail.readonly",
 ]
 
@@ -140,23 +143,27 @@ async def handle_oauth_callback(code: str, state: str) -> Dict[str, Any]:
     encrypted_tokens = encrypt_dict(tokens_data)
 
     now = datetime.utcnow()
-    await db.db["gmail_connections"].update_one(
-        {"user_id": user_id},
-        {
-            "$set": {
-                "user_id": user_id,
-                "email": email_address,
-                "encrypted_tokens": encrypted_tokens,
-                "scopes": scopes,
-                "connected_at": now,
-                "sync_status": "idle",
-                "last_error": None,
-                "is_active": True,
-                "updated_at": now,
-            }
-        },
-        upsert=True,
-    )
+    if db.db is not None:
+        try:
+            await db.db["gmail_connections"].update_one(
+                {"user_id": user_id},
+                {
+                    "$set": {
+                        "user_id": user_id,
+                        "email": email_address,
+                        "encrypted_tokens": encrypted_tokens,
+                        "scopes": scopes,
+                        "connected_at": now,
+                        "sync_status": "idle",
+                        "last_error": None,
+                        "is_active": True,
+                        "updated_at": now,
+                    }
+                },
+                upsert=True,
+            )
+        except Exception as db_err:
+            logger.warning(f"Notice storing connection in DB: {db_err}")
 
     logger.info(f"Gmail successfully connected for user {user_id} ({email_address})")
     return {
