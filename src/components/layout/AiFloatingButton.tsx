@@ -1,17 +1,21 @@
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { Sparkles } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export function AiFloatingButton() {
+  const navigate = useNavigate();
+  const { requireAuth } = useAuth();
+
   return (
-    <Link
-      to="/assistant"
-      className="group fixed bottom-6 right-6 z-50 flex h-12 items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 pl-3.5 pr-4 text-xs font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
-      aria-label="Open AI assistant"
+    <button
+      onClick={() => requireAuth(() => navigate({ to: "/assistant" }), "Sign in to chat with the AI Shopping Assistant.")}
+      className="group fixed bottom-6 right-6 z-50 flex h-11 items-center gap-2 rounded-full bg-brand px-4 text-xs font-semibold text-white shadow-md transition-all hover:bg-brand/90 hover:shadow-lg active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      aria-label="Open AI Shopping Assistant"
     >
-      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
-        <Sparkles className="h-3.5 w-3.5" />
+      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20">
+        <Sparkles className="h-3 w-3" />
       </span>
-      <span className="hidden sm:inline">AI Assistant</span>
-    </Link>
+      <span className="hidden sm:inline">AI Shopping Assistant</span>
+    </button>
   );
-}
+}

@@ -26,7 +26,7 @@ function NotificationsPage() {
 
         <div className="space-y-3">
           {[
-            { title: "Price Drop Alert: Aether Pro 14 Laptop", desc: "Price dropped by $200 (13% off). Now $1,299 at major retailers.", time: "2 hours ago" },
+            { title: "Price Drop Alert: Aether Pro 14 Laptop", desc: "Price dropped by ₹15,000 (13% off). Now ₹1,05,000 at major retailers.", time: "2 hours ago" },
             { title: "AI Regret Analysis Updated", desc: "Nimbus Headphones regret risk decreased to 5% based on 400 new verified reviews.", time: "1 day ago" },
           ].map((n, idx) => (
             <div

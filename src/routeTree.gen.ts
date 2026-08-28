@@ -11,16 +11,17 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssistantRouteImport } from './routes/assistant'
-import { Route as CartRouteImport } from './routes/cart'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CompareRouteImport } from './routes/compare'
-import { Route as HomeRouteImport } from './routes/home'
+import { Route as DealsRouteImport } from './routes/deals'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as ShoppingHistoryRouteImport } from './routes/shopping-history'
 import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthSignInRouteImport } from './routes/auth.sign-in'
 import { Route as AuthSignUpRouteImport } from './routes/auth.sign-up'
 
@@ -34,11 +35,6 @@ const AssistantRoute = AssistantRouteImport.update({
   path: '/assistant',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CartRoute = CartRouteImport.update({
-  id: '/cart',
-  path: '/cart',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CategoriesRoute = CategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
@@ -49,9 +45,9 @@ const CompareRoute = CompareRouteImport.update({
   path: '/compare',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
+const DealsRoute = DealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -79,9 +75,19 @@ const ShopRoute = ShopRouteImport.update({
   path: '/shop',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShoppingHistoryRoute = ShoppingHistoryRouteImport.update({
+  id: '/shopping-history',
+  path: '/shopping-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
   path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/auth/forgot-password',
+  path: '/auth/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthSignInRoute = AuthSignInRouteImport.update({
@@ -98,32 +104,34 @@ const AuthSignUpRoute = AuthSignUpRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/assistant': typeof AssistantRoute
-  '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
-  '/home': typeof HomeRoute
+  '/deals': typeof DealsRoute
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
+  '/shopping-history': typeof ShoppingHistoryRoute
   '/wishlist': typeof WishlistRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/assistant': typeof AssistantRoute
-  '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
-  '/home': typeof HomeRoute
+  '/deals': typeof DealsRoute
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
+  '/shopping-history': typeof ShoppingHistoryRoute
   '/wishlist': typeof WishlistRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
 }
@@ -131,16 +139,17 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/assistant': typeof AssistantRoute
-  '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
-  '/home': typeof HomeRoute
+  '/deals': typeof DealsRoute
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
+  '/shopping-history': typeof ShoppingHistoryRoute
   '/wishlist': typeof WishlistRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
 }
@@ -149,48 +158,51 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/assistant'
-    | '/cart'
     | '/categories'
     | '/compare'
-    | '/home'
+    | '/deals'
     | '/notifications'
     | '/orders'
     | '/profile'
     | '/settings'
     | '/shop'
+    | '/shopping-history'
     | '/wishlist'
+    | '/auth/forgot-password'
     | '/auth/sign-in'
     | '/auth/sign-up'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/assistant'
-    | '/cart'
     | '/categories'
     | '/compare'
-    | '/home'
+    | '/deals'
     | '/notifications'
     | '/orders'
     | '/profile'
     | '/settings'
     | '/shop'
+    | '/shopping-history'
     | '/wishlist'
+    | '/auth/forgot-password'
     | '/auth/sign-in'
     | '/auth/sign-up'
   id:
     | '__root__'
     | '/'
     | '/assistant'
-    | '/cart'
     | '/categories'
     | '/compare'
-    | '/home'
+    | '/deals'
     | '/notifications'
     | '/orders'
     | '/profile'
     | '/settings'
     | '/shop'
+    | '/shopping-history'
     | '/wishlist'
+    | '/auth/forgot-password'
     | '/auth/sign-in'
     | '/auth/sign-up'
   fileRoutesById: FileRoutesById
@@ -198,16 +210,17 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AssistantRoute: typeof AssistantRoute
-  CartRoute: typeof CartRoute
   CategoriesRoute: typeof CategoriesRoute
   CompareRoute: typeof CompareRoute
-  HomeRoute: typeof HomeRoute
+  DealsRoute: typeof DealsRoute
   NotificationsRoute: typeof NotificationsRoute
   OrdersRoute: typeof OrdersRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
   ShopRoute: typeof ShopRoute
+  ShoppingHistoryRoute: typeof ShoppingHistoryRoute
   WishlistRoute: typeof WishlistRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
 }
@@ -228,13 +241,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssistantRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/cart': {
-      id: '/cart'
-      path: '/cart'
-      fullPath: '/cart'
-      preLoaderRoute: typeof CartRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/categories': {
       id: '/categories'
       path: '/categories'
@@ -249,11 +255,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompareRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
+    '/deals': {
+      id: '/deals'
+      path: '/deals'
+      fullPath: '/deals'
+      preLoaderRoute: typeof DealsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -291,11 +297,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shopping-history': {
+      id: '/shopping-history'
+      path: '/shopping-history'
+      fullPath: '/shopping-history'
+      preLoaderRoute: typeof ShoppingHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wishlist': {
       id: '/wishlist'
       path: '/wishlist'
       fullPath: '/wishlist'
       preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/auth/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/sign-in': {
@@ -318,16 +338,17 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssistantRoute: AssistantRoute,
-  CartRoute: CartRoute,
   CategoriesRoute: CategoriesRoute,
   CompareRoute: CompareRoute,
-  HomeRoute: HomeRoute,
+  DealsRoute: DealsRoute,
   NotificationsRoute: NotificationsRoute,
   OrdersRoute: OrdersRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
   ShopRoute: ShopRoute,
+  ShoppingHistoryRoute: ShoppingHistoryRoute,
   WishlistRoute: WishlistRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthSignInRoute: AuthSignInRoute,
   AuthSignUpRoute: AuthSignUpRoute,
 }
