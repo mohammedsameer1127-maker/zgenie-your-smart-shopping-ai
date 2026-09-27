@@ -122,6 +122,12 @@ class SerperShoppingConnector(BaseShoppingConnector):
 
         delivery = item.get("delivery") or None
 
+        from datetime import datetime, timezone
+        now_iso = datetime.now(timezone.utc).isoformat()
+        availability = "AVAILABLE"
+        if delivery and ("out of stock" in str(delivery).lower() or "unavailable" in str(delivery).lower()):
+            availability = "OUT_OF_STOCK"
+
         return NormalizedProduct(
             title=str(title).strip(),
             price=price,
@@ -135,6 +141,10 @@ class SerperShoppingConnector(BaseShoppingConnector):
             source="serper",
             delivery=delivery,
             offers=[],
+            availability=availability,
+            seller=str(source_name),
+            last_updated=now_iso,
+            price_source="serper_live",
             raw_data=item
         )
 

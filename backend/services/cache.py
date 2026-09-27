@@ -78,7 +78,7 @@ async def set_cached_products(query: str, source: str, products: List[Normalized
         "created_at": now
     }
 
-    # 2. Save in MongoDB products_cache collection
+    # 2. Save in MongoDB products_cache, retailer_products, and price_history collections
     try:
         if db.db is not None:
             await db.db["products_cache"].update_one(
@@ -95,6 +95,45 @@ async def set_cached_products(query: str, source: str, products: List[Normalized
                 },
                 upsert=True
             )
-            logger.info(f"Products cache SAVED (MongoDB & Memory) for '{query}' [{source}] ({len(products)} items)")
+
+            # Store individual verified retailer listings and append to price_history
+            retailer_col = db.db["retailer_products"]
+            history_col = db.db["price_history"]
+
+            for p in products:
+                if p.price and p.price > 0:
+                    retailer_doc = {
+                        "query": query,
+                        "product_name": p.title,
+                        "retailer": p.platform,
+                        "retailer_product_id": p.retailer_product_id,
+                        "price": p.price,
+                        "original_price": p.original_price,
+                        "currency": p.currency,
+                        "availability": p.availability,
+                        "seller": p.seller,
+                        "product_url": p.product_url,
+                        "image_url": p.image_url,
+                        "delivery_info": p.delivery,
+                        "source": p.source,
+                        "last_updated": p.last_updated or now.isoformat(),
+                    }
+                    await retailer_col.update_one(
+                        {"retailer": p.platform, "product_name": p.title},
+                        {"$set": retailer_doc},
+                        upsert=True
+                    )
+
+                    # Append historical price entry
+                    await history_col.insert_one({
+                        "product_name": p.title,
+                        "retailer": p.platform,
+                        "price": p.price,
+                        "currency": p.currency,
+                        "recorded_at": now
+                    })
+
+            logger.info(f"Products cache & Price History SAVED (MongoDB & Memory) for '{query}' [{source}] ({len(products)} items)")
     except Exception as e:
-        logger.debug(f"MongoDB cache save notice: {e}")
+        logger.debug(f"MongoDB cache & price history save notice: {e}")
+

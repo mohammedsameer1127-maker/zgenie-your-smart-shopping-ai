@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useAuth } from "./AuthContext";
 import api from "@/lib/api";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { toast } from "sonner";
 
 export interface LikedProduct {
@@ -42,79 +44,160 @@ export function LikesProvider({ children }: { children: ReactNode }) {
   // Helper to get user-specific cache key
   const getUserStorageKey = (uid: string) => `zgenie_user_likes_${uid}`;
 
-  // Fetch likes from server when user is authenticated
+  // Fetch likes from server, firestore, and local cache when user is authenticated
   const fetchLikes = useCallback(async () => {
     if (!currentUser) {
+      // Check if guest likes exist
+      if (typeof window !== "undefined") {
+        try {
+          const guestCached = localStorage.getItem("zgenie_guest_likes");
+          if (guestCached) {
+            setLikedProducts(JSON.parse(guestCached));
+            return;
+          }
+        } catch {}
+      }
       setLikedProducts([]);
       return;
     }
 
     const userKey = getUserStorageKey(currentUser.uid);
+    let initialLikes: LikedProduct[] = [];
+
     // 1. Immediately hydrate from this specific user's cached storage if present
     if (typeof window !== "undefined") {
       try {
         const cached = localStorage.getItem(userKey);
         if (cached) {
-          setLikedProducts(JSON.parse(cached));
+          initialLikes = JSON.parse(cached);
+          if (Array.isArray(initialLikes) && initialLikes.length > 0) {
+            setLikedProducts(initialLikes);
+          }
+        }
+
+        // Migrate any unauthenticated guest likes to this newly logged in user
+        const guestLikesRaw = localStorage.getItem("zgenie_guest_likes");
+        if (guestLikesRaw) {
+          const guestLikes: LikedProduct[] = JSON.parse(guestLikesRaw);
+          if (Array.isArray(guestLikes) && guestLikes.length > 0) {
+            const map = new Map<string, LikedProduct>();
+            initialLikes.forEach((p) => map.set(p.product_id, p));
+            guestLikes.forEach((p) => {
+              if (!map.has(p.product_id)) {
+                map.set(p.product_id, { ...p, user_id: currentUser.uid, liked_at: new Date().toISOString() });
+              }
+            });
+            initialLikes = Array.from(map.values());
+            setLikedProducts(initialLikes);
+            localStorage.setItem(userKey, JSON.stringify(initialLikes));
+            localStorage.removeItem("zgenie_guest_likes");
+          }
         }
       } catch (err) {
-        console.warn("Failed to read user cache:", err);
+        console.warn("[LikesContext] Failed to read local user cache:", err);
       }
     }
 
-    // 2. Fetch authoritative likes from MongoDB backend for this user
     setLoading(true);
+
+    // 2. Fetch from Firestore Cloud Storage (persists across devices/browsers)
+    let firestoreLikes: LikedProduct[] = [];
+    try {
+      const likesDocRef = doc(db, "users", currentUser.uid, "user_data", "likes");
+      const snap = await getDoc(likesDocRef);
+      if (snap.exists() && Array.isArray(snap.data()?.items)) {
+        firestoreLikes = snap.data().items;
+      }
+    } catch (fsErr) {
+      console.debug("[LikesContext] Firestore sync notice:", fsErr);
+    }
+
+    // 3. Fetch from MongoDB backend for this user
+    let backendLikes: LikedProduct[] = [];
     try {
       const response = await api.get<LikedProduct[]>("/likes");
-      if (Array.isArray(response.data)) {
-        setLikedProducts(response.data);
-        if (typeof window !== "undefined") {
-          localStorage.setItem(userKey, JSON.stringify(response.data));
-        }
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        backendLikes = response.data;
       }
     } catch (error: any) {
-      console.debug("Backend likes offline, using local cached likes:", error?.message || error);
-    } finally {
-
-      setLoading(false);
+      console.debug("[LikesContext] Backend likes API notice:", error?.message || error);
     }
+
+    // 4. Merge all sources safely by product_id so NO user likes are ever wiped
+    const mergedMap = new Map<string, LikedProduct>();
+    // Add local first
+    initialLikes.forEach((p) => p?.product_id && mergedMap.set(p.product_id, p));
+    // Merge Firestore
+    firestoreLikes.forEach((p) => p?.product_id && mergedMap.set(p.product_id, p));
+    // Merge Backend
+    backendLikes.forEach((p) => p?.product_id && mergedMap.set(p.product_id, p));
+
+    const finalMerged = Array.from(mergedMap.values());
+
+    setLikedProducts(finalMerged);
+
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(userKey, JSON.stringify(finalMerged));
+      } catch {}
+    }
+
+    // If local had likes that weren't in Firestore yet, sync to Firestore
+    if (finalMerged.length > 0 && finalMerged.length > firestoreLikes.length) {
+      try {
+        const likesDocRef = doc(db, "users", currentUser.uid, "user_data", "likes");
+        await setDoc(likesDocRef, { items: finalMerged, updatedAt: new Date().toISOString() }, { merge: true });
+      } catch {}
+    }
+
+    setLoading(false);
   }, [currentUser]);
 
   // When auth state changes (login/logout/switch user)
   useEffect(() => {
-    if (currentUser) {
-      fetchLikes();
-    } else {
-      // User logged out: clear all liked products from state
-      setLikedProducts([]);
-      // Clean up legacy unscoped keys if any
-      if (typeof window !== "undefined") {
-        try {
-          localStorage.removeItem("zgenie_liked_products");
-        } catch {}
-      }
-    }
+    fetchLikes();
   }, [currentUser, fetchLikes]);
 
   const isLiked = useCallback(
     (productId: string): boolean => {
-      if (!currentUser || !productId) return false;
+      if (!productId) return false;
       return likedProducts.some((p) => p.product_id === productId);
     },
-    [currentUser, likedProducts]
+    [likedProducts]
   );
 
   const toggleLike = async (product: LikedProduct): Promise<boolean> => {
     const pId = product.product_id;
     if (!pId) return false;
 
-    // If user is not authenticated, prompt sign-in with email
+    // If user is not authenticated, prompt sign-in with email but allow guest like
     if (!currentUser) {
       requireAuth(
         () => {},
-        "Sign in with your email to save products to your Wishlist."
+        "Sign in with your account to sync your saved likes across all devices."
       );
-      return false;
+      // Still persist locally as guest
+      const currentlyLiked = isLiked(pId);
+      let updated: LikedProduct[] = [];
+      if (currentlyLiked) {
+        updated = likedProducts.filter((p) => p.product_id !== pId);
+        setLikedProducts(updated);
+        toast.info(`Removed "${product.product_name}" from saved likes`);
+      } else {
+        const newItem: LikedProduct = {
+          ...product,
+          liked_at: new Date().toISOString(),
+        };
+        updated = [newItem, ...likedProducts.filter((p) => p.product_id !== pId)];
+        setLikedProducts(updated);
+        toast.success(`Saved "${product.product_name}" to your likes!`);
+      }
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("zgenie_guest_likes", JSON.stringify(updated));
+        } catch {}
+      }
+      return !currentlyLiked;
     }
 
     const currentlyLiked = isLiked(pId);
@@ -146,7 +229,17 @@ export function LikesProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // 2. Background database sync for this user
+    // 2. Background sync to Firestore Cloud Storage
+    (async () => {
+      try {
+        const likesDocRef = doc(db, "users", currentUser.uid, "user_data", "likes");
+        await setDoc(likesDocRef, { items: updatedLikes, updatedAt: new Date().toISOString() }, { merge: true });
+      } catch (fsErr) {
+        console.debug("Firestore likes save notice:", fsErr);
+      }
+    })();
+
+    // 3. Background database sync for this user to FastAPI backend
     setActionLoading((prev) => ({ ...prev, [pId]: true }));
     try {
       if (currentlyLiked) {
@@ -166,7 +259,7 @@ export function LikesProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error: any) {
-      console.warn("Background likes sync error:", error);
+      console.warn("Background likes backend sync notice:", error);
     } finally {
       setActionLoading((prev) => {
         const next = { ...prev };
@@ -187,7 +280,7 @@ export function LikesProvider({ children }: { children: ReactNode }) {
         loading,
         actionLoading,
         refreshLikes: fetchLikes,
-        likesCount: currentUser ? likedProducts.length : 0,
+        likesCount: likedProducts.length,
       }}
     >
       {children}

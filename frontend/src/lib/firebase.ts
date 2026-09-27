@@ -63,10 +63,12 @@ if (typeof window !== "undefined") {
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
 
-// Set session persistence so auth state is cleared when the browser/tab is closed
+// Set local persistence so auth state persists across browser reloads and sessions
 if (typeof window !== "undefined") {
-  setPersistence(auth, browserSessionPersistence).catch((err) => {
-    console.warn("[Firebase Auth] Could not set session persistence:", err);
+  import("firebase/auth").then(({ browserLocalPersistence }) => {
+    setPersistence(auth, browserLocalPersistence).catch((err) => {
+      console.warn("[Firebase Auth] Could not set local persistence:", err);
+    });
   });
 }
 

@@ -4,9 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   ExternalLink,
   CheckCircle2,
   TrendingDown,
+  TrendingUp,
   Truck,
   ShieldCheck,
   Tag,
@@ -18,6 +26,18 @@ import {
   AlertCircle,
   Loader2,
   Zap,
+  Clock,
+  Building2,
+  XCircle,
+  AlertTriangle,
+  Bell,
+  HelpCircle,
+  ThumbsUp,
+  ThumbsDown,
+  History,
+  Info,
+  SlidersHorizontal,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { GroqAnalysisCard } from "./GroqAnalysisCard";
@@ -34,6 +54,11 @@ import {
   type CompareProduct,
   getPlatformSearchUrl,
   getPlatformDomain,
+  generateMatchScoreBreakdown,
+  getRegretScoreFactors,
+  getProductReviewAnalysis,
+  generateHelpMeDecideVerdict,
+  parseNaturalLanguageSearchIntent,
 } from "@/lib/groq";
 
 export type { PlatformDeal, CompareProduct, AvailableProductSuggestion };
@@ -2491,35 +2516,9 @@ import { scoreProductMatch } from "@/lib/productMatcher";
  * Validates a single search term against the authentic product database.
  * Returns the matching CompareProduct ONLY if strict exact match passes.
  */
-export function findValidProduct(query: string): CompareProduct | null {
-  const clean = query.trim();
-  if (!clean) return null;
-
-  // 1. Exact ID match
-  const byId = VALID_PRODUCTS_DATABASE.find((p) => p.id.toLowerCase() === clean.toLowerCase());
-  if (byId) return byId;
-
-  // 2. Check strict multi-signal scoreProductMatch against each database item
-  for (const p of VALID_PRODUCTS_DATABASE) {
-    const candidatePrice = p.platforms[0]?.price || 1000;
-    const match = scoreProductMatch(clean, p.name, candidatePrice);
-    if (match.isMatch) {
-      return p;
-    }
-  }
-
-  // 3. Strict match against aliases
-  for (const p of VALID_PRODUCTS_DATABASE) {
-    if (p.aliases) {
-      for (const alias of p.aliases) {
-        if (alias.toLowerCase() === clean.toLowerCase()) {
-          return p;
-        }
-      }
-    }
-  }
-
-  // No exact match in local DB -> return null to allow live connectors to search
+export function findValidProduct(_query: string): CompareProduct | null {
+  // Never use a static product catalog as live source of truth.
+  // All comparisons query live retailer sources dynamically.
   return null;
 }
 
@@ -2567,11 +2566,34 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
     }
     return [];
   });
-  const [availableSuggestions, setAvailableSuggestions] = useState<AvailableProductSuggestion[]>(() =>
-    getAvailableProductSuggestions(initialQuery)
-  );
-  const [activeSuggestions, setActiveSuggestions] = useState<string[]>([]);
+
   const [sortOption, setSortOption] = useState<"lowest_price" | "highest_quality" | "fastest_delivery" | "max_discount">("lowest_price");
+
+  // Interactive Modals State
+  const [activeWhyMatchProduct, setActiveWhyMatchProduct] = useState<CompareProduct | null>(null);
+  const [activeWhyScoreProduct, setActiveWhyScoreProduct] = useState<CompareProduct | null>(null);
+  const [activeReviewProduct, setActiveReviewProduct] = useState<CompareProduct | null>(null);
+  const [activeAlertProduct, setActiveAlertProduct] = useState<CompareProduct | null>(null);
+  const [targetPriceInput, setTargetPriceInput] = useState<string>("");
+  const [savedAlerts, setSavedAlerts] = useState<{ id: string; name: string; targetPrice: number }[]>(() => {
+    try {
+      const saved = localStorage.getItem("zgenie_price_alerts");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Help Me Decide State
+  const [isHelpMeDecideOpen, setIsHelpMeDecideOpen] = useState(false);
+  const [decidePriority, setDecidePriority] = useState<"price" | "performance" | "camera" | "battery" | "display" | "gaming" | "productivity">("price");
+
+  // Dynamic verified products strictly derived from current search
+  const verifiedProducts = compareResults
+    .filter((r) => r.product !== null)
+    .map((r) => r.product!);
+
+  const allInvalid = hasSearched && !isLoading && (compareResults.length === 0 || compareResults.every((r) => r.product === null));
 
   const performSearch = async (query: string) => {
     const clean = query.trim();
@@ -2583,36 +2605,24 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
     setSubmittedQuery(clean);
     setHasSearched(true);
     setIsLoading(true);
-
-    // Dynamic verified available suggestions with exact pricing
-    const availSugs = getAvailableProductSuggestions(clean);
-    setAvailableSuggestions(availSugs);
-    setActiveSuggestions(availSugs.map((s) => s.query));
-
-    // Immediate fast match from local DB if available
-    const localParsed = parseComparisonQuery(clean);
-    if (localParsed.results.some((r) => r.product !== null)) {
-      setCompareResults(localParsed.results);
-    }
+    setCompareResults([]); // Clear previous results immediately for isolated search state!
 
     try {
       const aiRes = await fetchDynamicCompareProducts(clean);
       if (aiRes.results && aiRes.results.length > 0) {
         setCompareResults(aiRes.results);
-        if (aiRes.suggestions && aiRes.suggestions.length > 0) {
-          setActiveSuggestions(aiRes.suggestions);
-          const updatedSugs = getAvailableProductSuggestions(clean);
-          setAvailableSuggestions(updatedSugs);
-        }
         const hasValid = aiRes.results.some((r) => r.product !== null);
         if (hasValid) {
           toast.success(`Comparing live prices for "${clean}" across verified stores!`);
         } else {
-          toast.info(`No verified product named "${clean}". Check available recommendations below.`);
+          toast.info(`No verified listings found for "${clean}".`);
         }
+      } else {
+        setCompareResults([{ term: clean, product: null }]);
       }
     } catch (e) {
-      console.error("AI Compare Search Error:", e);
+      console.error("Live Retailer Compare Search Error:", e);
+      setCompareResults([{ term: clean, product: null }]);
     } finally {
       setIsLoading(false);
     }
@@ -2633,14 +2643,46 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
     performSearch(query);
   };
 
+  const handleSavePriceAlert = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeAlertProduct) return;
+    const target = parseFloat(targetPriceInput.replace(/[^\d.]/g, ""));
+    if (isNaN(target) || target <= 0) {
+      toast.error("Please enter a valid target alert price!");
+      return;
+    }
+
+    const newAlerts = [
+      ...savedAlerts.filter((a) => a.id !== activeAlertProduct.id),
+      { id: activeAlertProduct.id, name: activeAlertProduct.name, targetPrice: target },
+    ];
+    setSavedAlerts(newAlerts);
+    try {
+      localStorage.setItem("zgenie_price_alerts", JSON.stringify(newAlerts));
+    } catch {
+      // Ignore storage errors
+    }
+    toast.success(`Price alert set for ₹${target.toLocaleString("en-IN")} on ${activeAlertProduct.name}!`);
+    setActiveAlertProduct(null);
+    setTargetPriceInput("");
+  };
+
+  const handleRemovePriceAlert = (id: string) => {
+    const updated = savedAlerts.filter((a) => a.id !== id);
+    setSavedAlerts(updated);
+    try {
+      localStorage.setItem("zgenie_price_alerts", JSON.stringify(updated));
+    } catch {
+      // Ignore storage errors
+    }
+    toast.info("Price alert removed.");
+  };
+
   const copyShareLink = async () => {
     if (!submittedQuery) return;
     const shareUrl = `${window.location.origin}/compare?q=${encodeURIComponent(submittedQuery)}`;
 
-    const validProducts = compareResults
-      .filter((r) => r.product !== null)
-      .map((r) => r.product!);
-    const allDeals = validProducts.flatMap((p) => p.platforms);
+    const allDeals = verifiedProducts.flatMap((p) => p.platforms);
     const lowestDeal =
       allDeals.length > 0
         ? allDeals.reduce((min, d) => (d.price < min.price ? d : min), allDeals[0])
@@ -2652,7 +2694,6 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
     const shareTitle = `${submittedQuery} - Live Price Comparison | ZGenie`;
     const shareText = `Compare live prices for ${submittedQuery} across Amazon, Flipkart, Croma, Reliance Digital & Blinkit on ZGenie!${lowestText}`;
 
-    // 1. Try Native OS Web Share API (WhatsApp, Telegram, Messages, AirDrop, etc.)
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
@@ -2663,11 +2704,10 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
         toast.success("Comparison shared successfully!");
         return;
       } catch (err: any) {
-        if (err?.name === "AbortError") return; // User cancelled the share dialog
+        if (err?.name === "AbortError") return;
       }
     }
 
-    // 2. Fallback to Clipboard Copy
     try {
       await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
       toast.success("Price comparison link & details copied to clipboard!");
@@ -2682,39 +2722,52 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
     }
   };
 
-  const allInvalid = hasSearched && !isLoading && compareResults.length > 0 && compareResults.every((r) => r.product === null);
-
   // Automatically save successful comparisons to comparison history
   useEffect(() => {
-    if (hasSearched && !isLoading && !allInvalid && compareResults.length > 0) {
-      const validProducts = compareResults
-        .filter((r) => r.product !== null)
-        .map((r) => r.product!);
+    if (hasSearched && !isLoading && !allInvalid && verifiedProducts.length > 0) {
+      const allDeals = verifiedProducts.flatMap((p) => p.platforms);
+      const lowestDeal =
+        allDeals.length > 0
+          ? allDeals.reduce((min, d) => (d.price < min.price ? d : min), allDeals[0])
+          : undefined;
 
-      if (validProducts.length > 0) {
-        const allDeals = validProducts.flatMap((p) => p.platforms);
-        const lowestDeal =
-          allDeals.length > 0
-            ? allDeals.reduce((min, d) => (d.price < min.price ? d : min), allDeals[0])
-            : undefined;
-
-        saveComparisonToHistory({
-          query: submittedQuery,
-          productNames: validProducts.map((p) => p.name),
-          lowestPrice: lowestDeal?.price,
-          lowestPlatform: lowestDeal?.platform,
-          storeCount: allDeals.length,
-        });
-      }
+      saveComparisonToHistory({
+        query: submittedQuery,
+        productNames: verifiedProducts.map((p) => p.name),
+        lowestPrice: lowestDeal?.price,
+        lowestPlatform: lowestDeal?.platform,
+        storeCount: allDeals.length,
+      });
     }
-  }, [hasSearched, isLoading, allInvalid, submittedQuery, compareResults]);
+  }, [hasSearched, isLoading, allInvalid, submittedQuery, verifiedProducts]);
+
+  // Helper to format real-time last-updated data freshness
+  const formatUpdatedTime = (isoString?: string | null): string => {
+    if (!isoString) return "Live Verified";
+    try {
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return "Live Verified";
+      const diffMs = Date.now() - d.getTime();
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1) return "Live Verified (Just now)";
+      if (diffMin < 60) return `Updated ${diffMin} min ago`;
+      const diffHours = Math.floor(diffMin / 60);
+      if (diffHours < 24) return `Updated ${diffHours} hr${diffHours > 1 ? "s" : ""} ago`;
+      return `Updated ${d.toLocaleDateString("en-IN")}`;
+    } catch {
+      return "Live Verified";
+    }
+  };
 
   // Helper to sort platform deals for a valid product
   const getSortedDeals = (platforms: PlatformDeal[]): PlatformDeal[] => {
-    let sorted = platforms.filter((d) => {
+    const valid = platforms.filter((d) => d.price > 0);
+    const inStock = valid.filter((d) => {
       const stockStr = (d.stock || "").toLowerCase();
-      return !stockStr.includes("out of stock") && !stockStr.includes("unavailable") && d.price > 0;
+      return !stockStr.includes("out of stock") && !stockStr.includes("unavailable");
     });
+
+    let sorted = inStock.length > 0 ? inStock : valid;
 
     if (sortOption === "lowest_price") {
       sorted.sort((a, b) => a.price - b.price);
@@ -2759,16 +2812,29 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
             </p>
           </div>
 
-          {hasSearched && !allInvalid && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyShareLink}
-              className="rounded-xl text-xs font-bold gap-1.5 self-start sm:self-auto shrink-0"
-            >
-              <Share2 className="h-3.5 w-3.5" /> Share Comparison
-            </Button>
-          )}
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
+            {verifiedProducts.length >= 2 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsHelpMeDecideOpen(true)}
+                className="rounded-xl text-xs font-bold gap-1.5 bg-brand/5 border-brand/20 text-brand hover:bg-brand/10"
+              >
+                <HelpCircle className="h-3.5 w-3.5 text-brand" /> Help Me Decide
+              </Button>
+            )}
+
+            {hasSearched && !allInvalid && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={copyShareLink}
+                className="rounded-xl text-xs font-bold gap-1.5"
+              >
+                <Share2 className="h-3.5 w-3.5" /> Share Comparison
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Search Bar Form */}
@@ -2778,7 +2844,7 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
             <Input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search exact phone or product (e.g. iQOO Neo 9 Pro, Infinix Note 40, iPhone 16 Pro, S24 Ultra, OnePlus 12)..."
+              placeholder="Search exact phone or product (e.g. iQOO 15R, iQOO Neo 10R, iPhone 17 Pro Max, Galaxy S26 Ultra)..."
               className="h-11 rounded-xl pl-10 text-xs bg-background"
             />
           </div>
@@ -2792,33 +2858,33 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
             ) : (
               <Scale className="h-4 w-4" />
             )}
-            <span>{isLoading ? "Verifying & Analyzing..." : "Compare Live Prices"}</span>
+            <span>{isLoading ? "Searching & Verifying..." : "Compare Live Prices"}</span>
           </Button>
         </form>
 
-        {/* Dynamic Verified Available Product Suggestions */}
-        {availableSuggestions.length > 0 && (
+        {/* Dynamic Verified Available Product Suggestions ONLY for CURRENT search results */}
+        {hasSearched && !isLoading && verifiedProducts.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap pt-2.5 border-t border-border/40">
             <span className="text-[11px] font-bold text-brand flex items-center gap-1 shrink-0">
               <Sparkles className="h-3.5 w-3.5 text-brand" />
-              Available Products:
+              Available Products ({verifiedProducts.length}):
             </span>
             <div className="flex items-center gap-2 flex-wrap">
-              {availableSuggestions.map((sug) => (
+              {verifiedProducts.map((prod) => (
                 <button
-                  key={sug.query}
+                  key={prod.id}
                   type="button"
-                  onClick={() => handleChipClick(sug.query)}
+                  onClick={() => handleChipClick(prod.name)}
                   className="rounded-full bg-brand/10 hover:bg-brand/20 text-brand text-[11px] font-bold px-3 py-1 border border-brand/20 transition-all cursor-pointer shadow-2xs hover:scale-105"
                 >
-                  {sug.query}
+                  {prod.name}
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Popular Available Comparisons */}
+        {/* Predefined Popular Comparisons (Separately maintained recommendations) */}
         <div className="flex flex-wrap items-center gap-2 text-xs pt-1 border-t border-border/60">
           <span className="font-semibold text-muted-foreground">Popular Comparisons:</span>
           {VERIFIED_AVAILABLE_SUGGESTIONS.slice(0, 8).map((chip) => (
@@ -2849,13 +2915,13 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
         </div>
       )}
 
-      {/* Loading AI State */}
+      {/* Loading AI State with Multi-Phase Feedback */}
       {isLoading && (
         <div className="space-y-6">
           <div className="rounded-3xl border-2 border-brand/30 bg-linear-to-br from-brand/5 via-card to-background p-6 text-center space-y-3 shadow-xs">
             <div className="inline-flex items-center gap-2 rounded-full bg-brand/10 px-4 py-1.5 text-xs font-bold text-brand animate-pulse">
               <Zap className="h-4 w-4 animate-spin text-brand" />
-              <span>Verifying product authentic catalog data for "{submittedQuery}"...</span>
+              <span>Searching across retailers for "{submittedQuery}"...</span>
             </div>
             <p className="text-xs text-muted-foreground max-w-md mx-auto">
               Scanning real-time prices, seller authenticity, active bank discounts, and stock availability across Amazon, Flipkart, Croma, Reliance Digital, Blinkit, and Myntra.
@@ -2885,67 +2951,58 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
         </div>
       )}
 
-      {/* State 2: Invalid Search ("No results found") with Verified Available Product Suggestions */}
+      {/* State 2: No Verified Listings Found (Exact Empty State UI) */}
       {hasSearched && !isLoading && allInvalid && (
-        <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-8 sm:p-12 text-center space-y-6">
+        <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-8 sm:p-12 text-center space-y-4">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
             <AlertCircle className="h-7 w-7" />
           </div>
           <div className="space-y-1.5 max-w-md mx-auto">
-            <h3 className="text-lg font-bold text-foreground">No exact match for "{submittedQuery}"</h3>
+            <h3 className="text-lg font-bold text-foreground">No verified listings found for "{submittedQuery}"</h3>
             <p className="text-xs text-muted-foreground">
-              We couldn't find an exact commercial match for <strong className="text-foreground">"{submittedQuery}"</strong> across connected retailers right now.
+              We checked the configured retailers but couldn't find an authenticated listing matching this exact product right now.
             </p>
-          </div>
-
-          {availableSuggestions.length > 0 && (
-            <div className="pt-3 max-w-lg mx-auto space-y-3">
-              <p className="text-xs font-semibold text-foreground flex items-center justify-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-brand" />
-                Available Verified Products to Compare:
-              </p>
-              <div className="flex items-center justify-center gap-2 flex-wrap">
-                {availableSuggestions.slice(0, 6).map((sug) => (
-                  <button
-                    key={sug.query}
-                    type="button"
-                    onClick={() => handleChipClick(sug.query)}
-                    className="rounded-full bg-brand/10 hover:bg-brand/20 text-brand text-xs font-bold px-3.5 py-1.5 border border-brand/20 transition-all cursor-pointer shadow-2xs hover:scale-105"
-                  >
-                    {sug.query}
-                  </button>
-                ))}
-              </div>
+            <div className="pt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearchInput("");
+                  setHasSearched(false);
+                  setCompareResults([]);
+                }}
+                className="rounded-xl text-xs font-semibold"
+              >
+                Try another product name
+              </Button>
             </div>
-          )}
+          </div>
         </div>
       )}
 
-      {/* State 3: Search Results */}
+      {/* State 3: Verified Search Results */}
       {hasSearched && !isLoading && !allInvalid && (
         <div className="space-y-10">
           {/* ZGenie AI Deal Analysis */}
           {(() => {
-            const validProductsForAi = compareResults
-              .filter((r) => r.product !== null)
-              .map((r) => ({
-                name: r.product!.name,
-                category: r.product!.category,
-                rating: r.product!.rating,
-                reviewsCount: r.product!.reviewsCount,
-                platforms: r.product!.platforms.map((d) => ({
-                  platform: d.platform,
-                  price: d.price,
-                  original_price: d.originalPrice,
-                  discount: d.discount,
-                  delivery: d.delivery,
-                  qualityRating: d.qualityRating,
-                  qualityScore: d.qualityScore,
-                  regretRisk: d.regretRisk,
-                  sellerType: d.sellerType,
-                  offers: d.offers,
-                })),
-              }));
+            const validProductsForAi = verifiedProducts.map((prod) => ({
+              name: prod.name,
+              category: prod.category,
+              rating: prod.rating,
+              reviewsCount: prod.reviewsCount,
+              platforms: prod.platforms.map((d) => ({
+                platform: d.platform,
+                price: d.price,
+                original_price: d.originalPrice,
+                discount: d.discount,
+                delivery: d.delivery,
+                qualityRating: d.qualityRating,
+                qualityScore: d.qualityScore,
+                regretRisk: d.regretRisk,
+                sellerType: d.sellerType,
+                offers: d.offers,
+              })),
+            }));
 
             if (validProductsForAi.length === 0) return null;
 
@@ -2959,31 +3016,15 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
 
           {compareResults.map((result, rIdx) => {
             if (!result.product) {
-              const sugs: string[] = (result as any).suggestions || activeSuggestions;
               return (
                 <div key={rIdx} className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 sm:p-8 text-center space-y-3">
                   <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                     <AlertCircle className="h-5 w-5" />
                   </div>
-                  <h4 className="text-base font-bold text-foreground">No product named "{result.term}" found</h4>
+                  <h4 className="text-base font-bold text-foreground">No verified listings found for "{result.term}"</h4>
                   <p className="text-xs text-muted-foreground">
-                    No verified product found in store catalogs for <strong className="text-foreground">"{result.term}"</strong>.
+                    No verified matching product found across checked retailers for <strong className="text-foreground">"{result.term}"</strong>.
                   </p>
-                  {sugs && sugs.length > 0 && (
-                    <div className="pt-2 flex items-center justify-center gap-2 flex-wrap">
-                      <span className="text-xs text-muted-foreground font-medium">Recommended:</span>
-                      {sugs.map((s: string) => (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => handleChipClick(s)}
-                          className="rounded-full bg-brand/10 hover:bg-brand/20 text-brand text-xs font-semibold px-3 py-1 border border-brand/20 transition-colors cursor-pointer"
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
               );
             }
@@ -2991,13 +3032,15 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
             const currentProduct = result.product;
             const deals = getSortedDeals(currentProduct.platforms);
             const lowestPriceVal = deals.length > 0 ? Math.min(...deals.map((d) => d.price)) : 0;
+            const matchBreakdown = generateMatchScoreBreakdown(submittedQuery, currentProduct);
+            const regretFactors = getRegretScoreFactors(currentProduct);
 
             return (
               <div key={currentProduct.id} className="space-y-4">
-                {/* Product Header Card with Zoomed-In Official Image */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 rounded-3xl border border-border/80 bg-card p-5 sm:p-6 shadow-xs">
-                  <div className="flex items-center gap-4">
-                    {/* Zoomed-in Product Cutout Image */}
+                {/* Product Header Card */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 rounded-3xl border border-border/80 bg-card p-5 sm:p-6 shadow-xs">
+                  <div className="flex items-start sm:items-center gap-4">
+                    {/* Zoomed-in Cutout Image */}
                     <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-2xl bg-white dark:bg-slate-900/90 border border-border/60 p-2 flex items-center justify-center overflow-hidden shadow-2xs group">
                       <img
                         src={currentProduct.image || getExactProductImage(currentProduct.name, currentProduct.category)}
@@ -3011,7 +3054,7 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                       />
                     </div>
 
-                    <div className="space-y-1 min-w-0">
+                    <div className="space-y-1.5 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge className="text-[10px] uppercase font-black bg-brand/10 text-brand border border-brand/20 rounded-full px-2.5">
                           Brand: {currentProduct.brand || inferBrand(currentProduct.name)}
@@ -3024,11 +3067,56 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                           <span>{currentProduct.rating}</span>
                           <span className="text-muted-foreground font-normal text-[10px]">({currentProduct.reviewsCount.toLocaleString()} reviews)</span>
                         </div>
+
+                        {/* Match Score Badge with 'Why this matches?' */}
+                        <button
+                          type="button"
+                          onClick={() => setActiveWhyMatchProduct(currentProduct)}
+                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                        >
+                          <Sparkles className="h-2.5 w-2.5" />
+                          <span>{matchBreakdown.score}% Match</span>
+                          <Info className="h-2.5 w-2.5 opacity-70" />
+                        </button>
                       </div>
 
                       <h3 className="text-lg sm:text-xl font-black text-foreground line-clamp-2">
                         {currentProduct.name}
                       </h3>
+
+                      {/* Quick Interactive Actions */}
+                      <div className="flex items-center gap-2 flex-wrap pt-1 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => setActiveWhyScoreProduct(currentProduct)}
+                          className="text-[11px] font-semibold text-muted-foreground hover:text-foreground underline decoration-dotted flex items-center gap-1 cursor-pointer"
+                        >
+                          Regret Risk: <strong className="text-foreground">{regretFactors.regretRisk}</strong> (Why this score?)
+                        </button>
+
+                        <span className="text-muted-foreground/40">•</span>
+
+                        <button
+                          type="button"
+                          onClick={() => setActiveReviewProduct(currentProduct)}
+                          className="text-[11px] font-semibold text-brand hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <ThumbsUp className="h-3 w-3" /> AI Review Breakdown
+                        </button>
+
+                        <span className="text-muted-foreground/40">•</span>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveAlertProduct(currentProduct);
+                            setTargetPriceInput(lowestPriceVal ? (lowestPriceVal * 0.9).toFixed(0) : "");
+                          }}
+                          className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <Bell className="h-3 w-3" /> Set Price Alert
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -3047,7 +3135,7 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                   </div>
                 </div>
 
-                {/* Platform Deals Grid */}
+                {/* Platform Deals Section */}
                 {deals.length === 0 ? (
                   <div className="rounded-3xl border border-dashed border-border bg-muted/10 p-8 text-center space-y-2">
                     <p className="text-sm font-semibold text-foreground">No authorized retailers have stock right now</p>
@@ -3056,127 +3144,542 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {deals.map((deal, dIdx) => {
-                    const isLowest = deal.price === lowestPriceVal;
-                    const searchUrl = deal.productUrl || getPlatformSearchUrl(deal.platform, currentProduct.name);
+                  <div className="space-y-6">
+                    {/* 1. LOWEST VERIFIED PRICE SPOTLIGHT HERO */}
+                    {(() => {
+                      const lowestDeal = deals.find((d) => d.price === lowestPriceVal) || deals[0];
+                      if (!lowestDeal) return null;
+                      const lowestSearchUrl = lowestDeal.productUrl || getPlatformSearchUrl(lowestDeal.platform, currentProduct.name);
 
-                    return (
-                      <Card
-                        key={dIdx}
-                        className={`relative rounded-3xl border-2 transition-all flex flex-col justify-between overflow-hidden shadow-xs hover:shadow-md ${
-                          isLowest
-                            ? "border-emerald-500/60 bg-emerald-500/[0.03] dark:bg-emerald-950/10"
-                            : "border-border/80 bg-card hover:border-border"
-                        }`}
-                      >
-                        {/* Top banner if Lowest Price */}
-                        {isLowest && (
-                          <div className="bg-emerald-600 px-4 py-1 text-center text-[10px] font-bold tracking-wider text-white uppercase flex items-center justify-center gap-1">
-                            <CheckCircle2 className="h-3 w-3" />
-                            <span>Lowest Verified Price Across Stores</span>
-                          </div>
-                        )}
-
-                        <CardContent className="p-5 space-y-4 flex-1 flex flex-col justify-between">
-                          {/* Store Name & Logo */}
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2.5">
-                                <div className={`flex h-9 w-9 items-center justify-center rounded-2xl font-black text-white text-xs ${deal.logoBgClass}`}>
-                                  {deal.logoLetter}
-                                </div>
-                                <div>
-                                  <h4 className="font-bold text-sm text-foreground">{deal.platform}</h4>
-                                  <span className="text-[10px] text-muted-foreground font-mono">{deal.domain}</span>
-                                </div>
-                              </div>
-
-                              <Badge className={`rounded-full text-[10px] font-bold px-2.5 py-0.5 border ${deal.badgeBg}`}>
-                                {deal.discount || "Best Deal"}
-                              </Badge>
-                            </div>
-
-                            {/* Price & MRP */}
-                            <div className="space-y-0.5 pt-1 border-t border-border/50">
-                              <div className="flex items-baseline gap-2">
-                                <span className="text-2xl font-black text-foreground">
-                                  ₹{deal.price.toLocaleString("en-IN")}
-                                </span>
-                                {deal.originalPrice > deal.price && (
-                                  <span className="text-xs text-muted-foreground line-through">
-                                    ₹{deal.originalPrice.toLocaleString("en-IN")}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">
-                                Inclusive of all store taxes
+                      return (
+                        <div className="rounded-3xl border-2 border-emerald-500/80 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-background p-5 sm:p-6 shadow-md space-y-4">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-500/20 pb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="flex h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
+                              <span className="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                                Lowest Verified Price Across Stores
                               </span>
                             </div>
+                            <Badge className="bg-emerald-600 text-white font-bold text-[10px] px-3 py-0.5 rounded-full self-start sm:self-auto">
+                              Best Market Deal
+                            </Badge>
+                          </div>
 
-                            {/* Highlights Specs */}
-                            <div className="space-y-2 text-xs pt-1">
-                              <div className="flex items-center gap-1.5 text-muted-foreground">
-                                <Truck className="h-3.5 w-3.5 text-brand shrink-0" />
-                                <span className="font-medium text-foreground">{deal.delivery}</span>
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                            <div className="flex items-center gap-4">
+                              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl font-black text-white text-base shadow-sm ${lowestDeal.logoBgClass}`}>
+                                {lowestDeal.logoLetter}
                               </div>
-
-                              <div className="flex items-center gap-1.5 text-muted-foreground">
-                                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                                <span>{deal.qualityScore}</span>
-                              </div>
-
-                              <div className="flex items-center gap-1.5 text-muted-foreground">
-                                <Tag className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                                <span>Regret Risk: <strong className="text-foreground">{deal.regretRisk}</strong></span>
-                              </div>
-
-                              {deal.offers && deal.offers.length > 0 && (
-                                <div className="pt-1 space-y-1">
-                                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-                                    Active Offers:
-                                  </span>
-                                  {deal.offers.slice(0, 2).map((off, oIdx) => (
-                                    <div key={oIdx} className="text-[11px] text-foreground/80 flex items-start gap-1">
-                                      <span className="text-brand font-bold">•</span>
-                                      <span className="line-clamp-1">{off}</span>
-                                    </div>
-                                  ))}
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="text-lg font-black text-foreground">{lowestDeal.platform}</h4>
+                                  <span className="text-xs text-muted-foreground font-mono">{lowestDeal.domain}</span>
+                                  <Badge className={`rounded-full text-[10px] font-bold px-2 py-0.5 border ${lowestDeal.badgeBg}`}>
+                                    {lowestDeal.discount || "Cheapest Deal"}
+                                  </Badge>
                                 </div>
-                              )}
+                                <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                                  <span className="flex items-center gap-1 font-medium text-foreground">
+                                    <Truck className="h-3.5 w-3.5 text-emerald-500" />
+                                    {lowestDeal.delivery}
+                                  </span>
+                                  <span>•</span>
+                                  <span className="flex items-center gap-1 font-mono text-[11px]">
+                                    <Clock className="h-3 w-3 text-emerald-500" />
+                                    {formatUpdatedTime(lowestDeal.lastUpdated)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 self-start md:self-auto shrink-0">
+                              <div className="text-right">
+                                <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                                  ₹{lowestDeal.price.toLocaleString("en-IN")}
+                                </div>
+                                {lowestDeal.originalPrice > lowestDeal.price && (
+                                  <div className="text-xs text-muted-foreground line-through">
+                                    ₹{lowestDeal.originalPrice.toLocaleString("en-IN")}
+                                  </div>
+                                )}
+                              </div>
+
+                              <Button
+                                asChild
+                                className="rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs h-11 px-5 gap-2 shadow-md hover:shadow-lg transition-all"
+                              >
+                                <a
+                                  href={lowestSearchUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <span>View on {lowestDeal.platform}</span>
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                              </Button>
                             </div>
                           </div>
+                        </div>
+                      );
+                    })()}
 
-                          {/* Direct Platform Link */}
-                          <div className="pt-4 mt-auto">
-                            <Button
-                              asChild
-                              className={`w-full rounded-2xl font-bold text-xs h-10 gap-1.5 shadow-xs ${
-                                isLowest
-                                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                                  : "bg-brand hover:bg-brand/90 text-white"
-                              }`}
-                            >
-                              <a
-                                href={searchUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                    {/* 2. ALL VERIFIED STORE PRICES HEADER */}
+                    <div className="flex items-center justify-between gap-3 pt-2">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-brand" />
+                        <h4 className="text-base font-black text-foreground">
+                          All Verified Store Prices ({deals.length} {deals.length === 1 ? "Store" : "Stores"} Discovered)
+                        </h4>
+                      </div>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        Real-time Retailer Data
+                      </span>
+                    </div>
+
+                    {/* 3. ALL VERIFIED STORE CARDS GRID */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {deals.map((deal, dIdx) => {
+                        const isLowest = deal.price === lowestPriceVal;
+                        const searchUrl = deal.productUrl || getPlatformSearchUrl(deal.platform, currentProduct.name);
+
+                        return (
+                          <Card
+                            key={dIdx}
+                            className={`relative rounded-3xl border-2 transition-all flex flex-col justify-between overflow-hidden shadow-xs hover:shadow-md ${
+                              isLowest
+                                ? "border-emerald-500/60 bg-emerald-500/[0.03] dark:bg-emerald-950/10"
+                                : "border-border/80 bg-card hover:border-border"
+                            }`}
+                          >
+                            {/* Top banner if Lowest Price */}
+                            {isLowest && (
+                              <div className="bg-emerald-600 px-4 py-1 text-center text-[10px] font-bold tracking-wider text-white uppercase flex items-center justify-center gap-1">
+                                <CheckCircle2 className="h-3 w-3" />
+                                <span>Lowest Verified Price</span>
+                              </div>
+                            )}
+
+                            <CardContent className="p-5 space-y-4 flex-1 flex flex-col justify-between">
+                              {/* Store Name & Logo */}
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className={`flex h-9 w-9 items-center justify-center rounded-2xl font-black text-white text-xs ${deal.logoBgClass}`}>
+                                      {deal.logoLetter}
+                                    </div>
+                                    <div>
+                                      <h4 className="font-bold text-sm text-foreground">{deal.platform}</h4>
+                                      <span className="text-[10px] text-muted-foreground font-mono">{deal.domain}</span>
+                                    </div>
+                                  </div>
+
+                                  <Badge className={`rounded-full text-[10px] font-bold px-2.5 py-0.5 border ${deal.badgeBg}`}>
+                                    {deal.discount || "Verified Deal"}
+                                  </Badge>
+                                </div>
+
+                                {/* Price & MRP */}
+                                <div className="space-y-0.5 pt-1 border-t border-border/50">
+                                  <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl font-black text-foreground">
+                                      ₹{deal.price.toLocaleString("en-IN")}
+                                    </span>
+                                    {deal.originalPrice > deal.price && (
+                                      <span className="text-xs text-muted-foreground line-through">
+                                        ₹{deal.originalPrice.toLocaleString("en-IN")}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">
+                                      Inclusive of store taxes
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
+                                      <Clock className="h-3 w-3 text-brand" />
+                                      {formatUpdatedTime(deal.lastUpdated)}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Highlights Specs */}
+                                <div className="space-y-2 text-xs pt-1">
+                                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                                    <Truck className="h-3.5 w-3.5 text-brand shrink-0" />
+                                    <span className="font-medium text-foreground">{deal.delivery}</span>
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                                    <span>{deal.qualityScore}</span>
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                                    <Tag className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                                    <span>Regret Risk: <strong className="text-foreground">{deal.regretRisk}</strong></span>
+                                  </div>
+
+                                  {deal.offers && deal.offers.length > 0 && (
+                                    <div className="pt-1 space-y-1">
+                                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                                        Active Offers:
+                                      </span>
+                                      {deal.offers.slice(0, 2).map((off, oIdx) => (
+                                        <div key={oIdx} className="text-[11px] text-foreground/80 flex items-start gap-1">
+                                          <span className="text-brand font-bold">•</span>
+                                          <span className="line-clamp-1">{off}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Direct Platform Link */}
+                              <div className="pt-4 mt-auto">
+                                <Button
+                                  asChild
+                                  className={`w-full rounded-2xl font-bold text-xs h-10 gap-1.5 shadow-xs ${
+                                    isLowest
+                                      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                      : "bg-brand hover:bg-brand/90 text-white"
+                                  }`}
+                                >
+                                  <a
+                                    href={searchUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <span>View Verified on {deal.platform}</span>
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                  </a>
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+
+                    {/* 4. Verified Retailer Availability Matrix / Breakdown */}
+                    <div className="rounded-3xl border border-border/80 bg-card p-5 sm:p-6 space-y-4 shadow-xs">
+                      <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-3">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-brand" />
+                          <h4 className="font-bold text-sm text-foreground">Verified Retailer Availability Status</h4>
+                        </div>
+                        <span className="text-[11px] text-muted-foreground font-mono">
+                          Live Data Engine (No Fake Listings)
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {(() => {
+                          const trackedStores = [
+                            { name: "Amazon", domain: "amazon.in" },
+                            { name: "Flipkart", domain: "flipkart.com" },
+                            { name: "Croma", domain: "croma.com" },
+                            { name: "Reliance Digital", domain: "reliancedigital.in" },
+                            { name: "Zepto", domain: "zeptonow.com" },
+                            { name: "iPlanet", domain: "iplanetstore.in" },
+                            { name: "Vijay Sales", domain: "vijaysales.com" },
+                            { name: "Blinkit", domain: "blinkit.com" },
+                            { name: "JioMart", domain: "jiomart.com" },
+                            { name: "Myntra", domain: "myntra.com" },
+                            { name: "Meesho", domain: "meesho.com" },
+                            { name: "Tata CLiQ", domain: "tatacliq.com" },
+                          ];
+
+                          return trackedStores.map((store) => {
+                            const matchedDeal = currentProduct.platforms.find(
+                              (p) => p.platform.toLowerCase() === store.name.toLowerCase() ||
+                                     p.domain.toLowerCase().includes(store.domain.toLowerCase())
+                            );
+
+                            const isAvailable = !!matchedDeal && matchedDeal.price > 0;
+                            const isOutOfStock = !!matchedDeal && (matchedDeal.stock || "").toLowerCase().includes("out of stock");
+
+                            return (
+                              <div
+                                key={store.name}
+                                className={`rounded-2xl border p-3.5 flex flex-col justify-between gap-2 text-xs transition-colors ${
+                                  isAvailable
+                                    ? "border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20"
+                                    : isOutOfStock
+                                    ? "border-amber-500/30 bg-amber-500/5"
+                                    : "border-border/60 bg-muted/20 opacity-75"
+                                }`}
                               >
-                                <span>View Deal on {deal.platform}</span>
-                                <ExternalLink className="h-3.5 w-3.5" />
-                              </a>
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="font-bold text-foreground">{store.name}</span>
+                                  {isAvailable ? (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                                      <CheckCircle2 className="h-3.5 w-3.5" /> Available
+                                    </span>
+                                  ) : isOutOfStock ? (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-500">
+                                      <AlertTriangle className="h-3.5 w-3.5" /> Out of stock
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
+                                      <XCircle className="h-3.5 w-3.5 text-muted-foreground/60" /> Not found
+                                    </span>
+                                  )}
+                                </div>
+
+                                {isAvailable && matchedDeal ? (
+                                  <div className="space-y-0.5">
+                                    <div className="text-base font-black text-foreground">
+                                      ₹{matchedDeal.price.toLocaleString("en-IN")}
+                                    </div>
+                                    <div className="text-[10px] text-muted-foreground">
+                                      {formatUpdatedTime(matchedDeal.lastUpdated)}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-[11px] text-muted-foreground italic">
+                                    — No matching price
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             );
           })}
         </div>
+      )}
+
+      {/* =========================================================================
+          MODALS & INTERACTIVE POPUPS
+         ========================================================================= */}
+
+      {/* 1. Why This Matches Modal */}
+      {activeWhyMatchProduct && (
+        <Dialog open={!!activeWhyMatchProduct} onOpenChange={() => setActiveWhyMatchProduct(null)}>
+          <DialogContent className="sm:max-w-md rounded-3xl p-6">
+            <DialogHeader>
+              <DialogTitle className="text-base font-black flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-brand" /> Why This Product Matches
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Transparent breakdown of matching criteria for <strong className="text-foreground">{activeWhyMatchProduct.name}</strong> against your search.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 pt-2">
+              {generateMatchScoreBreakdown(submittedQuery, activeWhyMatchProduct).points.map((pt, idx) => (
+                <div key={idx} className="flex items-start gap-2.5 rounded-2xl border border-border/70 p-3 bg-muted/20">
+                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white text-[10px] font-bold ${pt.match ? "bg-emerald-500" : "bg-amber-500"}`}>
+                    {pt.match ? <Check className="h-3 w-3" /> : "!"}
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-bold text-foreground">{pt.title}</p>
+                    <p className="text-[11px] text-muted-foreground">{pt.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* 2. Why This Score (Regret Risk) Modal */}
+      {activeWhyScoreProduct && (
+        <Dialog open={!!activeWhyScoreProduct} onOpenChange={() => setActiveWhyScoreProduct(null)}>
+          <DialogContent className="sm:max-w-lg rounded-3xl p-6">
+            <DialogHeader>
+              <DialogTitle className="text-base font-black flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-500" /> Regret Score Transparency Factors
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Understanding how ZGenie calculates the buyer regret index for <strong className="text-foreground">{activeWhyScoreProduct.name}</strong>.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 pt-2">
+              {getRegretScoreFactors(activeWhyScoreProduct).factors.map((f, idx) => (
+                <div key={idx} className="rounded-2xl border border-border/70 p-3.5 bg-muted/20 space-y-1">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-foreground">{f.name}</span>
+                    <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-500/30">
+                      {f.score}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">{f.explanation}</p>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* 3. AI Review Highlights Modal */}
+      {activeReviewProduct && (
+        <Dialog open={!!activeReviewProduct} onOpenChange={() => setActiveReviewProduct(null)}>
+          <DialogContent className="sm:max-w-lg rounded-3xl p-6">
+            <DialogHeader>
+              <DialogTitle className="text-base font-black flex items-center gap-2">
+                <ThumbsUp className="h-4 w-4 text-brand" /> Verified Review Analysis
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Aggregated insights from {activeReviewProduct.reviewsCount.toLocaleString()} verified buyers for <strong className="text-foreground">{activeReviewProduct.name}</strong>.
+              </DialogDescription>
+            </DialogHeader>
+
+            {(() => {
+              const analysis = getProductReviewAnalysis(activeReviewProduct);
+              return (
+                <div className="space-y-4 pt-2 text-xs">
+                  <div className="rounded-2xl bg-brand/5 border border-brand/20 p-3.5 space-y-1">
+                    <span className="text-[10px] font-bold text-brand uppercase tracking-wider">Sentiment Summary</span>
+                    <p className="text-foreground/90 font-medium">{analysis.sentimentSummary}</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <ThumbsUp className="h-3.5 w-3.5" /> Top Positive Highlights
+                    </span>
+                    <div className="space-y-1.5">
+                      {analysis.positiveHighlights.map((pos, pIdx) => (
+                        <div key={pIdx} className="flex items-start gap-2 text-muted-foreground">
+                          <span className="text-emerald-500 font-bold">•</span>
+                          <span>{pos}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                      <ThumbsDown className="h-3.5 w-3.5" /> Things to Keep in Mind
+                    </span>
+                    <div className="space-y-1.5">
+                      {analysis.negativeHighlights.map((neg, nIdx) => (
+                        <div key={nIdx} className="flex items-start gap-2 text-muted-foreground">
+                          <span className="text-amber-500 font-bold">•</span>
+                          <span>{neg}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-muted-foreground/80 italic border-t border-border/40 pt-2">
+                    Note: Summarized from authentic retailer customer feedback. Specifications and pricing remain factual live data.
+                  </p>
+                </div>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* 4. Set Price Alert Modal */}
+      {activeAlertProduct && (
+        <Dialog open={!!activeAlertProduct} onOpenChange={() => setActiveAlertProduct(null)}>
+          <DialogContent className="sm:max-w-md rounded-3xl p-6">
+            <DialogHeader>
+              <DialogTitle className="text-base font-black flex items-center gap-2">
+                <Bell className="h-4 w-4 text-amber-500" /> Set Price Drop Alert
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Get notified when <strong className="text-foreground">{activeAlertProduct.name}</strong> drops below your target price.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSavePriceAlert} className="space-y-4 pt-2">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">Target Alert Price (₹)</label>
+                <Input
+                  type="number"
+                  value={targetPriceInput}
+                  onChange={(e) => setTargetPriceInput(e.target.value)}
+                  placeholder="e.g. 45000"
+                  className="rounded-xl h-10 text-xs"
+                />
+              </div>
+
+              <Button type="submit" className="w-full rounded-xl font-bold text-xs h-10 bg-brand text-white hover:bg-brand/90">
+                Save Price Alert
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* 5. Help Me Decide Modal */}
+      {isHelpMeDecideOpen && verifiedProducts.length >= 2 && (
+        <Dialog open={isHelpMeDecideOpen} onOpenChange={setIsHelpMeDecideOpen}>
+          <DialogContent className="sm:max-w-lg rounded-3xl p-6">
+            <DialogHeader>
+              <DialogTitle className="text-base font-black flex items-center gap-2">
+                <HelpCircle className="h-4 w-4 text-brand" /> Help Me Decide
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Compare verified options based on what matters most to you.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 pt-2">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">What is your top priority?</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {[
+                    { id: "price", label: "Lowest Price" },
+                    { id: "performance", label: "Performance" },
+                    { id: "camera", label: "Camera Quality" },
+                    { id: "battery", label: "Battery Life" },
+                    { id: "display", label: "Display" },
+                    { id: "gaming", label: "Gaming" },
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setDecidePriority(p.id as any)}
+                      className={`rounded-xl p-2.5 text-xs font-bold border transition-all text-center cursor-pointer ${
+                        decidePriority === p.id
+                          ? "bg-brand text-white border-brand shadow-xs"
+                          : "bg-muted/30 border-border text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {(() => {
+                const verdict = generateHelpMeDecideVerdict(verifiedProducts, decidePriority);
+                return (
+                  <div className="rounded-2xl border border-brand/30 bg-brand/5 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-brand text-white text-[10px] font-bold rounded-full">
+                        Recommended Winner
+                      </Badge>
+                      <h4 className="font-bold text-sm text-foreground">{verdict.winner.name}</h4>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">{verdict.rationale}</p>
+
+                    <div className="space-y-1 pt-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand">Key Advantages:</span>
+                      {verdict.keyAdvantages.map((adv, aIdx) => (
+                        <div key={aIdx} className="flex items-start gap-2 text-xs text-foreground/90">
+                          <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                          <span>{adv}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

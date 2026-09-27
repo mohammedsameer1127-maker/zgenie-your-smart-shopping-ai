@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { useAuth } from "./AuthContext";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export type PersonaType = "value_seeker" | "tech_enthusiast" | "budget_conscious" | "premium_luxury";
 
@@ -51,39 +54,95 @@ const DEFAULT_PROFILE: TwinProfile = {
   lastCalibratedAt: new Date().toISOString(),
 };
 
-const STORAGE_KEY = "zgenie_digital_twin_profile";
-
 const DigitalTwinContext = createContext<DigitalTwinContextType | undefined>(undefined);
 
 export const DigitalTwinProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { currentUser } = useAuth();
   const [profile, setProfile] = useState<TwinProfile>(DEFAULT_PROFILE);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"collect" | "results">("results");
 
-  // Load from localStorage on client-side mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          setProfile(JSON.parse(saved));
-        }
-      } catch (e) {
-        console.error("Failed to load digital twin profile", e);
-      }
-    }
+  const getStorageKey = useCallback((uid?: string | null) => {
+    return uid ? `zgenie_digital_twin_profile_${uid}` : "zgenie_digital_twin_profile";
   }, []);
 
-  // Save to localStorage when profile changes
+  // Load profile from user-scoped localStorage and Firestore on mount or user switch
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-      } catch (e) {
-        console.error("Failed to save digital twin profile", e);
+    let isMounted = true;
+
+    async function loadProfile() {
+      const storageKey = getStorageKey(currentUser?.uid);
+
+      // 1. Instant local load
+      if (typeof window !== "undefined") {
+        try {
+          const saved = localStorage.getItem(storageKey);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (isMounted) setProfile(parsed);
+          } else if (!currentUser) {
+            // Check legacy default
+            const genericSaved = localStorage.getItem("zgenie_digital_twin_profile");
+            if (genericSaved && isMounted) {
+              setProfile(JSON.parse(genericSaved));
+            }
+          }
+        } catch (e) {
+          console.debug("[DigitalTwin] Failed to load local profile:", e);
+        }
+      }
+
+      // 2. Cloud load from Firestore if user is authenticated
+      if (currentUser) {
+        try {
+          const twinDocRef = doc(db, "users", currentUser.uid, "user_data", "digital_twin");
+          const snap = await getDoc(twinDocRef);
+          if (snap.exists() && snap.data()?.profile && isMounted) {
+            const cloudProfile = snap.data().profile as TwinProfile;
+            setProfile(cloudProfile);
+            if (typeof window !== "undefined") {
+              localStorage.setItem(storageKey, JSON.stringify(cloudProfile));
+            }
+          }
+        } catch (fsErr) {
+          console.debug("[DigitalTwin] Firestore profile sync notice:", fsErr);
+        }
       }
     }
-  }, [profile]);
+
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser, getStorageKey]);
+
+  // Save to localStorage and Firestore whenever profile changes
+  const persistProfile = useCallback(
+    async (newProfile: TwinProfile) => {
+      const storageKey = getStorageKey(currentUser?.uid);
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(newProfile));
+          if (!currentUser) {
+            localStorage.setItem("zgenie_digital_twin_profile", JSON.stringify(newProfile));
+          }
+        } catch (e) {
+          console.error("Failed to save digital twin profile to localStorage:", e);
+        }
+      }
+
+      if (currentUser) {
+        try {
+          const twinDocRef = doc(db, "users", currentUser.uid, "user_data", "digital_twin");
+          await setDoc(twinDocRef, { profile: newProfile, updatedAt: new Date().toISOString() }, { merge: true });
+        } catch (fsErr) {
+          console.debug("[DigitalTwin] Cloud profile save notice:", fsErr);
+        }
+      }
+    },
+    [currentUser, getStorageKey]
+  );
 
   const openTwinModal = (tab: "collect" | "results" = "results") => {
     setActiveTab(tab);
@@ -95,7 +154,11 @@ export const DigitalTwinProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const updateProfile = (updates: Partial<TwinProfile>) => {
-    setProfile((prev) => ({ ...prev, ...updates }));
+    setProfile((prev) => {
+      const updated = { ...prev, ...updates };
+      persistProfile(updated);
+      return updated;
+    });
   };
 
   const calibrateTwin = (newProfile: TwinProfile) => {
@@ -105,6 +168,7 @@ export const DigitalTwinProvider: React.FC<{ children: React.ReactNode }> = ({ c
       lastCalibratedAt: new Date().toISOString(),
     };
     setProfile(calibrated);
+    persistProfile(calibrated);
     setActiveTab("results");
   };
 

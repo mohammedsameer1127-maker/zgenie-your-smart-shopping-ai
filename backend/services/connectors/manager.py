@@ -56,8 +56,8 @@ class ShoppingConnectorManager:
             try:
                 raw_results = await connector.search(intent)
                 if raw_results and len(raw_results) > 0:
-                    # Apply strict multi-signal product matcher
-                    matched = filter_exact_match_products(intent.query, raw_results, min_similarity=0.85)
+                    # Apply multi-attribute product matcher (threshold >= 0.70 / 70%)
+                    matched = filter_exact_match_products(intent.query, raw_results, min_similarity=0.70)
                     if matched and len(matched) > 0:
                         logger.info(
                             f"Connector '{connector_name}' succeeded with {len(matched)} exact-matched results (out of {len(raw_results)} raw) for '{intent.query}'"

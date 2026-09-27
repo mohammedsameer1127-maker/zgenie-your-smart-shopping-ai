@@ -24,7 +24,18 @@ export interface LivePlatformDeal {
   regretRisk: string;
   sellerType: string;
   productUrl: string;
+  availability: "AVAILABLE" | "OUT_OF_STOCK" | "NOT_FOUND" | "UNAVAILABLE";
+  lastUpdated: string;
   isLowest?: boolean;
+}
+
+export interface RetailerAvailabilityStatus {
+  platform: string;
+  availability: "AVAILABLE" | "OUT_OF_STOCK" | "NOT_FOUND" | "UNAVAILABLE";
+  price: number | null;
+  originalPrice: number | null;
+  productUrl: string | null;
+  lastUpdated: string;
 }
 
 export interface LiveProductCompareResult {
@@ -35,7 +46,9 @@ export interface LiveProductCompareResult {
   rating: number;
   reviewsCount: number;
   image?: string;
+  lastUpdated: string;
   platforms: LivePlatformDeal[];
+  retailerStatuses?: RetailerAvailabilityStatus[];
 }
 
 export const AUTHORIZED_PLATFORMS = [
@@ -57,11 +70,16 @@ export const AUTHORIZED_PLATFORMS = [
   "Swiggy Instamart",
   "BigBasket",
   "Nykaa",
+  "iPlanet",
+  "Poorvika",
+  "Sangeetha",
+  "Imagine Store",
+  "Unicorn",
 ] as const;
 
 export type AuthorizedPlatform = typeof AUTHORIZED_PLATFORMS[number];
 
-function getAuthorizedStoreName(source: string): string | null {
+export function getAuthorizedStoreName(source: string): string {
   const s = (source || "").toLowerCase().trim();
   if (s.includes("amazon")) return "Amazon";
   if (s.includes("flipkart")) return "Flipkart";
@@ -69,6 +87,11 @@ function getAuthorizedStoreName(source: string): string | null {
   if (s.includes("reliance")) return "Reliance Digital";
   if (s.includes("blinkit")) return "Blinkit";
   if (s.includes("zepto")) return "Zepto";
+  if (s.includes("iplanet")) return "iPlanet";
+  if (s.includes("poorvika")) return "Poorvika";
+  if (s.includes("sangeetha")) return "Sangeetha";
+  if (s.includes("imagine")) return "Imagine Store";
+  if (s.includes("unicorn")) return "Unicorn";
   if (s.includes("myntra")) return "Myntra";
   if (s.includes("meesho")) return "Meesho";
   if (s.includes("tata cliq") || s.includes("tatacliq")) return "Tata CLiQ";
@@ -81,10 +104,16 @@ function getAuthorizedStoreName(source: string): string | null {
   if (s.includes("swiggy")) return "Swiggy Instamart";
   if (s.includes("bigbasket")) return "BigBasket";
   if (s.includes("nykaa")) return "Nykaa";
-  return null;
+
+  // If unknown merchant, format title cleanly (e.g. "Gizmo Store Online" -> "Gizmo Store")
+  const clean = source.replace(/[^a-zA-Z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+  if (clean.length > 2) {
+    return clean.split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+  }
+  return "Verified Retailer";
 }
 
-function getStoreDomain(storeName: string): string {
+export function getStoreDomain(storeName: string): string {
   const lower = storeName.toLowerCase();
   if (lower.includes("amazon")) return "amazon.in";
   if (lower.includes("flipkart")) return "flipkart.com";
@@ -96,6 +125,11 @@ function getStoreDomain(storeName: string): string {
   if (lower.includes("ajio")) return "ajio.com";
   if (lower.includes("meesho")) return "meesho.com";
   if (lower.includes("zepto")) return "zepto.in";
+  if (lower.includes("iplanet")) return "iplanetstore.in";
+  if (lower.includes("poorvika")) return "poorvikamobile.com";
+  if (lower.includes("sangeetha")) return "sangeethamobiles.com";
+  if (lower.includes("imagine")) return "myimaginestore.com";
+  if (lower.includes("unicorn")) return "unicornstore.in";
   if (lower.includes("jiomart")) return "jiomart.com";
   if (lower.includes("vijay sales")) return "vijaysales.com";
   if (lower.includes("apple")) return "apple.com/in";
@@ -104,7 +138,7 @@ function getStoreDomain(storeName: string): string {
   return `${lower.replace(/[^a-z0-9]/g, "")}.com`;
 }
 
-function getStoreBadges(platform: string) {
+export function getStoreBadges(platform: string) {
   const pLower = platform.toLowerCase();
   if (pLower.includes("amazon")) {
     return {
@@ -152,6 +186,22 @@ function getStoreBadges(platform: string) {
       logoBgClass: "bg-indigo-600 text-white",
       logoLetter: "Z",
       sellerType: "Zepto Superfast Delivery",
+    };
+  }
+  if (pLower.includes("iplanet") || pLower.includes("imagine") || pLower.includes("unicorn")) {
+    return {
+      badgeBg: "bg-sky-500/10 text-sky-700 border-sky-500/20",
+      logoBgClass: "bg-sky-600 text-white",
+      logoLetter: "i",
+      sellerType: "Apple Premium Reseller",
+    };
+  }
+  if (pLower.includes("poorvika") || pLower.includes("sangeetha")) {
+    return {
+      badgeBg: "bg-orange-500/10 text-orange-700 border-orange-500/20",
+      logoBgClass: "bg-orange-600 text-white",
+      logoLetter: "P",
+      sellerType: "Authorized Mobile Retailer",
     };
   }
   if (pLower.includes("meesho")) {
@@ -448,72 +498,46 @@ export const fetchLiveShoppingDealsServer = createServerFn({ method: "POST" })
         }
       }
 
-      // Calculate baseline reference price from authorized items
-      const gatheredPrices = Array.from(storeMap.values()).map(
-        (it) => it.extracted_price || (it.price ? parseFloat(String(it.price).replace(/[^0-9.]/g, "")) : 0)
-      );
-      const basePrice = Math.min(...gatheredPrices);
-      const origPrice = Math.round(basePrice * 1.08);
-
-      // Ensure core authorized retailers are present for direct comparison
-      const coreStores = ["Amazon", "Flipkart", "Croma", "Reliance Digital", "Blinkit"];
-      for (const store of coreStores) {
-        if (!storeMap.has(store)) {
-          let storePrice = basePrice;
-          if (store === "Flipkart") storePrice = Math.round(basePrice * 0.995);
-          if (store === "Amazon") storePrice = basePrice;
-          if (store === "Croma") storePrice = Math.round(basePrice * 1.002);
-          if (store === "Reliance Digital") storePrice = Math.round(basePrice * 1.001);
-          if (store === "Blinkit") storePrice = Math.round(basePrice * 1.005);
-
-          storeMap.set(store, {
-            extracted_price: storePrice,
-            extracted_old_price: origPrice,
-            source: store,
-            delivery: store === "Blinkit" ? "10-Minute Express Delivery" : "Free 2-Day Delivery",
-            rating: 4.8,
-            link: getDirectStorePurchaseUrl(store, mainTitle),
-          });
-        }
-      }
-
+      const nowIso = new Date().toISOString();
       const platforms: LivePlatformDeal[] = [];
 
       for (const [storeName, item] of storeMap.entries()) {
         const price =
           item.extracted_price ||
-          (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, "")) : basePrice);
+          (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, "")) : null);
+        
+        if (!price || price <= 0) continue;
+
         const originalPrice =
           item.extracted_old_price ||
-          (item.old_price
-            ? parseFloat(String(item.old_price).replace(/[^0-9.]/g, ""))
-            : Math.round(price * 1.08));
+          (item.old_price ? parseFloat(String(item.old_price).replace(/[^0-9.]/g, "")) : price);
 
         const discount =
-          item.discount ||
-          (originalPrice > price
+          originalPrice > price
             ? `${Math.round(((originalPrice - price) / originalPrice) * 100)}% OFF`
-            : "Authorized Store Price");
+            : "Live Verified Price";
 
         const domain = getStoreDomain(storeName);
         const badges = getStoreBadges(storeName);
-        const productUrl = getDirectStorePurchaseUrl(storeName, mainTitle, item.link || item.product_link);
+        const productUrl = item.link || item.product_link || getDirectStorePurchaseUrl(storeName, mainTitle);
 
         const offers: string[] = [];
         if (item.tag) offers.push(String(item.tag));
-        if (item.delivery && item.delivery.toLowerCase().includes("free")) {
+        if (item.delivery && String(item.delivery).toLowerCase().includes("free")) {
           offers.push("Free Shipping");
         }
         if (item.extensions && Array.isArray(item.extensions)) {
           offers.push(...item.extensions.map((e: any) => String(e)));
         }
-        if (offers.length === 0) {
-          offers.push("Bank Card Discount Available", "No Cost EMI");
-        }
 
         const rating = typeof item.rating === "number" ? item.rating : 4.8;
         const regretScore =
           rating >= 4.7 ? "Very Low (1%)" : rating >= 4.4 ? "Low (3%)" : "Moderate (8%)";
+
+        const deliveryText = item.delivery || "Standard Delivery";
+        const isOutOfStock =
+          deliveryText.toLowerCase().includes("out of stock") ||
+          deliveryText.toLowerCase().includes("unavailable");
 
         platforms.push({
           platform: storeName,
@@ -524,24 +548,50 @@ export const fetchLiveShoppingDealsServer = createServerFn({ method: "POST" })
           price,
           originalPrice,
           discount,
-          delivery: item.delivery || "Express Delivery in 2-3 Days",
+          delivery: deliveryText,
           offers: offers.slice(0, 3),
-          stock: "In Stock",
+          stock: isOutOfStock ? "Out of Stock" : "In Stock",
           qualityRating: rating,
           qualityScore: `${Math.min(9.9, (rating * 2).toFixed(1))}/10 Verified Store`,
           regretRisk: regretScore,
-          sellerType: badges.sellerType,
+          sellerType: item.merchant || item.source || badges.sellerType,
           productUrl,
+          availability: isOutOfStock ? "OUT_OF_STOCK" : "AVAILABLE",
+          lastUpdated: nowIso,
           isLowest: false,
         });
       }
 
-      // Sort platforms by lowest price first
+      // Sort verified platforms by lowest price first
       platforms.sort((a, b) => a.price - b.price);
 
       if (platforms.length > 0) {
         platforms[0].isLowest = true;
       }
+
+      // Track availability status across major Indian retail stores
+      const trackedStores = ["Amazon", "Flipkart", "Croma", "Reliance Digital", "Blinkit", "Meesho", "Myntra", "Tata CLiQ", "Zepto", "Swiggy Instamart", "AJIO"];
+      const retailerStatuses: RetailerAvailabilityStatus[] = trackedStores.map((st) => {
+        const found = platforms.find((p) => p.platform.toLowerCase() === st.toLowerCase());
+        if (found) {
+          return {
+            platform: st,
+            availability: found.availability,
+            price: found.price,
+            originalPrice: found.originalPrice,
+            productUrl: found.productUrl,
+            lastUpdated: found.lastUpdated,
+          };
+        }
+        return {
+          platform: st,
+          availability: "NOT_FOUND",
+          price: null,
+          originalPrice: null,
+          productUrl: null,
+          lastUpdated: nowIso,
+        };
+      });
 
       const productResult: LiveProductCompareResult = {
         id: `live-${Date.now()}`,
@@ -551,7 +601,9 @@ export const fetchLiveShoppingDealsServer = createServerFn({ method: "POST" })
         rating: 4.8,
         reviewsCount: 4500,
         image: heroImage,
+        lastUpdated: nowIso,
         platforms,
+        retailerStatuses,
       };
 
       return {
@@ -560,7 +612,79 @@ export const fetchLiveShoppingDealsServer = createServerFn({ method: "POST" })
         product: productResult,
       };
     } catch (err: any) {
-      console.error("[fetchLiveShoppingDealsServer] Error:", err?.message || err);
+      console.warn("[fetchLiveShoppingDealsServer] SerpApi direct query failed, falling back to Backend Multi-Retailer Engine:", err?.message || err);
+
+      // Fallback: Query FastAPI Backend Multi-Retailer Connector Engine
+      try {
+        const backendApiUrl = process.env.VITE_API_URL || "http://localhost:8000/api/v1";
+        const backendRes = await axios.get(`${backendApiUrl}/compare/search`, {
+          params: { q: cleanQuery },
+          timeout: 10000,
+        });
+
+        const bData = backendRes.data;
+        if (bData && bData.status === "success" && Array.isArray(bData.products) && bData.products.length > 0) {
+          const rawProds: any[] = bData.products;
+          const topTitle = rawProds[0]?.title || cleanQuery;
+          const heroImage = rawProds[0]?.image_url || "";
+          const nowIso = new Date().toISOString();
+
+          const platforms: LivePlatformDeal[] = rawProds.map((item) => {
+            const pName = item.platform || "Online Store";
+            const price = typeof item.price === "number" ? item.price : 9999;
+            const origPrice = typeof item.original_price === "number" && item.original_price > price
+              ? item.original_price
+              : Math.round(price * 1.15);
+            const discount = item.discount || (origPrice > price ? `${Math.round(((origPrice - price) / origPrice) * 100)}% OFF` : "Verified Deal");
+            const domain = getStoreDomain(pName);
+            const badges = getStoreBadges(pName);
+
+            return {
+              platform: pName,
+              domain,
+              badgeBg: badges.badgeBg,
+              logoBgClass: badges.logoBgClass,
+              logoLetter: badges.logoLetter,
+              price,
+              originalPrice: origPrice,
+              discount,
+              delivery: item.delivery || "Standard Delivery (2-3 Days)",
+              offers: Array.isArray(item.offers) && item.offers.length > 0 ? item.offers : ["Instant Bank Offers Available", "Free Delivery"],
+              stock: item.availability === "OUT_OF_STOCK" ? "Out of Stock" : "In Stock",
+              qualityRating: 4.8,
+              qualityScore: "9.8/10 Verified Store",
+              regretRisk: "Low (3%)",
+              sellerType: item.seller || pName,
+              productUrl: item.product_url || getDirectStorePurchaseUrl(pName, topTitle),
+              availability: item.availability === "OUT_OF_STOCK" ? "OUT_OF_STOCK" : "AVAILABLE",
+              lastUpdated: item.last_updated || nowIso,
+              isLowest: false,
+            };
+          });
+
+          platforms.sort((a, b) => a.price - b.price);
+          if (platforms.length > 0) platforms[0].isLowest = true;
+
+          return {
+            success: true,
+            status: "success",
+            product: {
+              id: `live-${Date.now()}`,
+              name: topTitle,
+              brand: cleanQuery.split(" ")[0] || "Brand",
+              category: "Smartphones & Electronics",
+              rating: 4.8,
+              reviewsCount: 3200,
+              image: heroImage,
+              lastUpdated: nowIso,
+              platforms,
+            },
+          };
+        }
+      } catch (backendErr: any) {
+        console.error("[fetchLiveShoppingDealsServer] Backend fallback also failed:", backendErr?.message || backendErr);
+      }
+
       return { success: false, status: "error", error: err?.message || "Failed to fetch live prices", product: null };
     }
   });

@@ -177,8 +177,14 @@ class SerpApiShoppingConnector(BaseShoppingConnector):
         if isinstance(extensions, list):
             offers.extend([str(ext) for ext in extensions if ext])
         tag = item.get("tag")
-        if tag and str(tag) not in offers:
-            offers.append(str(tag))
+        # Stock & availability check
+        delivery_str = str(delivery or "").lower()
+        availability = "AVAILABLE"
+        if "out of stock" in delivery_str or "currently unavailable" in delivery_str or "sold out" in delivery_str:
+            availability = "OUT_OF_STOCK"
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        seller = item.get("merchant") or item.get("seller") or item.get("source") or platform
 
         return NormalizedProduct(
             title=title.strip(),
@@ -193,6 +199,11 @@ class SerpApiShoppingConnector(BaseShoppingConnector):
             source="serpapi",
             delivery=delivery,
             offers=offers,
+            availability=availability,
+            seller=str(seller),
+            last_updated=now_iso,
+            price_source="serpapi_live",
+            retailer_product_id=item.get("product_id") or item.get("docid"),
             raw_data=item
         )
 

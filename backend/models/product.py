@@ -50,12 +50,17 @@ AUTHORIZED_STORES = {
     "croma": "Croma",
     "reliance": "Reliance Digital",
     "blinkit": "Blinkit",
+    "zepto": "Zepto",
+    "iplanet": "iPlanet",
+    "poorvika": "Poorvika",
+    "sangeetha": "Sangeetha",
+    "imagine": "Imagine Store",
+    "unicorn": "Unicorn",
     "myntra": "Myntra",
     "meesho": "Meesho",
     "tatacliq": "Tata CLiQ",
     "tata cliq": "Tata CLiQ",
     "ajio": "AJIO",
-    "zepto": "Zepto",
     "swiggy": "Swiggy Instamart",
     "instamart": "Swiggy Instamart",
     "jiomart": "JioMart",
@@ -64,12 +69,15 @@ AUTHORIZED_STORES = {
     "apple": "Apple Official",
     "samsung": "Samsung Store",
     "oneplus": "OnePlus Store",
+    "bigbasket": "BigBasket",
+    "nykaa": "Nykaa",
 }
 
 def get_authorized_platform_name(source: Optional[str]) -> Optional[str]:
     """
     Standardize platform / merchant names and verify if store is authorized.
-    Returns None if platform is not in the authorized platforms whitelist.
+    If exact authorized store match found, returns the clean name.
+    If not in dictionary but non-empty, cleans and returns formatted merchant name.
     """
     if not source:
         return None
@@ -77,7 +85,9 @@ def get_authorized_platform_name(source: Optional[str]) -> Optional[str]:
     for key, name in AUTHORIZED_STORES.items():
         if key in s_lower:
             return name
-    return None
+    # Clean merchant title
+    clean = re.sub(r"[^a-zA-Z0-9\s]", " ", source).strip().title()
+    return clean if len(clean) >= 2 else None
 
 def clean_platform_name(source: Optional[str]) -> str:
     """
@@ -111,20 +121,52 @@ class NormalizedProduct(BaseModel):
     product_url: Optional[str] = Field(None, description="Product destination link")
     rating: Optional[float] = Field(None, description="Rating out of 5.0")
     reviews_count: Optional[int] = Field(None, description="Total number of reviews")
-    source: str = Field("serpapi", description="Connector source name (serpapi, serper, catalog)")
+    source: str = Field("serpapi", description="Connector source name (serpapi, serper, retailer_live)")
     delivery: Optional[str] = Field(None, description="Delivery timeframe / note")
     offers: Optional[List[str]] = Field(default_factory=list, description="Extracted promotional offers or badges")
+    availability: str = Field("AVAILABLE", description="AVAILABLE, OUT_OF_STOCK, NOT_FOUND, UNAVAILABLE, STALE, ERROR")
+    seller: Optional[str] = Field(None, description="Seller or merchant name")
+    last_updated: Optional[str] = Field(None, description="ISO timestamp when price data was retrieved")
+    price_source: str = Field("live_retailer", description="live_retailer, serpapi, serper, cache")
+    retailer_product_id: Optional[str] = Field(None, description="ASIN, FSN, SKU or Retailer ID")
     raw_data: Optional[Dict[str, Any]] = Field(None, description="Raw provider payload for reference")
 
     model_config = {
         "extra": "ignore"
     }
 
+class RetailerStatusItem(BaseModel):
+    retailer: str
+    availability: str = Field("NOT_FOUND", description="AVAILABLE, OUT_OF_STOCK, NOT_FOUND, UNAVAILABLE, STALE, ERROR")
+    price: Optional[float] = None
+    original_price: Optional[float] = None
+    discount: Optional[str] = None
+    currency: str = "INR"
+    product_url: Optional[str] = None
+    last_updated: Optional[str] = None
+    seller: Optional[str] = None
+    delivery_info: Optional[str] = None
+    offers: List[str] = Field(default_factory=list)
+
 class ComparisonResponse(BaseModel):
     query: str
-    source_connector: str
-    total_results: int
+    source_connector: str = "live_retailers"
+    total_results: int = 0
+    total_results_found: int = 0
+    verified_results: int = 0
     from_cache: bool = False
     status: str = Field("success", description="Status code: success, no_match_found")
     message: Optional[str] = Field(None, description="Human-readable status or guidance message")
-    products: List[NormalizedProduct]
+    product: Optional[Dict[str, Any]] = Field(None, description="Product identity summary")
+    retailers_checked: List[str] = Field(default_factory=list)
+    retailer_status: Dict[str, Any] = Field(default_factory=dict)
+    retailer_statuses: Optional[List[RetailerStatusItem]] = Field(default_factory=list)
+    lowest_offer: Optional[Dict[str, Any]] = Field(None, description="Lowest priced verified retailer offer")
+    offers: List[Dict[str, Any]] = Field(default_factory=list, description="All verified retailer offers")
+    results: List[NormalizedProduct] = Field(default_factory=list)
+    products: List[NormalizedProduct] = Field(default_factory=list)
+
+    model_config = {
+        "extra": "ignore"
+    }
+
