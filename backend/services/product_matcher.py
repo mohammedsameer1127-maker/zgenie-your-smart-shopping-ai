@@ -52,7 +52,8 @@ ACCESSORY_KEYWORDS = [
     "display screen", "lcd", "touch lcd", "touch screen", "digitizer", "display combo",
     "folder", "combo", "motherboard", "flex cable", "connector", "charging jack",
     "sim tray", "fingerprint sensor", "camera module", "speaker grill", "strap",
-    "lanyard", "keychain", "case only", "cover only", "band only", "aulumu"
+    "lanyard", "keychain", "case only", "cover only", "band only", "aulumu",
+    "mod nx", "solidsuit", "crashguard", "rhinoshield", "spigen", "otterbox"
 ]
 
 ACCESSORY_COMPATIBILITY_PATTERNS = [
@@ -590,9 +591,14 @@ def score_candidate_product(
             )
             return False, 0.0, reason
 
-        # C. Phone Price Sanity Filter: Real smartphones never sell for < ₹3,500
-        if price is not None and price < 3500:
-            reason = f"Price ₹{price} fails smartphone sanity lower bound (< ₹3,500, likely an accessory)"
+        # C. Phone Price Sanity Filter: Real smartphones never sell for < ₹4,000, and flagships < ₹20,000
+        min_phone_price = 4000.0
+        q_lower = query.lower()
+        if any(flag in q_lower for flag in ["iphone 13", "iphone 14", "iphone 15", "iphone 16", "galaxy s2", "pixel 8", "pixel 9", "oneplus 12", "oneplus 13"]):
+            min_phone_price = 20000.0
+
+        if price is not None and price < min_phone_price:
+            reason = f"Price ₹{price} fails smartphone sanity lower bound (< ₹{min_phone_price:,.0f}, likely an accessory)"
             logger.info(
                 f"[ProductMatcher] Retailer: {retailer} | Query: '{query}' | Title: '{title}' | "
                 f"Price: ₹{price} | Decision: REJECT | Reason: {reason}"

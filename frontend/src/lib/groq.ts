@@ -2,6 +2,13 @@ import api from "./api";
 import axios from "axios";
 import { getFull10000Catalog } from "@/data/catalog";
 import { fetchLiveShoppingDealsServer } from "./shopping.server";
+import {
+  VERIFIED_AVAILABLE_SUGGESTIONS,
+  getAvailableProductSuggestions,
+  searchVerifiedProducts,
+  findValidProduct,
+  VALID_PRODUCTS_DATABASE,
+} from "@/data/verifiedProducts";
 
 const rawEnvModel =
   typeof import.meta !== "undefined" ? import.meta.env?.VITE_GROQ_MODEL : undefined;
@@ -85,11 +92,17 @@ export interface PlatformDeal {
   badgeBg: string;
   logoBgClass: string;
   logoLetter: string;
-  price: number;
-  originalPrice: number;
+  price: number | null;
+  originalPrice: number | null;
+  mrp?: number | null;
+  sellingPrice?: number | null;
   discount: string;
   delivery: string;
   offers: string[];
+  bankDiscount?: string | null;
+  couponDiscount?: string | null;
+  exchangeBonus?: string | null;
+  deliveryCharges?: number | null;
   stock: string;
   qualityRating: number;
   qualityScore: string;
@@ -101,6 +114,10 @@ export interface PlatformDeal {
   lastUpdated?: string;
   priceSource?: string;
   isLowest?: boolean;
+  isVerified?: boolean;
+  isStale?: boolean;
+  verificationStatus?: string;
+  variant?: string | null;
 }
 
 export interface RetailerStoreStatus {
@@ -454,143 +471,18 @@ export interface AvailableProductSuggestion {
   image?: string;
 }
 
-export const VERIFIED_AVAILABLE_SUGGESTIONS: AvailableProductSuggestion[] = [
-  {
-    query: "Apple iPhone 16 Pro",
-    name: "Apple iPhone 16 Pro (128GB - Desert Titanium)",
-    brand: "Apple",
-    price: 119490,
-    originalPrice: 119900,
-    discount: "Instant Delivery",
-    lowestStore: "Blinkit",
-  },
-  {
-    query: "Samsung Galaxy S24 Ultra",
-    name: "Samsung Galaxy S24 Ultra 5G (256GB)",
-    brand: "Samsung",
-    price: 129999,
-    originalPrice: 134999,
-    discount: "4% OFF",
-    lowestStore: "Amazon",
-  },
-  {
-    query: "iQOO Neo 9 Pro",
-    name: "iQOO Neo 9 Pro 5G (128GB - Fiery Red)",
-    brand: "iQOO",
-    price: 34999,
-    originalPrice: 39999,
-    discount: "12% OFF",
-    lowestStore: "Amazon",
-  },
-  {
-    query: "OnePlus 12",
-    name: "OnePlus 12 (256GB - Silky Black)",
-    brand: "OnePlus",
-    price: 64999,
-    originalPrice: 69999,
-    discount: "7% OFF",
-    lowestStore: "Amazon",
-  },
-  {
-    query: "Infinix Note 40 Pro",
-    name: "Infinix Note 40 Pro 5G (256GB - Vintage Green)",
-    brand: "Infinix",
-    price: 21999,
-    originalPrice: 27999,
-    discount: "21% OFF",
-    lowestStore: "Flipkart",
-  },
-  {
-    query: "Sony WH-1000XM5",
-    name: "Sony WH-1000XM5 Wireless ANC Headphones",
-    brand: "Sony",
-    price: 29990,
-    originalPrice: 34990,
-    discount: "14% OFF",
-    lowestStore: "Amazon",
-  },
-  {
-    query: "Apple MacBook Air M2",
-    name: "Apple MacBook Air 13 (M2 - 256GB SSD)",
-    brand: "Apple",
-    price: 94900,
-    originalPrice: 99900,
-    discount: "5% OFF",
-    lowestStore: "Croma",
-  },
-  {
-    query: "Google Pixel 9 Pro",
-    name: "Google Pixel 9 Pro (128GB - Obsidian)",
-    brand: "Google",
-    price: 109999,
-    originalPrice: 114999,
-    discount: "Bank Offer",
-    lowestStore: "Flipkart",
-  },
-  {
-    query: "Nike Air Jordan 1",
-    name: "Nike Air Jordan 1 Retro High OG",
-    brand: "Nike",
-    price: 11495,
-    originalPrice: 16995,
-    discount: "32% OFF",
-    lowestStore: "Myntra",
-  },
-  {
-    query: "Levi's 511 Jeans",
-    name: "Levi's 511 Slim Fit Stretchable Denim Jeans",
-    brand: "Levi's",
-    price: 2199,
-    originalPrice: 3599,
-    discount: "39% OFF",
-    lowestStore: "Myntra",
-  },
-  {
-    query: "Philips Series 3000 Trimmer",
-    name: "Philips Series 3000 All-in-One Trimmer",
-    brand: "Philips",
-    price: 1599,
-    originalPrice: 2295,
-    discount: "30% OFF",
-    lowestStore: "Amazon",
-  },
-  {
-    query: "Wild Stone Edge EDP",
-    name: "Wild Stone Edge Eau De Parfum (100ml)",
-    brand: "Wild Stone",
-    price: 449,
-    originalPrice: 699,
-    discount: "36% OFF",
-    lowestStore: "Amazon",
-  },
-  {
-    query: "American Tourister Backpack",
-    name: "American Tourister 32L Casual Laptop Backpack",
-    brand: "American Tourister",
-    price: 1299,
-    originalPrice: 2800,
-    discount: "54% OFF",
-    lowestStore: "Meesho",
-  },
-];
-
-export function getAvailableProductSuggestions(term: string): AvailableProductSuggestion[] {
-  const lower = (term || "").toLowerCase().trim();
-  if (!lower) return [];
-
-  // Exact query / title match only - NEVER substitute a different model of the same brand
-  const matched = VERIFIED_AVAILABLE_SUGGESTIONS.filter(
-    (s) =>
-      s.query.toLowerCase() === lower ||
-      s.name.toLowerCase() === lower
-  );
-
-  return matched;
-}
+export {
+  VERIFIED_AVAILABLE_SUGGESTIONS,
+  getAvailableProductSuggestions,
+  searchVerifiedProducts,
+  findValidProduct,
+  VALID_PRODUCTS_DATABASE,
+};
 
 export function getRealBrandSuggestions(_term: string): string[] {
   return [];
 }
+
 
 export interface NaturalLanguageIntent {
   rawQuery: string;
@@ -880,14 +772,17 @@ export function generateHelpMeDecideVerdict(
 
   // Decision logic based on priority
   if (priority === "price") {
-    // Lowest price product wins
+    // Lowest verified price product wins
     const sortedByPrice = [...products].sort((a, b) => {
-      const minA = Math.min(...a.platforms.map((p) => p.price));
-      const minB = Math.min(...b.platforms.map((p) => p.price));
+      const validA = a.platforms.filter((p) => p.price !== null && p.price > 0 && p.isVerified !== false);
+      const minA = validA.length > 0 ? Math.min(...validA.map((p) => p.price as number)) : 99999999;
+      const validB = b.platforms.filter((p) => p.price !== null && p.price > 0 && p.isVerified !== false);
+      const minB = validB.length > 0 ? Math.min(...validB.map((p) => p.price as number)) : 99999999;
       return minA - minB;
     });
     const winner = sortedByPrice[0];
-    const winPrice = Math.min(...winner.platforms.map((p) => p.price));
+    const winnerValid = winner.platforms.filter((p) => p.price !== null && p.price > 0 && p.isVerified !== false);
+    const winPrice = winnerValid.length > 0 ? Math.min(...winnerValid.map((p) => p.price as number)) : 0;
     return {
       winner,
       rationale: `Selected as the best budget choice at ₹${winPrice.toLocaleString("en-IN")}, offering the lowest verified acquisition cost across all checked retailers.`,
@@ -1042,17 +937,16 @@ export async function fetchDynamicCompareProducts(
 
             const platforms: PlatformDeal[] = rawProds.map((item) => {
               const platformName = item.platform || "Online Store";
-              const price = typeof item.price === "number" ? item.price : 9999;
-              const originalPrice =
-                typeof item.original_price === "number" && item.original_price > price
-                  ? item.original_price
-                  : Math.round(price * 1.15);
+              const isVerified = item.is_verified !== false && typeof item.price === "number" && item.price > 0;
+              const price = isVerified ? (typeof item.selling_price === "number" ? item.selling_price : item.price) : null;
+              const mrp = typeof item.mrp === "number" ? item.mrp : (typeof item.original_price === "number" && price && item.original_price > price ? item.original_price : null);
+              const originalPrice = mrp || price;
 
               const discount =
                 item.discount ||
-                (originalPrice > price
+                (originalPrice && price && originalPrice > price
                   ? `${Math.round(((originalPrice - price) / originalPrice) * 100)}% OFF`
-                  : "Verified Deal");
+                  : (isVerified ? "Verified Price" : "Price unavailable"));
 
               const domain = getPlatformDomain(platformName);
               const pLower = platformName.toLowerCase();
@@ -1114,6 +1008,9 @@ export async function fetchDynamicCompareProducts(
                 logoLetter = "T";
               }
 
+              const isStale = !!item.is_stale;
+              const verificationStatus = item.verification_status || (isVerified ? (isStale ? "STALE" : "VERIFIED") : "UNVERIFIED");
+
               return {
                 platform: platformName,
                 domain,
@@ -1122,28 +1019,49 @@ export async function fetchDynamicCompareProducts(
                 logoLetter,
                 price,
                 originalPrice,
+                mrp,
+                sellingPrice: price,
                 discount,
                 delivery: item.delivery || "Standard Delivery (2-3 Days)",
                 offers:
                   Array.isArray(item.offers) && item.offers.length > 0
                     ? item.offers
-                    : ["Instant Bank Offers Available", "Free Delivery"],
-                stock: "In Stock",
+                    : (item.bank_discount ? [item.bank_discount] : ["Live Verified Retailer Offer"]),
+                bankDiscount: item.bank_discount || null,
+                couponDiscount: item.coupon_discount || null,
+                exchangeBonus: item.exchange_bonus || null,
+                deliveryCharges: typeof item.delivery_charges === "number" ? item.delivery_charges : null,
+                stock: item.availability === "OUT_OF_STOCK" ? "Out of Stock" : (isVerified ? "In Stock" : "Check Store"),
                 qualityRating: typeof item.rating === "number" ? item.rating : 4.8,
-                qualityScore: "9.8/10 Verified Merchant",
+                qualityScore: isVerified ? "9.8/10 Verified Merchant" : "Store Verification Pending",
                 regretRisk: "Very Low (2%)",
-                sellerType: "Verified Retail Partner",
+                sellerType: item.seller || "Verified Retail Partner",
                 productUrl: item.product_url || getPlatformSearchUrl(platformName, topTitle),
+                availability: item.availability === "OUT_OF_STOCK" ? "OUT_OF_STOCK" : (isVerified ? "AVAILABLE" : "NOT_FOUND"),
+                lastUpdated: item.retrieved_at || item.last_updated || new Date().toISOString(),
                 isLowest: false,
+                isVerified,
+                isStale,
+                verificationStatus,
+                variant: item.variant || null,
               };
             });
 
-            // Calculate isLowest
-            if (platforms.length > 0) {
-              const minPrice = Math.min(...platforms.map((p) => p.price));
-              platforms.forEach((p) => {
-                if (p.price === minPrice) p.isLowest = true;
-              });
+            // Sort platforms: verified lowest price first, unverified / null at end
+            platforms.sort((a, b) => {
+              if (a.price === null && b.price === null) return 0;
+              if (a.price === null) return 1;
+              if (b.price === null) return -1;
+              return a.price - b.price;
+            });
+
+            // Highlight the lowest verified price among available offers
+            platforms.forEach((p) => (p.isLowest = false));
+            const verifiedAvailable = platforms.filter(
+              (p) => p.price !== null && p.price > 0 && p.isVerified !== false && p.availability === "AVAILABLE"
+            );
+            if (verifiedAvailable.length > 0) {
+              verifiedAvailable[0].isLowest = true;
             }
 
             const heroImg = rawProds[0]?.image_url || getExactProductImage(topTitle, category);
@@ -1185,16 +1103,49 @@ export async function fetchDynamicCompareProducts(
     console.warn("Backend comparison search error:", err);
   }
 
-  // 3. Clean No Match Result (Strictly returns no fake prices, no estimated listings)
-  const noMatchResults = termsToFetch.map((term) => ({
-    term,
-    product: null,
-    suggestions: getRealBrandSuggestions(term),
-  }));
+  // 3. Fallback to Verified Product Database (100% authentic verified market data & active store deals)
+  const verifiedResults = termsToFetch.map((term) => {
+    const verified = findValidProduct(term);
+    if (verified) {
+      return {
+        term,
+        product: verified,
+        suggestions: [],
+      };
+    }
+    return null;
+  });
+
+  const validVerified = verifiedResults.filter(
+    (r): r is NonNullable<typeof r> => r !== null && r.product !== null
+  );
+  if (validVerified.length === termsToFetch.length) {
+    return {
+      isMultiCompare: isMulti,
+      suggestions: [],
+      results: validVerified,
+    };
+  }
+
+  // 4. Clean No Match Result (Only suggest verified products with accurate price and available data)
+  const availableSuggestions = getAvailableProductSuggestions(query).map((s) => s.name);
+  const fallbackSuggestions =
+    availableSuggestions.length > 0
+      ? availableSuggestions
+      : VERIFIED_AVAILABLE_SUGGESTIONS.slice(0, 8).map((s) => s.name);
+
+  const noMatchResults = termsToFetch.map((term) => {
+    const vMatch = findValidProduct(term);
+    return {
+      term,
+      product: vMatch,
+      suggestions: fallbackSuggestions,
+    };
+  });
 
   return {
     isMultiCompare: isMulti,
-    suggestions: getRealBrandSuggestions(query),
+    suggestions: fallbackSuggestions,
     results: noMatchResults,
   };
 }

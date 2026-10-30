@@ -113,19 +113,32 @@ class IntentPayload(BaseModel):
 
 class NormalizedProduct(BaseModel):
     title: str = Field(..., description="Product title / name")
-    price: Optional[float] = Field(None, description="Cleaned numerical price in currency")
+    price: Optional[float] = Field(None, description="Cleaned numerical selling price in INR")
+    selling_price: Optional[float] = Field(None, description="Current verified selling price")
     original_price: Optional[float] = Field(None, description="Original list price / MRP if discounted")
+    mrp: Optional[float] = Field(None, description="Manufacturer suggested retail price / MRP")
     currency: str = Field("INR", description="Currency symbol or 3-letter code")
     platform: str = Field(..., description="Source / merchant name (e.g. Amazon, Flipkart, Blinkit)")
     image_url: Optional[str] = Field(None, description="Product image / thumbnail URL")
-    product_url: Optional[str] = Field(None, description="Product destination link")
+    product_url: Optional[str] = Field(None, description="Direct verified product destination link")
     rating: Optional[float] = Field(None, description="Rating out of 5.0")
     reviews_count: Optional[int] = Field(None, description="Total number of reviews")
     source: str = Field("serpapi", description="Connector source name (serpapi, serper, retailer_live)")
     delivery: Optional[str] = Field(None, description="Delivery timeframe / note")
+    delivery_charges: Optional[str] = Field(None, description="Extracted delivery charges e.g. Free Delivery")
     offers: Optional[List[str]] = Field(default_factory=list, description="Extracted promotional offers or badges")
+    coupon_discount: Optional[str] = Field(None, description="Coupon or promotional code discount")
+    bank_discount: Optional[str] = Field(None, description="Bank card / payment specific discount")
+    exchange_bonus: Optional[str] = Field(None, description="Exchange offer bonus")
+    final_price: Optional[float] = Field(None, description="Final calculated payable price when conditions known")
     availability: str = Field("AVAILABLE", description="AVAILABLE, OUT_OF_STOCK, NOT_FOUND, UNAVAILABLE, STALE, ERROR")
+    is_verified: bool = Field(True, description="True if price is verified from live offer")
+    verification_status: str = Field("VERIFIED", description="VERIFIED, UNVERIFIED, STALE, UNAVAILABLE")
+    is_stale: bool = Field(False, description="True if price came from cache or expired refresh")
     seller: Optional[str] = Field(None, description="Seller or merchant name")
+    brand: Optional[str] = Field(None, description="Extracted brand")
+    model: Optional[str] = Field(None, description="Extracted model")
+    variant: Optional[str] = Field(None, description="Extracted variant e.g. 128GB / 8GB RAM")
     last_updated: Optional[str] = Field(None, description="ISO timestamp when price data was retrieved")
     price_source: str = Field("live_retailer", description="live_retailer, serpapi, serper, cache")
     retailer_product_id: Optional[str] = Field(None, description="ASIN, FSN, SKU or Retailer ID")
@@ -139,14 +152,22 @@ class RetailerStatusItem(BaseModel):
     retailer: str
     availability: str = Field("NOT_FOUND", description="AVAILABLE, OUT_OF_STOCK, NOT_FOUND, UNAVAILABLE, STALE, ERROR")
     price: Optional[float] = None
+    selling_price: Optional[float] = None
     original_price: Optional[float] = None
+    mrp: Optional[float] = None
     discount: Optional[str] = None
+    coupon_discount: Optional[str] = None
+    bank_discount: Optional[str] = None
+    exchange_bonus: Optional[str] = None
     currency: str = "INR"
     product_url: Optional[str] = None
     last_updated: Optional[str] = None
     seller: Optional[str] = None
     delivery_info: Optional[str] = None
     offers: List[str] = Field(default_factory=list)
+    is_verified: bool = False
+    verification_status: str = "NOT_FOUND"
+    is_stale: bool = False
 
 class ComparisonResponse(BaseModel):
     query: str

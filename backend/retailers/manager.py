@@ -17,7 +17,7 @@ from backend.retailers.ajio import ajio_connector
 from backend.retailers.meesho import meesho_connector
 from backend.retailers.myntra import myntra_connector
 from backend.retailers.tatacliq import tatacliq_connector
-from backend.retailers.utils import fetch_all_live_retailer_offers
+from backend.retailers.utils import fetch_all_live_retailer_offers, get_direct_store_url
 
 from backend.models.product import NormalizedProduct, RetailerStatusItem, clean_platform_name
 from backend.services.connectors.query_builder import clean_conversational_query
@@ -238,12 +238,17 @@ class RetailerManager:
         offers_list: List[Dict[str, Any]] = []
 
         for r in verified_results:
+            clean_prod_url = r.product_url
+            ret_keyword = r.retailer.lower().split()[0]
+            if not clean_prod_url or "google." in clean_prod_url or ret_keyword not in clean_prod_url.lower():
+                clean_prod_url = get_direct_store_url(r.retailer, "", cleaned_query)
+
             np = NormalizedProduct(
                 title=r.title,
                 price=r.price or 0.0,
                 original_price=r.original_price,
                 platform=r.retailer,
-                product_url=r.product_url,
+                product_url=clean_prod_url,
                 image_url=r.image_url,
                 rating=4.8,
                 reviews_count=1200,
@@ -264,7 +269,7 @@ class RetailerManager:
                 "discount": r.discount,
                 "availability": r.stock_status == "AVAILABLE",
                 "stock_status": r.stock_status,
-                "product_url": r.product_url,
+                "product_url": clean_prod_url,
                 "source": r.source,
                 "seller": r.seller or r.retailer,
                 "fetched_at": r.fetched_at
@@ -304,7 +309,7 @@ class RetailerManager:
                 "retailers_checked": retailers_checked,
                 "retailer_status": retailer_status_dict,
                 "retailer_statuses": [s.model_dump() for s in retailer_statuses],
-                "results": [r.model_dump() for r in verified_results],
+                "results": [p.model_dump() for p in normalized_prods],
                 "products": [p.model_dump() for p in normalized_prods]
             }
 

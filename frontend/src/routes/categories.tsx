@@ -204,7 +204,12 @@ function CategoriesPage() {
   }
 
   // Intelligent search matching: searches active category, all categories, and brand/token fallbacks
-  const { filteredProducts, isFallbackMatch, activeSuggestions, groupedByCategory } = useMemo(() => {
+  const { filteredProducts, isFallbackMatch, activeSuggestions, groupedByCategory } = useMemo<{
+    filteredProducts: CategoryProduct[];
+    isFallbackMatch: boolean;
+    activeSuggestions: string[];
+    groupedByCategory: Record<string, CategoryProduct[]>;
+  }>(() => {
     let prods: CategoryProduct[] = [];
 
     if (!searchQuery.trim()) {
@@ -778,7 +783,7 @@ function CategoriesPage() {
 
                       {/* Products Grid for this category section */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {showcaseProducts.map((p) => renderProductCard(p))}
+                        {showcaseProducts.map((p: CategoryProduct) => renderProductCard(p))}
                       </div>
 
                       <div className="text-center pt-2">

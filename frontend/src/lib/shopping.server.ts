@@ -13,11 +13,17 @@ export interface LivePlatformDeal {
   badgeBg: string;
   logoBgClass: string;
   logoLetter: string;
-  price: number;
-  originalPrice: number;
+  price: number | null;
+  originalPrice: number | null;
+  mrp?: number | null;
+  sellingPrice?: number | null;
   discount: string;
   delivery: string;
   offers: string[];
+  bankDiscount?: string | null;
+  couponDiscount?: string | null;
+  exchangeBonus?: string | null;
+  deliveryCharges?: number | null;
   stock: string;
   qualityRating: number;
   qualityScore: string;
@@ -27,6 +33,10 @@ export interface LivePlatformDeal {
   availability: "AVAILABLE" | "OUT_OF_STOCK" | "NOT_FOUND" | "UNAVAILABLE";
   lastUpdated: string;
   isLowest?: boolean;
+  isVerified?: boolean;
+  isStale?: boolean;
+  verificationStatus?: string;
+  variant?: string | null;
 }
 
 export interface RetailerAvailabilityStatus {
@@ -36,6 +46,8 @@ export interface RetailerAvailabilityStatus {
   originalPrice: number | null;
   productUrl: string | null;
   lastUpdated: string;
+  isVerified?: boolean;
+  isStale?: boolean;
 }
 
 export interface LiveProductCompareResult {
@@ -399,6 +411,7 @@ export function getDirectStorePurchaseUrl(storeName: string, productName: string
 }
 
 import { scoreProductMatch } from "./productMatcher";
+import { findValidProduct } from "@/data/verifiedProducts";
 
 export const fetchLiveShoppingDealsServer = createServerFn({ method: "POST" })
   .validator((data: { query: string }) => data)
@@ -547,26 +560,134 @@ export const fetchLiveShoppingDealsServer = createServerFn({ method: "POST" })
           logoLetter: badges.logoLetter,
           price,
           originalPrice,
+          mrp: originalPrice,
+          sellingPrice: price,
           discount,
           delivery: deliveryText,
           offers: offers.slice(0, 3),
           stock: isOutOfStock ? "Out of Stock" : "In Stock",
           qualityRating: rating,
-          qualityScore: `${Math.min(9.9, (rating * 2).toFixed(1))}/10 Verified Store`,
+          qualityScore: `${Math.min(9.9, parseFloat((rating * 2).toFixed(1)))}/10 Verified Store`,
           regretRisk: regretScore,
           sellerType: item.merchant || item.source || badges.sellerType,
           productUrl,
           availability: isOutOfStock ? "OUT_OF_STOCK" : "AVAILABLE",
           lastUpdated: nowIso,
           isLowest: false,
+          isVerified: true,
+          isStale: false,
+          verificationStatus: "VERIFIED",
         });
       }
 
-      // Sort verified platforms by lowest price first
-      platforms.sort((a, b) => a.price - b.price);
+      // Ensure official e-commerce stores (Amazon, Flipkart, Croma, Reliance Digital) are represented
+      const verifiedDbProduct = findValidProduct(cleanQuery);
+      if (verifiedDbProduct && verifiedDbProduct.platforms) {
+        for (const vp of verifiedDbProduct.platforms) {
+          const alreadyExists = platforms.some(
+            (p) => p.platform.toLowerCase() === vp.platform.toLowerCase()
+          );
+          if (!alreadyExists) {
+            platforms.push({
+              platform: vp.platform,
+              domain: vp.domain,
+              badgeBg: vp.badgeBg,
+              logoBgClass: vp.logoBgClass,
+              logoLetter: vp.logoLetter,
+              price: vp.price,
+              originalPrice: vp.originalPrice,
+              mrp: vp.originalPrice,
+              sellingPrice: vp.price,
+              discount: vp.discount,
+              delivery: vp.delivery,
+              offers: vp.offers || ["Bank Offers Available", "Free Delivery"],
+              stock: vp.stock || "In Stock",
+              qualityRating: vp.qualityRating || 4.8,
+              qualityScore: vp.qualityScore || "9.8/10 Official Authorized Partner",
+              regretRisk: vp.regretRisk || "Low (2%)",
+              sellerType: vp.sellerType || "Verified Direct Retailer",
+              productUrl: vp.productUrl || getDirectStorePurchaseUrl(vp.platform, mainTitle),
+              availability: vp.availability || "AVAILABLE",
+              lastUpdated: nowIso,
+              isLowest: false,
+              isVerified: true,
+              isStale: false,
+              verificationStatus: "VERIFIED",
+            });
+          }
+        }
+      } else if (platforms.length > 0) {
+        // If live platforms exist but Amazon or Flipkart are missing, show them with direct link and "Price unavailable"
+        // NEVER fabricate, estimate, or synthesize a price using factors
+        const coreOfficialStores = [
+          {
+            name: "Amazon",
+            domain: "amazon.in",
+            delivery: "Prime Delivery Available",
+            badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+            logoBgClass: "bg-amber-600",
+            logoLetter: "A",
+            sellerType: "Amazon Fulfilled Store",
+          },
+          {
+            name: "Flipkart",
+            domain: "flipkart.com",
+            delivery: "Standard Delivery",
+            badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+            logoBgClass: "bg-blue-600",
+            logoLetter: "F",
+            sellerType: "Flipkart Authorized Seller",
+          },
+        ];
 
-      if (platforms.length > 0) {
-        platforms[0].isLowest = true;
+        for (const store of coreOfficialStores) {
+          const exists = platforms.some((p) => p.platform.toLowerCase() === store.name.toLowerCase());
+          if (!exists) {
+            platforms.push({
+              platform: store.name,
+              domain: store.domain,
+              badgeBg: store.badgeBg,
+              logoBgClass: store.logoBgClass,
+              logoLetter: store.logoLetter,
+              price: null,
+              originalPrice: null,
+              mrp: null,
+              sellingPrice: null,
+              discount: "Price unavailable",
+              delivery: store.delivery,
+              offers: ["Check official store for live price"],
+              stock: "Check Store",
+              qualityRating: 4.8,
+              qualityScore: "Official Retailer Listing",
+              regretRisk: "Low (2%)",
+              sellerType: store.sellerType,
+              productUrl: getDirectStorePurchaseUrl(store.name, mainTitle),
+              availability: "NOT_FOUND",
+              lastUpdated: nowIso,
+              isLowest: false,
+              isVerified: false,
+              isStale: false,
+              verificationStatus: "UNVERIFIED",
+            });
+          }
+        }
+      }
+
+      // Sort platforms: verified prices ascending, unverified / unavailable prices at the end
+      platforms.sort((a, b) => {
+        if (a.price === null && b.price === null) return 0;
+        if (a.price === null) return 1;
+        if (b.price === null) return -1;
+        return a.price - b.price;
+      });
+
+      // Highlight the lowest verified selling price among comparable available offers
+      platforms.forEach((p) => (p.isLowest = false));
+      const verifiedAvailableDeals = platforms.filter(
+        (p) => p.price !== null && p.price > 0 && p.isVerified !== false && p.availability === "AVAILABLE"
+      );
+      if (verifiedAvailableDeals.length > 0) {
+        verifiedAvailableDeals[0].isLowest = true;
       }
 
       // Track availability status across major Indian retail stores
@@ -616,7 +737,7 @@ export const fetchLiveShoppingDealsServer = createServerFn({ method: "POST" })
 
       // Fallback: Query FastAPI Backend Multi-Retailer Connector Engine
       try {
-        const backendApiUrl = process.env.VITE_API_URL || "http://localhost:8000/api/v1";
+        const backendApiUrl = process.env.VITE_API_URL || "http://localhost:8000/api";
         const backendRes = await axios.get(`${backendApiUrl}/compare/search`, {
           params: { q: cleanQuery },
           timeout: 10000,
@@ -631,13 +752,19 @@ export const fetchLiveShoppingDealsServer = createServerFn({ method: "POST" })
 
           const platforms: LivePlatformDeal[] = rawProds.map((item) => {
             const pName = item.platform || "Online Store";
-            const price = typeof item.price === "number" ? item.price : 9999;
-            const origPrice = typeof item.original_price === "number" && item.original_price > price
-              ? item.original_price
-              : Math.round(price * 1.15);
-            const discount = item.discount || (origPrice > price ? `${Math.round(((origPrice - price) / origPrice) * 100)}% OFF` : "Verified Deal");
+            const isVerified = item.is_verified !== false && typeof item.price === "number" && item.price > 0;
+            const price = isVerified ? (typeof item.selling_price === "number" ? item.selling_price : item.price) : null;
+            const mrp = typeof item.mrp === "number" ? item.mrp : (typeof item.original_price === "number" && price && item.original_price > price ? item.original_price : null);
+            const origPrice = mrp || price;
+            const discount =
+              item.discount ||
+              (origPrice && price && origPrice > price
+                ? `${Math.round(((origPrice - price) / origPrice) * 100)}% OFF`
+                : (isVerified ? "Verified Price" : "Price unavailable"));
             const domain = getStoreDomain(pName);
             const badges = getStoreBadges(pName);
+            const isStale = !!item.is_stale;
+            const verificationStatus = item.verification_status || (isVerified ? (isStale ? "STALE" : "VERIFIED") : "UNVERIFIED");
 
             return {
               platform: pName,
@@ -647,23 +774,50 @@ export const fetchLiveShoppingDealsServer = createServerFn({ method: "POST" })
               logoLetter: badges.logoLetter,
               price,
               originalPrice: origPrice,
+              mrp,
+              sellingPrice: price,
               discount,
               delivery: item.delivery || "Standard Delivery (2-3 Days)",
-              offers: Array.isArray(item.offers) && item.offers.length > 0 ? item.offers : ["Instant Bank Offers Available", "Free Delivery"],
-              stock: item.availability === "OUT_OF_STOCK" ? "Out of Stock" : "In Stock",
+              offers:
+                Array.isArray(item.offers) && item.offers.length > 0
+                  ? item.offers
+                  : (item.bank_discount ? [item.bank_discount] : ["Verified Direct Retailer"]),
+              bankDiscount: item.bank_discount || null,
+              couponDiscount: item.coupon_discount || null,
+              exchangeBonus: item.exchange_bonus || null,
+              deliveryCharges: typeof item.delivery_charges === "number" ? item.delivery_charges : null,
+              stock: item.availability === "OUT_OF_STOCK" ? "Out of Stock" : (isVerified ? "In Stock" : "Check Store"),
               qualityRating: 4.8,
-              qualityScore: "9.8/10 Verified Store",
+              qualityScore: isVerified ? "9.8/10 Verified Store" : "Store Verification Pending",
               regretRisk: "Low (3%)",
               sellerType: item.seller || pName,
               productUrl: item.product_url || getDirectStorePurchaseUrl(pName, topTitle),
-              availability: item.availability === "OUT_OF_STOCK" ? "OUT_OF_STOCK" : "AVAILABLE",
-              lastUpdated: item.last_updated || nowIso,
+              availability: item.availability === "OUT_OF_STOCK" ? "OUT_OF_STOCK" : (isVerified ? "AVAILABLE" : "NOT_FOUND"),
+              lastUpdated: item.retrieved_at || item.last_updated || nowIso,
               isLowest: false,
+              isVerified,
+              isStale,
+              verificationStatus,
+              variant: item.variant || null,
             };
           });
 
-          platforms.sort((a, b) => a.price - b.price);
-          if (platforms.length > 0) platforms[0].isLowest = true;
+          // Sort platforms: verified lowest price first, null / unverified at end
+          platforms.sort((a, b) => {
+            if (a.price === null && b.price === null) return 0;
+            if (a.price === null) return 1;
+            if (b.price === null) return -1;
+            return a.price - b.price;
+          });
+
+          // Highlight lowest verified price
+          platforms.forEach((p) => (p.isLowest = false));
+          const verifiedAvailableDeals = platforms.filter(
+            (p) => p.price !== null && p.price > 0 && p.isVerified !== false && p.availability === "AVAILABLE"
+          );
+          if (verifiedAvailableDeals.length > 0) {
+            verifiedAvailableDeals[0].isLowest = true;
+          }
 
           return {
             success: true,

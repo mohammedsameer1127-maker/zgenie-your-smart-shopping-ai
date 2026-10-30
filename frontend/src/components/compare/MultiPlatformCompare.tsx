@@ -46,12 +46,7 @@ import {
   fetchDynamicCompareProducts,
   inferBrand,
   getRealBrandSuggestions,
-  getAvailableProductSuggestions,
-  VERIFIED_AVAILABLE_SUGGESTIONS,
-  type AvailableProductSuggestion,
   getExactProductImage,
-  type PlatformDeal,
-  type CompareProduct,
   getPlatformSearchUrl,
   getPlatformDomain,
   generateMatchScoreBreakdown,
@@ -61,2466 +56,31 @@ import {
   parseNaturalLanguageSearchIntent,
 } from "@/lib/groq";
 
+import {
+  VALID_PRODUCTS_DATABASE,
+  VERIFIED_AVAILABLE_SUGGESTIONS,
+  searchVerifiedProducts,
+  findValidProduct,
+  getAvailableProductSuggestions,
+  type AvailableProductSuggestion,
+  type CompareProduct,
+  type PlatformDeal,
+} from "@/data/verifiedProducts";
+
+export {
+  VALID_PRODUCTS_DATABASE,
+  VERIFIED_AVAILABLE_SUGGESTIONS,
+  searchVerifiedProducts,
+  findValidProduct,
+  getAvailableProductSuggestions,
+};
 export type { PlatformDeal, CompareProduct, AvailableProductSuggestion };
-export { getPlatformSearchUrl, getPlatformDomain, inferBrand, getRealBrandSuggestions, getAvailableProductSuggestions, getExactProductImage };
-
-/**
- * Valid Products Database
- * Authentic database containing real-market verified models, accurate INR prices, and active retail platforms.
- */
-export const VALID_PRODUCTS_DATABASE: CompareProduct[] = [
-  // 1. Apple iPhone 16 Pro
-  {
-    id: "prod-iphone-16-pro",
-    name: "Apple iPhone 16 Pro (128GB - Desert Titanium)",
-    category: "Smartphones",
-    rating: 4.9,
-    reviewsCount: 8900,
-    aliases: [
-      "iphone 16 pro",
-      "iphone 16 pro max",
-      "apple iphone 16 pro",
-      "iphone16 pro",
-      "iphone16pro",
-    ],
-    platforms: [
-      {
-        platform: "Blinkit",
-        domain: "blinkit.com",
-        badgeBg: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-        logoBgClass: "bg-yellow-500 text-black",
-        logoLetter: "B",
-        price: 119490,
-        originalPrice: 119900,
-        discount: "10-Min Instant Delivery",
-        delivery: "10-15 Min Instant Delivery",
-        offers: ["Instant 10-Min Delivery", "ICICI & SBI Cards ₹5,000 Instant Off"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 Apple Authorized Partner",
-        regretRisk: "Very Low (1%)",
-        sellerType: "Blinkit Official Partner",
-        productUrl: "https://blinkit.com/s/?q=Apple+iPhone+16+Pro",
-        isLowest: true,
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 119900,
-        originalPrice: 119900,
-        discount: "Bank Offers Available",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["₹5,000 Instant Discount on ICICI/Kotak Cards", "5% Unlimited Amazon Pay Cashback"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 Apple Official Direct",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Amazon Fulfilled Store",
-        productUrl: "https://www.amazon.in/s?k=Apple+iPhone+16+Pro",
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 119900,
-        originalPrice: 119900,
-        discount: "Exchange Bonus",
-        delivery: "Delivery in 2 Days",
-        offers: ["HDFC Bank ₹5,000 Instant Off", "Extra ₹4,000 Exchange Bonus"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Official Retailer",
-        regretRisk: "Very Low (3%)",
-        sellerType: "Apple Authorized Reseller",
-        productUrl: "https://www.flipkart.com/search?q=Apple+iPhone+16+Pro",
-      },
-      {
-        platform: "Croma",
-        domain: "croma.com",
-        badgeBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        logoBgClass: "bg-emerald-600",
-        logoLetter: "C",
-        price: 119900,
-        originalPrice: 119900,
-        discount: "Tata Neu Rewards",
-        delivery: "Same-Day Store Pickup / Express Delivery",
-        offers: ["Tata Neu 5% NeuCoins", "Instant ₹5,000 Bank Cashback"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 Tata Certified Retail",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Croma Official Retail",
-        productUrl: "https://www.croma.com/searchB?q=Apple+iPhone+16+Pro%3Arelevance",
-      },
-      {
-        platform: "Reliance Digital",
-        domain: "reliancedigital.in",
-        badgeBg: "bg-red-500/10 text-red-600 border-red-500/20",
-        logoBgClass: "bg-red-600",
-        logoLetter: "R",
-        price: 119900,
-        originalPrice: 119900,
-        discount: "Jio Points Savings",
-        delivery: "Express 3-Hour Delivery in Select Cities",
-        offers: ["OneCard & Axis Bank Instant ₹5,000 Off", "Free Apple Care Consultation"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.8/10 Official Store",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Reliance Retail Direct",
-        productUrl: "https://www.reliancedigital.in/search?q=Apple+iPhone+16+Pro:relevance",
-      },
-    ],
-  },
-
-  // 2. Apple iPhone 16
-  {
-    id: "prod-iphone-16",
-    name: "Apple iPhone 16 (128GB - Ultramarine)",
-    category: "Smartphones",
-    rating: 4.8,
-    reviewsCount: 11200,
-    aliases: [
-      "iphone 16",
-      "apple iphone 16",
-      "iphone16",
-      "iphone 16 plus",
-    ],
-    platforms: [
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 74990,
-        originalPrice: 79900,
-        discount: "6% OFF",
-        delivery: "Delivery by Tomorrow",
-        offers: ["HDFC Bank ₹5,000 Instant Off", "Extra ₹3,000 Exchange Bonus"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 Official Reseller",
-        regretRisk: "Low (3%)",
-        sellerType: "Apple Authorized Reseller",
-        productUrl: "https://www.flipkart.com/search?q=Apple+iPhone+16",
-        isLowest: true,
-      },
-      {
-        platform: "Blinkit",
-        domain: "blinkit.com",
-        badgeBg: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-        logoBgClass: "bg-yellow-500 text-black",
-        logoLetter: "B",
-        price: 75490,
-        originalPrice: 79900,
-        discount: "10-Min Instant Delivery",
-        delivery: "10-15 Min Instant Delivery",
-        offers: ["Instant ₹4,500 Bank Rebate", "Instant Darkstore Dispatch"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Official Authorized Store",
-        regretRisk: "Low (2%)",
-        sellerType: "Blinkit Official Partner",
-        productUrl: "https://blinkit.com/s/?q=Apple+iPhone+16",
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 75900,
-        originalPrice: 79900,
-        discount: "5% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["ICICI Instant ₹4,000 Off", "Amazon Pay ICICI 5% Cashback"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.8/10 Apple Direct",
-        regretRisk: "Low (3%)",
-        sellerType: "Amazon Fulfilled",
-        productUrl: "https://www.amazon.in/s?k=Apple+iPhone+16",
-      },
-      {
-        platform: "Croma",
-        domain: "croma.com",
-        badgeBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        logoBgClass: "bg-emerald-600",
-        logoLetter: "C",
-        price: 77900,
-        originalPrice: 79900,
-        discount: "2% OFF",
-        delivery: "Store Pickup / Express Courier",
-        offers: ["Tata Neu 5% Bonus Points", "Instant Bank Discount ₹4,000"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Tata Assured",
-        regretRisk: "Low (3%)",
-        sellerType: "Croma Official Retail",
-        productUrl: "https://www.croma.com/searchB?q=Apple+iPhone+16%3Arelevance",
-      },
-      {
-        platform: "Blinkit",
-        domain: "blinkit.com",
-        badgeBg: "bg-yellow-500/10 text-yellow-800 border-yellow-500/20",
-        logoBgClass: "bg-yellow-500",
-        logoLetter: "B",
-        price: 79900,
-        originalPrice: 79900,
-        discount: "Instant 10-Min Delivery",
-        delivery: "10-Minute Instant Delivery",
-        offers: ["Club Cashback ₹2,000", "Instant Darkstore Dispatch"],
-        stock: "In Stock (Select Metros)",
-        qualityRating: 4.7,
-        qualityScore: "9.4/10 Verified Darkstore",
-        regretRisk: "Low (4%)",
-        sellerType: "Blinkit Verified Store",
-        productUrl: "https://blinkit.com/s/?q=Apple+iPhone+16",
-      },
-    ],
-  },
-
-  // 3. Apple iPhone 15 Pro
-  {
-    id: "prod-1",
-    name: "Apple iPhone 15 Pro (128GB - Natural Titanium)",
-    category: "Smartphones",
-    rating: 4.8,
-    reviewsCount: 14200,
-    aliases: [
-      "iphone 15 pro",
-      "apple iphone 15 pro",
-      "iphone15 pro",
-      "iphone15pro",
-      "iphone 15 pro max",
-    ],
-    platforms: [
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 122990,
-        originalPrice: 134900,
-        discount: "8% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["HDFC Card ₹4,000 Instant Off", "Extra ₹3,000 Exchange Bonus"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.6/10 Official Retailer",
-        regretRisk: "Low (4%)",
-        sellerType: "Apple Authorized Reseller",
-        productUrl: "https://www.flipkart.com/search?q=Apple+iPhone+15+Pro",
-        isLowest: true,
-      },
-      {
-        platform: "Blinkit",
-        domain: "blinkit.com",
-        badgeBg: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-        logoBgClass: "bg-yellow-500 text-black",
-        logoLetter: "B",
-        price: 123990,
-        originalPrice: 134900,
-        discount: "10-Min Delivery",
-        delivery: "10-15 Min Instant Delivery",
-        offers: ["Instant Bank Cashback ₹3,000", "Instant Express Dispatch"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Official Apple Store",
-        regretRisk: "Low (3%)",
-        sellerType: "Blinkit Official Partner",
-        productUrl: "https://blinkit.com/s/?q=Apple+iPhone+15+Pro",
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 124900,
-        originalPrice: 134900,
-        discount: "7% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["5% Unlimited Cashback with Amazon Pay ICICI", "No Cost EMI up to 12 months"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.8/10 Brand Direct",
-        regretRisk: "Low (3%)",
-        sellerType: "Amazon Fulfilled Store",
-        productUrl: "https://www.amazon.in/s?k=Apple+iPhone+15+Pro",
-      },
-      {
-        platform: "Croma",
-        domain: "croma.com",
-        badgeBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        logoBgClass: "bg-emerald-600",
-        logoLetter: "C",
-        price: 124900,
-        originalPrice: 134900,
-        discount: "7% OFF",
-        delivery: "Express Store Pickup / Delivery",
-        offers: ["Tata Neu 5% NeuCoins", "Instant Bank ₹3,500 Off"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 Tata Certified",
-        regretRisk: "Low (4%)",
-        sellerType: "Croma Electronics",
-        productUrl: "https://www.croma.com/searchB?q=Apple+iPhone+15+Pro%3Arelevance",
-      },
-      {
-        platform: "Reliance Digital",
-        domain: "reliancedigital.in",
-        badgeBg: "bg-red-500/10 text-red-600 border-red-500/20",
-        logoBgClass: "bg-red-600",
-        logoLetter: "R",
-        price: 125900,
-        originalPrice: 134900,
-        discount: "6% OFF",
-        delivery: "Express Courier",
-        offers: ["Bank Instant ₹3,000 Rebate", "Free In-store Setup"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.6/10 Retail Assured",
-        regretRisk: "Low (4%)",
-        sellerType: "Reliance Retail",
-        productUrl: "https://www.reliancedigital.in/search?q=Apple+iPhone+15+Pro:relevance",
-      },
-    ],
-  },
-
-  // 4. Apple iPhone 15
-  {
-    id: "prod-iphone-15",
-    name: "Apple iPhone 15 (128GB - Black / Blue)",
-    category: "Smartphones",
-    rating: 4.8,
-    reviewsCount: 18400,
-    aliases: [
-      "iphone 15",
-      "apple iphone 15",
-      "iphone15",
-      "apple iphone",
-      "iphone",
-    ],
-    platforms: [
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 59999,
-        originalPrice: 69900,
-        discount: "14% OFF",
-        delivery: "Delivery by Tomorrow",
-        offers: ["Flipkart Axis Bank 5% Cashback", "Extra ₹2,500 Exchange Bonus"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 Flipkart Assured",
-        regretRisk: "Low (3%)",
-        sellerType: "Apple Authorized Reseller",
-        productUrl: "https://www.flipkart.com/search?q=Apple+iPhone+15",
-        isLowest: true,
-      },
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 61490,
-        originalPrice: 69900,
-        discount: "12% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Instant ₹3,000 Bank Off", "Myntra Kotak 10% Cashback"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Authorized Brand Store",
-        regretRisk: "Low (3%)",
-        sellerType: "Myntra Official Direct",
-        productUrl: "https://www.myntra.com/Apple+iPhone+15",
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 61999,
-        originalPrice: 69900,
-        discount: "11% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["Amazon Pay ICICI 5% Cashback", "Exchange Bonus up to ₹3,000"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.8/10 Official Store",
-        regretRisk: "Low (3%)",
-        sellerType: "Amazon Fulfilled Store",
-        productUrl: "https://www.amazon.in/s?k=Apple+iPhone+15",
-      },
-      {
-        platform: "Croma",
-        domain: "croma.com",
-        badgeBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        logoBgClass: "bg-emerald-600",
-        logoLetter: "C",
-        price: 62990,
-        originalPrice: 69900,
-        discount: "10% OFF",
-        delivery: "Store Pickup / Express Shipping",
-        offers: ["Tata Neu 5% Coins", "Instant Bank ₹2,500 Off"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 Tata Certified",
-        regretRisk: "Low (4%)",
-        sellerType: "Croma Retail",
-        productUrl: "https://www.croma.com/searchB?q=Apple+iPhone+15%3Arelevance",
-      },
-      {
-        platform: "Reliance Digital",
-        domain: "reliancedigital.in",
-        badgeBg: "bg-red-500/10 text-red-600 border-red-500/20",
-        logoBgClass: "bg-red-600",
-        logoLetter: "R",
-        price: 63490,
-        originalPrice: 69900,
-        discount: "9% OFF",
-        delivery: "Express Delivery",
-        offers: ["Bank Instant ₹2,000 Rebate"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.5/10 Official Retailer",
-        regretRisk: "Low (4%)",
-        sellerType: "Reliance Retail",
-        productUrl: "https://www.reliancedigital.in/search?q=Apple+iPhone+15:relevance",
-      },
-      {
-        platform: "Blinkit",
-        domain: "blinkit.com",
-        badgeBg: "bg-yellow-500/10 text-yellow-800 border-yellow-500/20",
-        logoBgClass: "bg-yellow-500",
-        logoLetter: "B",
-        price: 64900,
-        originalPrice: 69900,
-        discount: "7% OFF",
-        delivery: "10-Minute Darkstore Delivery",
-        offers: ["Instant ₹1,500 Bank Coupon"],
-        stock: "In Stock (Select Cities)",
-        qualityRating: 4.7,
-        qualityScore: "9.3/10 Verified Darkstore",
-        regretRisk: "Low (5%)",
-        sellerType: "Blinkit Electronics",
-        productUrl: "https://blinkit.com/s/?q=Apple+iPhone+15",
-      },
-    ],
-  },
-
-  // 5. Samsung Galaxy S24 Ultra
-  {
-    id: "prod-3",
-    name: "Samsung Galaxy S24 Ultra (5G 256GB - Titanium Gray)",
-    category: "Smartphones",
-    rating: 4.8,
-    reviewsCount: 9600,
-    aliases: [
-      "samsung galaxy s24 ultra",
-      "samsung galaxy s24",
-      "galaxy s24 ultra",
-      "samsung s24 ultra",
-      "s24 ultra",
-      "samsung s24",
-      "s24",
-    ],
-    platforms: [
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 124999,
-        originalPrice: 139999,
-        discount: "11% OFF",
-        delivery: "Delivery by Tomorrow",
-        offers: ["Samsung Axis Card 10% Cashback", "Extra ₹6,000 Exchange Bonus"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.6/10 Official Samsung Store",
-        regretRisk: "Low (4%)",
-        sellerType: "Samsung Official Partner",
-        productUrl: "https://www.flipkart.com/search?q=Samsung+Galaxy+S24+Ultra",
-        isLowest: true,
-      },
-      {
-        platform: "Blinkit",
-        domain: "blinkit.com",
-        badgeBg: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-        logoBgClass: "bg-yellow-500 text-black",
-        logoLetter: "B",
-        price: 126990,
-        originalPrice: 139999,
-        discount: "10-Min Delivery",
-        delivery: "10-15 Min Instant Delivery",
-        offers: ["Instant ₹5,000 HDFC/ICICI Off", "Instant Darkstore Dispatch"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Samsung Official Store",
-        regretRisk: "Low (3%)",
-        sellerType: "Blinkit Official Partner",
-        productUrl: "https://blinkit.com/s/?q=Samsung+Galaxy+S24+Ultra",
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 127999,
-        originalPrice: 139999,
-        discount: "8% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["Instant ₹5,000 Bank Discount", "No Cost EMI up to 24 Months"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.8/10 Official Brand Store",
-        regretRisk: "Low (3%)",
-        sellerType: "Amazon Fulfilled",
-        productUrl: "https://www.amazon.in/s?k=Samsung+Galaxy+S24+Ultra",
-      },
-      {
-        platform: "Croma",
-        domain: "croma.com",
-        badgeBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        logoBgClass: "bg-emerald-600",
-        logoLetter: "C",
-        price: 129999,
-        originalPrice: 139999,
-        discount: "7% OFF",
-        delivery: "Same-Day Store Pickup Available",
-        offers: ["Tata Neu 5% Coins", "Free Galaxy Watch 4 Upgrade Voucher"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 Tata Certified",
-        regretRisk: "Low (4%)",
-        sellerType: "Croma Official Retail",
-        productUrl: "https://www.croma.com/searchB?q=Samsung+Galaxy+S24+Ultra%3Arelevance",
-      },
-      {
-        platform: "Reliance Digital",
-        domain: "reliancedigital.in",
-        badgeBg: "bg-red-500/10 text-red-600 border-red-500/20",
-        logoBgClass: "bg-red-600",
-        logoLetter: "R",
-        price: 129999,
-        originalPrice: 139999,
-        discount: "7% OFF",
-        delivery: "Express Shipping",
-        offers: ["Bank Instant ₹5,000 Rebate", "Free Screen Replacement 1-Year"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.6/10 Official Partner",
-        regretRisk: "Low (4%)",
-        sellerType: "Reliance Retail",
-        productUrl: "https://www.reliancedigital.in/search?q=Samsung+Galaxy+S24+Ultra:relevance",
-      },
-    ],
-  },
-
-  // 6. OnePlus 12
-  {
-    id: "prod-oneplus-12",
-    name: "OnePlus 12 (5G 256GB - Silky Black)",
-    category: "Smartphones",
-    rating: 4.7,
-    reviewsCount: 7800,
-    aliases: [
-      "oneplus 12",
-      "one plus 12",
-      "oneplus12",
-      "oneplus",
-      "one plus",
-    ],
-    platforms: [
-      {
-        platform: "Blinkit",
-        domain: "blinkit.com",
-        badgeBg: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-        logoBgClass: "bg-yellow-500 text-black",
-        logoLetter: "B",
-        price: 63999,
-        originalPrice: 69999,
-        discount: "10-Min Instant Delivery",
-        delivery: "10-15 Min Instant Delivery",
-        offers: ["ICICI Instant ₹3,000 Off", "Free OnePlus Official Cable"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 OnePlus Verified Partner",
-        regretRisk: "Low (3%)",
-        sellerType: "Blinkit Official Store",
-        productUrl: "https://blinkit.com/s/?q=OnePlus+12",
-        isLowest: true,
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 64999,
-        originalPrice: 69999,
-        discount: "7% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["Instant ₹3,000 Bank Discount", "No Cost EMI up to 12 Months"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 OnePlus Direct Store",
-        regretRisk: "Low (3%)",
-        sellerType: "Amazon Fulfilled Store",
-        productUrl: "https://www.amazon.in/s?k=OnePlus+12",
-      },
-      {
-        platform: "Croma",
-        domain: "croma.com",
-        badgeBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        logoBgClass: "bg-emerald-600",
-        logoLetter: "C",
-        price: 64999,
-        originalPrice: 69999,
-        discount: "7% OFF",
-        delivery: "Express Store Pickup",
-        offers: ["Tata Neu 5% Coins", "Instant Bank ₹3,000 Cashback"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 Tata Certified",
-        regretRisk: "Low (4%)",
-        sellerType: "Croma Retail",
-        productUrl: "https://www.croma.com/searchB?q=OnePlus+12%3Arelevance",
-      },
-      {
-        platform: "Reliance Digital",
-        domain: "reliancedigital.in",
-        badgeBg: "bg-red-500/10 text-red-600 border-red-500/20",
-        logoBgClass: "bg-red-600",
-        logoLetter: "R",
-        price: 65499,
-        originalPrice: 69999,
-        discount: "6% OFF",
-        delivery: "Express Courier",
-        offers: ["Bank Instant ₹2,500 Rebate"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.5/10 Official Partner",
-        regretRisk: "Low (5%)",
-        sellerType: "Reliance Retail",
-        productUrl: "https://www.reliancedigital.in/search?q=OnePlus+12:relevance",
-      },
-    ],
-  },
-
-  // 7. OnePlus 12R
-  {
-    id: "prod-oneplus-12r",
-    name: "OnePlus 12R (5G 128GB - Cool Blue)",
-    category: "Smartphones",
-    rating: 4.7,
-    reviewsCount: 10400,
-    aliases: [
-      "oneplus 12r",
-      "one plus 12r",
-      "oneplus12r",
-      "12r",
-    ],
-    platforms: [
-      {
-        platform: "Blinkit",
-        domain: "blinkit.com",
-        badgeBg: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-        logoBgClass: "bg-yellow-500 text-black",
-        logoLetter: "B",
-        price: 38990,
-        originalPrice: 39999,
-        discount: "10-Min Delivery",
-        delivery: "10-15 Min Instant Delivery",
-        offers: ["Instant ₹2,000 Bank Off", "Instant Delivery to Doorstep"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Official Partner",
-        regretRisk: "Low (3%)",
-        sellerType: "Blinkit Official Partner",
-        productUrl: "https://blinkit.com/s/?q=OnePlus+12R",
-        isLowest: true,
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 39999,
-        originalPrice: 39999,
-        discount: "Bank Offers Available",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["Instant ₹2,000 ICICI Bank Discount", "No Cost EMI 6 Months"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 OnePlus Direct",
-        regretRisk: "Low (3%)",
-        sellerType: "Amazon Fulfilled Store",
-        productUrl: "https://www.amazon.in/s?k=OnePlus+12R",
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 39999,
-        originalPrice: 39999,
-        discount: "Exchange Offer",
-        delivery: "Delivery in 2 Days",
-        offers: ["Flipkart Axis 5% Cashback", "Extra ₹2,000 Exchange Bonus"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.5/10 Assured Reseller",
-        regretRisk: "Low (4%)",
-        sellerType: "Flipkart Assured",
-        productUrl: "https://www.flipkart.com/search?q=OnePlus+12R",
-      },
-      {
-        platform: "Croma",
-        domain: "croma.com",
-        badgeBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        logoBgClass: "bg-emerald-600",
-        logoLetter: "C",
-        price: 39999,
-        originalPrice: 39999,
-        discount: "Tata Neu Rewards",
-        delivery: "Express Store Pickup",
-        offers: ["Tata Neu 5% Coins", "Instant Bank ₹2,000 Off"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 Tata Assured",
-        regretRisk: "Low (4%)",
-        sellerType: "Croma Official Retail",
-        productUrl: "https://www.croma.com/searchB?q=OnePlus+12R%3Arelevance",
-      },
-      {
-        platform: "Reliance Digital",
-        domain: "reliancedigital.in",
-        badgeBg: "bg-red-500/10 text-red-600 border-red-500/20",
-        logoBgClass: "bg-red-600",
-        logoLetter: "R",
-        price: 40490,
-        originalPrice: 39999,
-        discount: "Special Retail Pack",
-        delivery: "Express Courier",
-        offers: ["Free Fast Charger Cable", "Bank Instant ₹1,500 Rebate"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.4/10 Verified Store",
-        regretRisk: "Low (5%)",
-        sellerType: "Reliance Retail",
-        productUrl: "https://www.reliancedigital.in/search?q=OnePlus+12R:relevance",
-      },
-    ],
-  },
-
-  // 8. Google Pixel 9 Pro
-  {
-    id: "prod-pixel-9-pro",
-    name: "Google Pixel 9 Pro (128GB - Obsidian)",
-    category: "Smartphones",
-    rating: 4.8,
-    reviewsCount: 3400,
-    aliases: [
-      "pixel 9 pro",
-      "google pixel 9 pro",
-      "pixel 9",
-      "google pixel 9",
-      "pixel9 pro",
-      "pixel9",
-    ],
-    platforms: [
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 109999,
-        originalPrice: 109999,
-        discount: "Official Launch Partner",
-        delivery: "Delivery by Tomorrow",
-        offers: ["ICICI Bank ₹10,000 Instant Off", "Extra ₹8,000 Exchange Bonus", "1 Year Google One AI Premium Free"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 Google Exclusive Partner",
-        regretRisk: "Low (3%)",
-        sellerType: "Google Authorized Retailer",
-        productUrl: "https://www.flipkart.com/search?q=Google+Pixel+9+Pro",
-        isLowest: true,
-      },
-      {
-        platform: "Croma",
-        domain: "croma.com",
-        badgeBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        logoBgClass: "bg-emerald-600",
-        logoLetter: "C",
-        price: 109999,
-        originalPrice: 109999,
-        discount: "Bank Cashbacks",
-        delivery: "Store Pickup / Express Courier",
-        offers: ["Instant ₹10,000 ICICI Bank Discount", "Tata Neu 5% Coins"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Official Experience Center",
-        regretRisk: "Low (3%)",
-        sellerType: "Croma Store",
-        productUrl: "https://www.croma.com/searchB?q=Google+Pixel+9+Pro%3Arelevance",
-      },
-      {
-        platform: "Reliance Digital",
-        domain: "reliancedigital.in",
-        badgeBg: "bg-red-500/10 text-red-600 border-red-500/20",
-        logoBgClass: "bg-red-600",
-        logoLetter: "R",
-        price: 109999,
-        originalPrice: 109999,
-        discount: "Jio Points Savings",
-        delivery: "Express Shipping",
-        offers: ["ICICI Instant ₹10,000 Rebate", "Free 1-Year Screen Protection"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Reliance Assured",
-        regretRisk: "Low (3%)",
-        sellerType: "Reliance Retail Direct",
-        productUrl: "https://www.reliancedigital.in/search?q=Google+Pixel+9+Pro:relevance",
-      },
-    ],
-  },
-
-  // 9. Nothing Phone (2)
-  {
-    id: "prod-nothing-phone-2",
-    name: "Nothing Phone (2) (256GB - Dark Grey)",
-    category: "Smartphones",
-    rating: 4.6,
-    reviewsCount: 6800,
-    aliases: [
-      "nothing phone 2",
-      "nothing phone (2)",
-      "nothing phone",
-      "nothing 2",
-      "nothing",
-    ],
-    platforms: [
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 36499,
-        originalPrice: 49999,
-        discount: "27% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Instant ₹2,000 Bank Off", "Free Nothing Screen Guard"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 Verified Brand Store",
-        regretRisk: "Low (4%)",
-        sellerType: "Myntra Official Direct",
-        productUrl: "https://www.myntra.com/Nothing+Phone+2",
-        isLowest: true,
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 36999,
-        originalPrice: 49999,
-        discount: "26% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Flipkart Axis 5% Cashback", "Extra ₹2,500 Exchange Bonus"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.6/10 Official Store",
-        regretRisk: "Low (5%)",
-        sellerType: "Nothing Official Partner",
-        productUrl: "https://www.flipkart.com/search?q=Nothing+Phone+2",
-      },
-      {
-        platform: "Croma",
-        domain: "croma.com",
-        badgeBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        logoBgClass: "bg-emerald-600",
-        logoLetter: "C",
-        price: 37999,
-        originalPrice: 49999,
-        discount: "24% OFF",
-        delivery: "Store Pickup / Express Courier",
-        offers: ["Tata Neu 5% Coins", "Instant Bank ₹1,500 Off"],
-        stock: "In Stock",
-        qualityRating: 4.6,
-        qualityScore: "9.4/10 Tata Assured",
-        regretRisk: "Low (6%)",
-        sellerType: "Croma Retail",
-        productUrl: "https://www.croma.com/searchB?q=Nothing+Phone+2%3Arelevance",
-      },
-    ],
-  },
-
-  // 10. Sony WH-1000XM5
-  {
-    id: "prod-2",
-    name: "Sony WH-1000XM5 Wireless Noise Canceling Headphones",
-    category: "Audio",
-    rating: 4.7,
-    reviewsCount: 8400,
-    aliases: [
-      "sony wh-1000xm5",
-      "sony xm5",
-      "sony wh1000xm5",
-      "sony headphones",
-      "xm5",
-      "sony wireless headphones",
-      "wh-1000xm5",
-      "sony wh 1000xm5",
-    ],
-    platforms: [
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 24990,
-        originalPrice: 29990,
-        discount: "16% OFF",
-        delivery: "Prime Delivery Tomorrow",
-        offers: ["ICICI Card ₹2,000 Off", "Free 3-Month Audible Subscription"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.7/10 Premium Audio Build",
-        regretRisk: "Low (3%)",
-        sellerType: "Sony India Authorized",
-        productUrl: "https://www.amazon.in/s?k=Sony+WH-1000XM5",
-        isLowest: true,
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 25990,
-        originalPrice: 29990,
-        discount: "13% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["SBI Card ₹1,500 Off", "Flipkart Pay Later"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.3/10 Verified Quality",
-        regretRisk: "Low (5%)",
-        sellerType: "Assured SuperSeller",
-        productUrl: "https://www.flipkart.com/search?q=Sony+WH-1000XM5",
-      },
-      {
-        platform: "Croma",
-        domain: "croma.com",
-        badgeBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        logoBgClass: "bg-emerald-600",
-        logoLetter: "C",
-        price: 25990,
-        originalPrice: 29990,
-        discount: "13% OFF",
-        delivery: "Store Pickup / 2-Day Delivery",
-        offers: ["Tata Neu 5% Coins", "Free Sony Headphone Pouch"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.6/10 Official Partner",
-        regretRisk: "Low (4%)",
-        sellerType: "Croma Electronics",
-        productUrl: "https://www.croma.com/searchB?q=Sony+WH-1000XM5%3Arelevance",
-      },
-      {
-        platform: "Reliance Digital",
-        domain: "reliancedigital.in",
-        badgeBg: "bg-red-500/10 text-red-600 border-red-500/20",
-        logoBgClass: "bg-red-600",
-        logoLetter: "R",
-        price: 26490,
-        originalPrice: 29990,
-        discount: "11% OFF",
-        delivery: "Express Shipping",
-        offers: ["Instant Bank Cashback ₹1,500"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.4/10 Verified Store",
-        regretRisk: "Low (4%)",
-        sellerType: "Reliance Retail",
-        productUrl: "https://www.reliancedigital.in/search?q=Sony+WH-1000XM5:relevance",
-      },
-      {
-        platform: "Blinkit",
-        domain: "blinkit.com",
-        badgeBg: "bg-yellow-500/10 text-yellow-800 border-yellow-500/20",
-        logoBgClass: "bg-yellow-500",
-        logoLetter: "B",
-        price: 26990,
-        originalPrice: 29990,
-        discount: "10% OFF",
-        delivery: "10-Minute Delivery",
-        offers: ["Blinkit Quick Tech Warranty 1-Year Free"],
-        stock: "In Stock (Select Cities)",
-        qualityRating: 4.8,
-        qualityScore: "9.5/10 Brand Store Warranty",
-        regretRisk: "Low (4%)",
-        sellerType: "Blinkit Verified Store",
-        productUrl: "https://blinkit.com/s/?q=Sony+WH-1000XM5",
-      },
-    ],
-  },
-
-  // 11. Apple MacBook Air M2
-  {
-    id: "prod-4",
-    name: "Apple MacBook Air M2 (13.6-inch, 8GB RAM, 256GB SSD - Midnight)",
-    category: "Laptops",
-    rating: 4.9,
-    reviewsCount: 11500,
-    aliases: [
-      "macbook air m2",
-      "macbook air",
-      "apple macbook air",
-      "macbook m2",
-      "macbook",
-      "apple macbook",
-      "mac book",
-    ],
-    platforms: [
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 89990,
-        originalPrice: 99900,
-        discount: "10% OFF",
-        delivery: "Express Delivery in 2 Days",
-        offers: ["HDFC Card Instant ₹5,000 Off", "No Cost EMI Available"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 Official Apple Partner",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Apple Authorized Partner",
-        productUrl: "https://www.flipkart.com/search?q=Apple+MacBook+Air+M2",
-        isLowest: true,
-      },
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 91490,
-        originalPrice: 99900,
-        discount: "8% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Instant ₹5,000 Bank Rebate", "Free Laptop Sleeve"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 Apple Authorized Store",
-        regretRisk: "Very Low (1%)",
-        sellerType: "Myntra Official Tech Store",
-        productUrl: "https://www.myntra.com/Apple+MacBook+Air+M2",
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 92990,
-        originalPrice: 99900,
-        discount: "7% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["Amazon Pay ICICI 5% Unlimited Cashback", "Exchange Bonus ₹4,000"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.8/10 Brand Store",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Amazon Fulfilled",
-        productUrl: "https://www.amazon.in/s?k=Apple+MacBook+Air+M2",
-      },
-      {
-        platform: "Croma",
-        domain: "croma.com",
-        badgeBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        logoBgClass: "bg-emerald-600",
-        logoLetter: "C",
-        price: 93990,
-        originalPrice: 99900,
-        discount: "6% OFF",
-        delivery: "Same-Day Store Pickup Available",
-        offers: ["Tata Neu 5% Coins", "Instant Bank ₹5,000 Off"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Tata Assured",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Croma Official Retail",
-        productUrl: "https://www.croma.com/searchB?q=Apple+MacBook+Air+M2%3Arelevance",
-      },
-      {
-        platform: "Reliance Digital",
-        domain: "reliancedigital.in",
-        badgeBg: "bg-red-500/10 text-red-600 border-red-500/20",
-        logoBgClass: "bg-red-600",
-        logoLetter: "R",
-        price: 94990,
-        originalPrice: 99900,
-        discount: "5% OFF",
-        delivery: "Express Courier",
-        offers: ["OneCard Instant ₹5,000 Off", "Free Diagnostic Support"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 Retail Assured",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Reliance Retail",
-        productUrl: "https://www.reliancedigital.in/search?q=Apple+MacBook+Air+M2:relevance",
-      },
-    ],
-  },
-
-  // 12. Apple AirPods Pro 2nd Gen
-  {
-    id: "prod-5",
-    name: "Apple AirPods Pro 2nd Gen (USB-C MagSafe)",
-    category: "Audio",
-    rating: 4.8,
-    reviewsCount: 16800,
-    aliases: [
-      "airpods pro",
-      "airpods pro 2",
-      "apple airpods pro",
-      "airpods",
-      "apple airpods",
-      "air pods",
-    ],
-    platforms: [
-      {
-        platform: "Blinkit",
-        domain: "blinkit.com",
-        badgeBg: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-        logoBgClass: "bg-yellow-500 text-black",
-        logoLetter: "B",
-        price: 21490,
-        originalPrice: 24900,
-        discount: "10-Min Delivery",
-        delivery: "10-15 Min Instant Delivery",
-        offers: ["Instant ₹2,000 Bank Cashback", "Instant Darkstore Dispatch"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 Official Apple Store",
-        regretRisk: "Low (2%)",
-        sellerType: "Blinkit Official Partner",
-        productUrl: "https://blinkit.com/s/?q=Apple+AirPods+Pro",
-        isLowest: true,
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 22490,
-        originalPrice: 24900,
-        discount: "10% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["5% Unlimited ICICI Cashback", "Free 6-Month Apple Music"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.8/10 Official Store",
-        regretRisk: "Low (3%)",
-        sellerType: "Amazon Fulfilled",
-        productUrl: "https://www.amazon.in/s?k=Apple+AirPods+Pro",
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 22990,
-        originalPrice: 24900,
-        discount: "8% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["SuperCoin Instant ₹1,000 Off", "Axis Bank 5% Cashback"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.6/10 Verified Seller",
-        regretRisk: "Low (4%)",
-        sellerType: "Flipkart Assured",
-        productUrl: "https://www.flipkart.com/search?q=Apple+AirPods+Pro",
-      },
-      {
-        platform: "Croma",
-        domain: "croma.com",
-        badgeBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        logoBgClass: "bg-emerald-600",
-        logoLetter: "C",
-        price: 23490,
-        originalPrice: 24900,
-        discount: "6% OFF",
-        delivery: "Store Pickup / Express Courier",
-        offers: ["Tata Neu 5% Coins", "Free Protective Case"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.6/10 Tata Assured",
-        regretRisk: "Low (4%)",
-        sellerType: "Croma Store",
-        productUrl: "https://www.croma.com/searchB?q=Apple+AirPods+Pro%3Arelevance",
-      },
-      {
-        platform: "Blinkit",
-        domain: "blinkit.com",
-        badgeBg: "bg-yellow-500/10 text-yellow-800 border-yellow-500/20",
-        logoBgClass: "bg-yellow-500",
-        logoLetter: "B",
-        price: 23990,
-        originalPrice: 24900,
-        discount: "4% OFF",
-        delivery: "10-Minute Instant Delivery",
-        offers: ["Instant Cashback ₹1,000", "Free Ear Tips Set"],
-        stock: "In Stock (Select Cities)",
-        qualityRating: 4.8,
-        qualityScore: "9.5/10 Verified Quick Commerce",
-        regretRisk: "Low (4%)",
-        sellerType: "Blinkit Assured Store",
-        productUrl: "https://blinkit.com/s/?q=Apple+AirPods+Pro",
-      },
-    ],
-  },
-
-  // 13. Nike Air Max Pulse
-  {
-    id: "prod-6",
-    name: "Nike Air Max Pulse Lifestyle Sneakers",
-    category: "Fashion",
-    rating: 4.8,
-    reviewsCount: 5200,
-    aliases: [
-      "nike air max pulse",
-      "nike shoes",
-      "nike air max",
-      "air max pulse",
-      "nike sneakers",
-      "nike",
-    ],
-    platforms: [
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 7499,
-        originalPrice: 12999,
-        discount: "42% OFF",
-        delivery: "Express Delivery in 2 Days",
-        offers: ["Myntra Sneakerhead 10% Extra Off", "14-Day Free Exchange"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.8/10 100% Authentic Nike India",
-        regretRisk: "Low (4%)",
-        sellerType: "Nike Official Store (Myntra)",
-        productUrl: "https://www.myntra.com/Nike+Air+Max+Pulse",
-        isLowest: true,
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 8499,
-        originalPrice: 12999,
-        discount: "35% OFF",
-        delivery: "Delivery in 3 Days",
-        offers: ["Flipkart Fashion 5% Extra Savings"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.4/10 Brand Store",
-        regretRisk: "Low (5%)",
-        sellerType: "Verified Footwear Partner",
-        productUrl: "https://www.flipkart.com/search?q=Nike+Air+Max+Pulse",
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 8999,
-        originalPrice: 12999,
-        discount: "31% OFF",
-        delivery: "Prime Delivery Tomorrow",
-        offers: ["5% Unlimited ICICI Cashback"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.5/10 Authorized Reseller",
-        regretRisk: "Low (5%)",
-        sellerType: "Amazon Fashion",
-        productUrl: "https://www.amazon.in/s?k=Nike+Air+Max+Pulse",
-      },
-      {
-        platform: "Tata CLiQ",
-        domain: "tatacliq.com",
-        badgeBg: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-        logoBgClass: "bg-purple-600",
-        logoLetter: "T",
-        price: 9299,
-        originalPrice: 12999,
-        discount: "28% OFF",
-        delivery: "Express Delivery in 2 Days",
-        offers: ["Tata Neu 5% Coins", "10-Day Easy Returns"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.6/10 Tata Luxury Fashion",
-        regretRisk: "Low (5%)",
-        sellerType: "Tata CLiQ Luxury Direct",
-        productUrl: "https://www.tatacliq.com/search/?searchCategory=all&text=Nike+Air+Max+Pulse",
-      },
-      {
-        platform: "Meesho",
-        domain: "meesho.com",
-        badgeBg: "bg-pink-500/10 text-pink-600 border-pink-500/20",
-        logoBgClass: "bg-pink-600",
-        logoLetter: "M",
-        price: 9499,
-        originalPrice: 12999,
-        discount: "27% OFF",
-        delivery: "Free Delivery",
-        offers: ["Direct Reseller Price Guarantee"],
-        stock: "Limited Sizes",
-        qualityRating: 4.4,
-        qualityScore: "8.8/10 Verified Quality",
-        regretRisk: "Low (7%)",
-        sellerType: "Meesho Verified Seller",
-        productUrl: "https://www.meesho.com/search?q=Nike+Air+Max+Pulse",
-      },
-    ],
-  },
-
-  // 46. Nike Air Jordan 1 Retro High OG
-  {
-    id: "prod-air-jordan-1",
-    name: "Nike Air Jordan 1 Retro High OG Men's Leather Sneakers",
-    brand: "Nike",
-    category: "Footwear & Shoes",
-    rating: 4.9,
-    reviewsCount: 14200,
-    image: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/b7d9211c-26e7-431a-ac24-b0540fb3c00f/AIR+JORDAN+1+RETRO+HIGH+OG.png",
-    aliases: [
-      "nike air jordan 1",
-      "air jordan 1",
-      "jordan 1",
-      "jordan shoes",
-      "men shoes",
-      "shoes",
-      "nike shoes",
-      "sneakers",
-      "nike sneakers",
-      "sports shoes",
-      "leather sneakers",
-    ],
-    platforms: [
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 16995,
-        originalPrice: 18995,
-        discount: "11% OFF",
-        delivery: "Express Delivery in 2 Days",
-        offers: ["10% Instant Off on HDFC Cards", "Free 14-Day Returns & Exchanges"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 Myntra Sneaker Studio",
-        regretRisk: "Very Low (1%)",
-        sellerType: "Nike Official Store",
-        productUrl: "https://www.myntra.com/nike-air-jordan-1",
-        isLowest: true,
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 17495,
-        originalPrice: 18995,
-        discount: "8% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["5% Unlimited Amazon Pay Cashback", "Authenticity Guaranteed"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Authorized Seller",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Amazon Fashion Direct",
-        productUrl: "https://www.amazon.in/s?k=Nike+Air+Jordan+1+Retro",
-      },
-      {
-        platform: "Tata CLiQ",
-        domain: "tatacliq.com",
-        badgeBg: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-        logoBgClass: "bg-purple-600",
-        logoLetter: "T",
-        price: 17995,
-        originalPrice: 18995,
-        discount: "5% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Tata Neu 5% NeuCoins Back", "100% Genuine Certified"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Tata Luxury",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Tata CLiQ Luxury Direct",
-        productUrl: "https://www.tatacliq.com/search/?searchCategory=all&text=Nike+Air+Jordan+1",
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 18495,
-        originalPrice: 18995,
-        discount: "Bank Offer",
-        delivery: "Delivery in 3 Days",
-        offers: ["Flipkart Axis Bank 5% Cashback", "Exchange Offer Available"],
-        stock: "Limited Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.7/10 Flipkart Assured",
-        regretRisk: "Low (3%)",
-        sellerType: "Authorized Retail Partner",
-        productUrl: "https://www.flipkart.com/search?q=Nike+Air+Jordan+1",
-      },
-    ],
-  },
-
-  // 47. Adidas Ultraboost Light Performance Running Shoes
-  {
-    id: "prod-ultraboost-light",
-    name: "Adidas Ultraboost Light Performance Running Shoes",
-    brand: "Adidas",
-    category: "Footwear & Shoes",
-    rating: 4.8,
-    reviewsCount: 9400,
-    image: "https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/7ebf279185a54e959ec2af4200fd6117_9366/Ultraboost_Light_Running_Shoes_White_HQ6339_01_standard.jpg",
-    aliases: [
-      "adidas ultraboost",
-      "ultraboost",
-      "ultraboost light",
-      "adidas running shoes",
-      "adidas shoes",
-      "running shoes",
-      "adidas sneakers",
-      "boost shoes",
-    ],
-    platforms: [
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 11999,
-        originalPrice: 18999,
-        discount: "37% OFF",
-        delivery: "Express Delivery in 2 Days",
-        offers: ["Extra 10% Off on Axis Cards", "Free Doorstep Returns"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 Adidas Official Store",
-        regretRisk: "Very Low (1%)",
-        sellerType: "Adidas India Direct",
-        productUrl: "https://www.myntra.com/adidas-ultraboost-light",
-        isLowest: true,
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 12499,
-        originalPrice: 18999,
-        discount: "34% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["5% Cashback on Amazon Pay ICICI Card", "No Cost EMI Available"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Verified Store",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Amazon Fulfilled Retailer",
-        productUrl: "https://www.amazon.in/s?k=Adidas+Ultraboost+Light",
-      },
-      {
-        platform: "Tata CLiQ",
-        domain: "tatacliq.com",
-        badgeBg: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-        logoBgClass: "bg-purple-600",
-        logoLetter: "T",
-        price: 12799,
-        originalPrice: 18999,
-        discount: "32% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Tata Neu 5% Coins", "100% Genuine"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 Official Store",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Tata CLiQ Direct",
-        productUrl: "https://www.tatacliq.com/search/?searchCategory=all&text=Adidas+Ultraboost",
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 12999,
-        originalPrice: 18999,
-        discount: "31% OFF",
-        delivery: "Delivery in 3 Days",
-        offers: ["5% Unlimited Cashback with Flipkart Axis Card", "Brand Warranty"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.7/10 Flipkart Assured",
-        regretRisk: "Low (3%)",
-        sellerType: "Authorized Retail Partner",
-        productUrl: "https://www.flipkart.com/search?q=Adidas+Ultraboost+Light",
-      },
-    ],
-  },
-
-  // 48. Puma RS-X Reinvent Unisex Sneakers
-  {
-    id: "prod-puma-rs-x",
-    name: "Puma RS-X Reinvent Unisex Chunky Lifestyle Sneakers",
-    brand: "Puma",
-    category: "Footwear & Shoes",
-    rating: 4.7,
-    reviewsCount: 7800,
-    image: "https://images.puma.com/image/upload/f_auto,q_auto,b_rgb:fafafa,w_600,h_600/global/391174/01/sv01/fnd/IND/fmt/png",
-    aliases: [
-      "puma rs-x",
-      "puma rsx",
-      "puma sneakers",
-      "puma shoes",
-      "chunky sneakers",
-      "casual sneakers",
-      "puma casual shoes",
-    ],
-    platforms: [
-      {
-        platform: "Meesho",
-        domain: "meesho.com",
-        badgeBg: "bg-pink-500/10 text-pink-600 border-pink-500/20",
-        logoBgClass: "bg-pink-600",
-        logoLetter: "M",
-        price: 4799,
-        originalPrice: 9999,
-        discount: "52% OFF",
-        delivery: "Free Delivery in 3 Days",
-        offers: ["Direct Reseller Price Guarantee", "COD Available"],
-        stock: "In Stock",
-        qualityRating: 4.6,
-        qualityScore: "9.4/10 Verified Merchant",
-        regretRisk: "Low (4%)",
-        sellerType: "Meesho Verified Seller",
-        productUrl: "https://www.meesho.com/search?q=Puma+RS-X",
-        isLowest: true,
-      },
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 4999,
-        originalPrice: 9999,
-        discount: "50% OFF",
-        delivery: "Express Delivery in 2 Days",
-        offers: ["Puma Brand Day 10% Extra Off", "14-Day Easy Returns"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Puma Official Store",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Puma India Direct",
-        productUrl: "https://www.myntra.com/puma-rs-x",
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 5299,
-        originalPrice: 9999,
-        discount: "47% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["5% Unlimited Amazon Pay Cashback", "Free Size Exchange"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 Verified Store",
-        regretRisk: "Low (3%)",
-        sellerType: "Amazon Fulfilled Retailer",
-        productUrl: "https://www.amazon.in/s?k=Puma+RS-X+Reinvent",
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 5499,
-        originalPrice: 9999,
-        discount: "45% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Axis Bank 5% Cashback", "Special Festive Discount"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.7/10 Flipkart Assured",
-        regretRisk: "Low (3%)",
-        sellerType: "Official Puma Retailer",
-        productUrl: "https://www.flipkart.com/search?q=Puma+RS-X",
-      },
-    ],
-  },
-
-  // 49. Levi's Men Classic Graphic Cotton T-Shirt
-  {
-    id: "prod-levis-classic-tshirt",
-    name: "Levi's Men Classic Graphic Cotton Crew-Neck T-Shirt",
-    brand: "Levi's",
-    category: "Fashion & Apparel",
-    rating: 4.8,
-    reviewsCount: 16500,
-    image: "https://m.media-amazon.com/images/I/71wLpW6s7aL._SL1500_.jpg",
-    aliases: [
-      "levis tshirt",
-      "levi tshirt",
-      "tshirt",
-      "t-shirt",
-      "t shirt",
-      "men tshirt",
-      "men t-shirt",
-      "cotton tshirt",
-      "graphic tshirt",
-      "round neck tshirt",
-      "casual tshirt",
-      "levis men tshirt",
-    ],
-    platforms: [
-      {
-        platform: "Meesho",
-        domain: "meesho.com",
-        badgeBg: "bg-pink-500/10 text-pink-600 border-pink-500/20",
-        logoBgClass: "bg-pink-600",
-        logoLetter: "M",
-        price: 899,
-        originalPrice: 1999,
-        discount: "55% OFF",
-        delivery: "Free Delivery in 3 Days",
-        offers: ["Special App Price Discount", "Cash on Delivery Available"],
-        stock: "In Stock",
-        qualityRating: 4.5,
-        qualityScore: "9.2/10 Verified Seller",
-        regretRisk: "Low (4%)",
-        sellerType: "Meesho Apparel Store",
-        productUrl: "https://www.meesho.com/search?q=Levis+Men+Tshirt",
-        isLowest: true,
-      },
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 999,
-        originalPrice: 1999,
-        discount: "50% OFF",
-        delivery: "Express Delivery in 2 Days",
-        offers: ["Buy 2 Get Extra 10% Off", "14-Day Free Returns"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 Levi's Official Store",
-        regretRisk: "Very Low (1%)",
-        sellerType: "Levi's Official Direct",
-        productUrl: "https://www.myntra.com/levis-men-tshirt",
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 1049,
-        originalPrice: 1999,
-        discount: "48% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["5% Unlimited Amazon Pay Cashback", "Free Size Exchange"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Amazon Fashion",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Amazon Fulfilled Retailer",
-        productUrl: "https://www.amazon.in/s?k=Levis+Men+Tshirt",
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 1099,
-        originalPrice: 1999,
-        discount: "45% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Flipkart Axis Card 5% Cashback", "SuperCoins Eligible"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.7/10 Flipkart Assured",
-        regretRisk: "Low (3%)",
-        sellerType: "Levi's Authorized Retailer",
-        productUrl: "https://www.flipkart.com/search?q=Levis+Men+Tshirt",
-      },
-      {
-        platform: "Tata CLiQ",
-        domain: "tatacliq.com",
-        badgeBg: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-        logoBgClass: "bg-purple-600",
-        logoLetter: "T",
-        price: 1099,
-        originalPrice: 1999,
-        discount: "45% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Tata Neu 5% Coins", "100% Genuine Quality"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Tata Enterprise",
-        regretRisk: "Low (2%)",
-        sellerType: "Tata CLiQ Direct",
-        productUrl: "https://www.tatacliq.com/search/?searchCategory=all&text=Levis+Tshirt",
-      },
-    ],
-  },
-
-  // 50. Puma Men Graphic Pure Cotton Slim Fit T-Shirt
-  {
-    id: "prod-puma-graphic-tshirt",
-    name: "Puma Men Graphic Pure Cotton Slim Fit Sports T-Shirt",
-    brand: "Puma",
-    category: "Fashion & Apparel",
-    rating: 4.7,
-    reviewsCount: 11200,
-    image: "https://images.puma.com/image/upload/f_auto,q_auto,b_rgb:fafafa,w_600,h_600/global/674488/01/fnd/IND/fmt/png",
-    aliases: [
-      "puma tshirt",
-      "puma t-shirt",
-      "sports tshirt",
-      "gym tshirt",
-      "running tshirt",
-      "puma men tshirt",
-      "black tshirt",
-      "slim fit tshirt",
-    ],
-    platforms: [
-      {
-        platform: "Meesho",
-        domain: "meesho.com",
-        badgeBg: "bg-pink-500/10 text-pink-600 border-pink-500/20",
-        logoBgClass: "bg-pink-600",
-        logoLetter: "M",
-        price: 699,
-        originalPrice: 1499,
-        discount: "53% OFF",
-        delivery: "Free Delivery in 3 Days",
-        offers: ["Direct Reseller Price Guarantee"],
-        stock: "In Stock",
-        qualityRating: 4.5,
-        qualityScore: "9.1/10 Verified Seller",
-        regretRisk: "Low (4%)",
-        sellerType: "Meesho Apparel",
-        productUrl: "https://www.meesho.com/search?q=Puma+Men+Tshirt",
-        isLowest: true,
-      },
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 799,
-        originalPrice: 1499,
-        discount: "47% OFF",
-        delivery: "Express Delivery in 2 Days",
-        offers: ["Puma Official Brand Offer", "14-Day Free Exchange"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Puma Official Store",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Puma Official Direct",
-        productUrl: "https://www.myntra.com/puma-men-tshirt",
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 849,
-        originalPrice: 1499,
-        discount: "43% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["Amazon Pay 5% Cashback", "Fast Returns"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.7/10 Verified Store",
-        regretRisk: "Low (3%)",
-        sellerType: "Amazon Fulfilled Retailer",
-        productUrl: "https://www.amazon.in/s?k=Puma+Men+Tshirt",
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 899,
-        originalPrice: 1499,
-        discount: "40% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Axis Card 5% Cashback", "SuperCoins Eligible"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.7/10 Flipkart Assured",
-        regretRisk: "Low (3%)",
-        sellerType: "Puma Authorized Retailer",
-        productUrl: "https://www.flipkart.com/search?q=Puma+Men+Tshirt",
-      },
-    ],
-  },
-
-  // 51. U.S. Polo Assn. Men Solid Pure Cotton Polo T-Shirt
-  {
-    id: "prod-uspa-polo-tshirt",
-    name: "U.S. Polo Assn. Men Solid Pure Cotton Regular Fit Polo T-Shirt",
-    brand: "U.S. Polo Assn.",
-    category: "Fashion & Apparel",
-    rating: 4.8,
-    reviewsCount: 14800,
-    image: "https://m.media-amazon.com/images/I/71cvoGVystL._SL1500_.jpg",
-    aliases: [
-      "uspa polo",
-      "us polo tshirt",
-      "polo tshirt",
-      "polo t-shirt",
-      "collar tshirt",
-      "uspa tshirt",
-      "us polo",
-      "men polo tshirt",
-      "polo",
-    ],
-    platforms: [
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 1299,
-        originalPrice: 2199,
-        discount: "41% OFF",
-        delivery: "Express Delivery in 2 Days",
-        offers: ["Extra 10% Off on Multi-buy", "Free Doorstep Returns"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 USPA Official Store",
-        regretRisk: "Very Low (1%)",
-        sellerType: "USPA Official Direct",
-        productUrl: "https://www.myntra.com/us-polo-assn-tshirt",
-        isLowest: true,
-      },
-      {
-        platform: "Tata CLiQ",
-        domain: "tatacliq.com",
-        badgeBg: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-        logoBgClass: "bg-purple-600",
-        logoLetter: "T",
-        price: 1299,
-        originalPrice: 2199,
-        discount: "41% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Tata Neu 5% Coins Back", "100% Genuine Cotton"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Tata Enterprise",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Tata CLiQ Direct",
-        productUrl: "https://www.tatacliq.com/search/?searchCategory=all&text=USPA+Polo",
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 1349,
-        originalPrice: 2199,
-        discount: "39% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["5% Unlimited Amazon Pay Cashback", "Free Size Exchange"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Amazon Fashion",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Amazon Fulfilled Retailer",
-        productUrl: "https://www.amazon.in/s?k=US+Polo+Assn+Men+Polo",
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 1399,
-        originalPrice: 2199,
-        discount: "36% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Flipkart Axis Card 5% Cashback", "SuperCoins Eligible"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.7/10 Flipkart Assured",
-        regretRisk: "Low (3%)",
-        sellerType: "USPA Authorized Retailer",
-        productUrl: "https://www.flipkart.com/search?q=US+Polo+Assn+Men+Polo",
-      },
-    ],
-  },
-
-  // 52. Levi's 511 Slim Fit Stretchable Denim Jeans
-  {
-    id: "prod-levis-511-jeans",
-    name: "Levi's 511 Slim Fit Stretchable Denim Jeans",
-    brand: "Levi's",
-    category: "Fashion & Apparel",
-    rating: 4.8,
-    reviewsCount: 19500,
-    image: "https://m.media-amazon.com/images/I/71g0rC+1h0L._SL1500_.jpg",
-    aliases: [
-      "levis jeans",
-      "levi jeans",
-      "jeans",
-      "men jeans",
-      "denim jeans",
-      "slim fit jeans",
-      "blue jeans",
-      "denim pants",
-      "levis 511",
-    ],
-    platforms: [
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 2299,
-        originalPrice: 3999,
-        discount: "43% OFF",
-        delivery: "Express Delivery in 2 Days",
-        offers: ["10% Instant Off on HDFC Cards", "14-Day Free Returns & Alteration"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 Levi's Official Store",
-        regretRisk: "Very Low (1%)",
-        sellerType: "Levi's Official Direct",
-        productUrl: "https://www.myntra.com/levis-511-jeans",
-        isLowest: true,
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 2399,
-        originalPrice: 3999,
-        discount: "40% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["5% Unlimited Amazon Pay Cashback", "Free Size Exchange"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Amazon Fashion",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Amazon Fulfilled Retailer",
-        productUrl: "https://www.amazon.in/s?k=Levis+511+Slim+Fit+Jeans",
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 2449,
-        originalPrice: 3999,
-        discount: "39% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Flipkart Axis Card 5% Cashback", "SuperCoins Points"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.7/10 Flipkart Assured",
-        regretRisk: "Low (3%)",
-        sellerType: "Authorized Retail Partner",
-        productUrl: "https://www.flipkart.com/search?q=Levis+511+Jeans",
-      },
-      {
-        platform: "Tata CLiQ",
-        domain: "tatacliq.com",
-        badgeBg: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-        logoBgClass: "bg-purple-600",
-        logoLetter: "T",
-        price: 2499,
-        originalPrice: 3999,
-        discount: "38% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Tata Neu 5% Coins Back", "100% Genuine Certified"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Tata Enterprise",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Tata CLiQ Direct",
-        productUrl: "https://www.tatacliq.com/search/?searchCategory=all&text=Levis+511",
-      },
-    ],
-  },
-
-  // 53. Allen Solly Men Pure Cotton Regular Fit Casual Shirt
-  {
-    id: "prod-allen-solly-shirt",
-    name: "Allen Solly Men Pure Cotton Regular Fit Casual Shirt",
-    brand: "Allen Solly",
-    category: "Fashion & Apparel",
-    rating: 4.7,
-    reviewsCount: 8200,
-    image: "https://m.media-amazon.com/images/I/71g2E7G8ZHL._SL1500_.jpg",
-    aliases: [
-      "shirt",
-      "men shirt",
-      "casual shirt",
-      "formal shirt",
-      "cotton shirt",
-      "allen solly shirt",
-      "white shirt",
-      "allen solly",
-      "shirts",
-    ],
-    platforms: [
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 1499,
-        originalPrice: 2499,
-        discount: "40% OFF",
-        delivery: "Express Delivery in 2 Days",
-        offers: ["10% Extra on Axis Cards", "Free 14-Day Returns"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Allen Solly Store",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Allen Solly Official",
-        productUrl: "https://www.myntra.com/allen-solly-shirt",
-        isLowest: true,
-      },
-      {
-        platform: "Tata CLiQ",
-        domain: "tatacliq.com",
-        badgeBg: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-        logoBgClass: "bg-purple-600",
-        logoLetter: "T",
-        price: 1499,
-        originalPrice: 2499,
-        discount: "40% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Tata Neu 5% Coins Back", "100% Genuine"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Tata Enterprise",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Tata CLiQ Direct",
-        productUrl: "https://www.tatacliq.com/search/?searchCategory=all&text=Allen+Solly+Shirt",
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 1599,
-        originalPrice: 2499,
-        discount: "36% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["5% Unlimited Amazon Pay Cashback", "Free Size Exchange"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.7/10 Amazon Fashion",
-        regretRisk: "Low (3%)",
-        sellerType: "Amazon Fulfilled Retailer",
-        productUrl: "https://www.amazon.in/s?k=Allen+Solly+Men+Shirt",
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 1649,
-        originalPrice: 2499,
-        discount: "34% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Flipkart Axis Card 5% Cashback", "SuperCoins Eligible"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.7/10 Flipkart Assured",
-        regretRisk: "Low (3%)",
-        sellerType: "Allen Solly Retail Partner",
-        productUrl: "https://www.flipkart.com/search?q=Allen+Solly+Shirt",
-      },
-    ],
-  },
-
-  // 54. Philips Series 3000 All-in-One Trimmer for Men
-  {
-    id: "prod-philips-trimmer-3000",
-    name: "Philips Series 3000 All-in-One Cordless Beard & Hair Trimmer",
-    brand: "Philips",
-    category: "Personal Care & Grooming",
-    rating: 4.8,
-    reviewsCount: 34500,
-    image: "https://m.media-amazon.com/images/I/51wB7-7Qx3L._SL1000_.jpg",
-    aliases: [
-      "trimmer",
-      "beard trimmer",
-      "philips trimmer",
-      "shaving trimmer",
-      "grooming kit",
-      "men trimmer",
-      "hair trimmer",
-      "philips 3000",
-    ],
-    platforms: [
-      {
-        platform: "Blinkit",
-        domain: "blinkit.com",
-        badgeBg: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-        logoBgClass: "bg-yellow-500 text-black",
-        logoLetter: "B",
-        price: 1499,
-        originalPrice: 1995,
-        discount: "25% OFF (10-Min Delivery)",
-        delivery: "10-15 Min Instant Delivery",
-        offers: ["Instant 10-Min Doorstep Delivery", "2 Year Philips Brand Warranty"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 Authorized Partner",
-        regretRisk: "Very Low (1%)",
-        sellerType: "Blinkit Official Partner",
-        productUrl: "https://blinkit.com/s/?q=Philips+Trimmer+Series+3000",
-        isLowest: true,
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 1549,
-        originalPrice: 1995,
-        discount: "22% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["Amazon Pay 5% Cashback", "2 Year Official Warranty"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Philips Official Store",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Amazon Fulfilled Retailer",
-        productUrl: "https://www.amazon.in/s?k=Philips+Series+3000+Trimmer",
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 1549,
-        originalPrice: 1995,
-        discount: "22% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Flipkart Axis Card 5% Cashback", "SuperCoins Eligible"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Flipkart Assured",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Philips Authorized Retailer",
-        productUrl: "https://www.flipkart.com/search?q=Philips+Trimmer+Series+3000",
-      },
-      {
-        platform: "Croma",
-        domain: "croma.com",
-        badgeBg: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-        logoBgClass: "bg-emerald-600",
-        logoLetter: "C",
-        price: 1599,
-        originalPrice: 1995,
-        discount: "20% OFF",
-        delivery: "Express Delivery in 24 Hours",
-        offers: ["Tata Neu 5% NeuCoins Back", "Instant Store Pickup Available"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Tata Enterprise",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Croma Direct Retail",
-        productUrl: "https://www.croma.com/search/?text=Philips+Trimmer",
-      },
-    ],
-  },
-
-  // 55. Wild Stone Edge Eau De Parfum for Men (100ml)
-  {
-    id: "prod-wild-stone-edge-edp",
-    name: "Wild Stone Edge Premium Eau De Parfum for Men (100ml)",
-    brand: "Wild Stone",
-    category: "Beauty & Fragrances",
-    rating: 4.6,
-    reviewsCount: 22800,
-    image: "https://m.media-amazon.com/images/I/51wB7-7Qx3L._SL1000_.jpg",
-    aliases: [
-      "perfume",
-      "men perfume",
-      "wild stone perfume",
-      "wild stone edge",
-      "deodorant",
-      "fragrance",
-      "cologne",
-      "perfumes",
-    ],
-    platforms: [
-      {
-        platform: "Blinkit",
-        domain: "blinkit.com",
-        badgeBg: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-        logoBgClass: "bg-yellow-500 text-black",
-        logoLetter: "B",
-        price: 549,
-        originalPrice: 799,
-        discount: "31% OFF (10-Min Delivery)",
-        delivery: "10-15 Min Instant Delivery",
-        offers: ["Instant 10-Min Doorstep Delivery", "100% Genuine Certified"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Authorized Partner",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Blinkit Official Partner",
-        productUrl: "https://blinkit.com/s/?q=Wild+Stone+Edge+Perfume",
-        isLowest: true,
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 589,
-        originalPrice: 799,
-        discount: "26% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Flipkart Axis Card 5% Cashback", "SuperCoins Eligible"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.7/10 Flipkart Assured",
-        regretRisk: "Low (3%)",
-        sellerType: "Wild Stone Official Retailer",
-        productUrl: "https://www.flipkart.com/search?q=Wild+Stone+Edge+Perfume",
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 599,
-        originalPrice: 799,
-        discount: "25% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["5% Unlimited Amazon Pay Cashback", "Free Delivery"],
-        stock: "In Stock",
-        qualityRating: 4.7,
-        qualityScore: "9.7/10 Verified Store",
-        regretRisk: "Low (3%)",
-        sellerType: "Amazon Fulfilled Retailer",
-        productUrl: "https://www.amazon.in/s?k=Wild+Stone+Edge+Perfume",
-      },
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 649,
-        originalPrice: 799,
-        discount: "19% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Beauty Rewards Eligible", "100% Original"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Myntra Beauty",
-        regretRisk: "Low (3%)",
-        sellerType: "Wild Stone Direct",
-        productUrl: "https://www.myntra.com/wild-stone-edge-perfume",
-      },
-    ],
-  },
-
-  // 56. American Tourister 32L Casual Laptop Backpack
-  {
-    id: "prod-american-tourister-backpack",
-    name: "American Tourister 32L Casual Laptop Backpack (Water Resistant)",
-    brand: "American Tourister",
-    category: "Bags & Luggage",
-    rating: 4.8,
-    reviewsCount: 18900,
-    image: "https://m.media-amazon.com/images/I/718y6tLw2bL._SL1500_.jpg",
-    aliases: [
-      "backpack",
-      "laptop bag",
-      "school bag",
-      "college bag",
-      "travel backpack",
-      "american tourister",
-      "bag",
-      "bags",
-      "backpacks",
-    ],
-    platforms: [
-      {
-        platform: "Meesho",
-        domain: "meesho.com",
-        badgeBg: "bg-pink-500/10 text-pink-600 border-pink-500/20",
-        logoBgClass: "bg-pink-600",
-        logoLetter: "M",
-        price: 1299,
-        originalPrice: 2800,
-        discount: "54% OFF",
-        delivery: "Free Delivery in 3 Days",
-        offers: ["Direct Reseller Price Guarantee"],
-        stock: "In Stock",
-        qualityRating: 4.5,
-        qualityScore: "9.2/10 Verified Seller",
-        regretRisk: "Low (4%)",
-        sellerType: "Meesho Bags Direct",
-        productUrl: "https://www.meesho.com/search?q=American+Tourister+Backpack",
-        isLowest: true,
-      },
-      {
-        platform: "Myntra",
-        domain: "myntra.com",
-        badgeBg: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-        logoBgClass: "bg-rose-600",
-        logoLetter: "M",
-        price: 1399,
-        originalPrice: 2800,
-        discount: "50% OFF",
-        delivery: "Express Delivery in 2 Days",
-        offers: ["Extra 10% on Axis Cards", "1 Year Brand Warranty"],
-        stock: "In Stock",
-        qualityRating: 4.9,
-        qualityScore: "9.9/10 American Tourister Store",
-        regretRisk: "Very Low (1%)",
-        sellerType: "American Tourister Direct",
-        productUrl: "https://www.myntra.com/american-tourister-backpack",
-      },
-      {
-        platform: "Flipkart",
-        domain: "flipkart.com",
-        badgeBg: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-        logoBgClass: "bg-blue-600",
-        logoLetter: "F",
-        price: 1449,
-        originalPrice: 2800,
-        discount: "48% OFF",
-        delivery: "Delivery in 2 Days",
-        offers: ["Flipkart Axis Card 5% Cashback", "SuperCoins Eligible"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Flipkart Assured",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Authorized Retail Partner",
-        productUrl: "https://www.flipkart.com/search?q=American+Tourister+Backpack",
-      },
-      {
-        platform: "Amazon",
-        domain: "amazon.in",
-        badgeBg: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-        logoBgClass: "bg-amber-600",
-        logoLetter: "A",
-        price: 1499,
-        originalPrice: 2800,
-        discount: "46% OFF",
-        delivery: "Prime 1-Day Delivery",
-        offers: ["5% Unlimited Amazon Pay Cashback", "1 Year Warranty"],
-        stock: "In Stock",
-        qualityRating: 4.8,
-        qualityScore: "9.8/10 Amazon Fulfilled",
-        regretRisk: "Very Low (2%)",
-        sellerType: "Amazon Fulfilled Retailer",
-        productUrl: "https://www.amazon.in/s?k=American+Tourister+Backpack",
-      },
-    ],
-  },
-];
+export { getPlatformSearchUrl, getPlatformDomain, inferBrand, getRealBrandSuggestions, getExactProductImage };
 
 // Backwards compatibility export
 export const SAMPLE_PRODUCTS = VALID_PRODUCTS_DATABASE;
 
 import { scoreProductMatch } from "@/lib/productMatcher";
-
-/**
- * Validates a single search term against the authentic product database.
- * Returns the matching CompareProduct ONLY if strict exact match passes.
- */
-export function findValidProduct(_query: string): CompareProduct | null {
-  // Never use a static product catalog as live source of truth.
-  // All comparisons query live retailer sources dynamically.
-  return null;
-}
 
 /**
  * Parses user search query for single or multi-product comparison (e.g. "X vs Y").
@@ -2587,6 +147,23 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
   // Help Me Decide State
   const [isHelpMeDecideOpen, setIsHelpMeDecideOpen] = useState(false);
   const [decidePriority, setDecidePriority] = useState<"price" | "performance" | "camera" | "battery" | "display" | "gaming" | "productivity">("price");
+
+  // Autocomplete Suggestions State for Verified Products with Accurate Prices
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchDropdownRef = useRef<HTMLDivElement>(null);
+  const autocompleteSuggestions = searchVerifiedProducts(searchInput, 6);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
+        setIsSearchFocused(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Dynamic verified products strictly derived from current search
   const verifiedProducts = compareResults
@@ -2683,13 +260,16 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
     const shareUrl = `${window.location.origin}/compare?q=${encodeURIComponent(submittedQuery)}`;
 
     const allDeals = verifiedProducts.flatMap((p) => p.platforms);
+    const validDeals = allDeals.filter(
+      (d) => d.price !== null && d.price > 0 && d.isVerified !== false
+    );
     const lowestDeal =
-      allDeals.length > 0
-        ? allDeals.reduce((min, d) => (d.price < min.price ? d : min), allDeals[0])
+      validDeals.length > 0
+        ? validDeals.reduce((min, d) => ((d.price || 999999) < (min.price || 999999) ? d : min), validDeals[0])
         : undefined;
 
-    const lowestText = lowestDeal
-      ? ` • Lowest Price: ₹${lowestDeal.price.toLocaleString("en-IN")} on ${lowestDeal.platform}`
+    const lowestText = lowestDeal && lowestDeal.price
+      ? ` • Lowest Verified Price: ₹${lowestDeal.price.toLocaleString("en-IN")} on ${lowestDeal.platform}`
       : "";
     const shareTitle = `${submittedQuery} - Live Price Comparison | ZGenie`;
     const shareText = `Compare live prices for ${submittedQuery} across Amazon, Flipkart, Croma, Reliance Digital & Blinkit on ZGenie!${lowestText}`;
@@ -2726,51 +306,66 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
   useEffect(() => {
     if (hasSearched && !isLoading && !allInvalid && verifiedProducts.length > 0) {
       const allDeals = verifiedProducts.flatMap((p) => p.platforms);
+      const validDeals = allDeals.filter(
+        (d) => d.price !== null && d.price > 0 && d.isVerified !== false
+      );
       const lowestDeal =
-        allDeals.length > 0
-          ? allDeals.reduce((min, d) => (d.price < min.price ? d : min), allDeals[0])
+        validDeals.length > 0
+          ? validDeals.reduce((min, d) => ((d.price || 999999) < (min.price || 999999) ? d : min), validDeals[0])
           : undefined;
 
       saveComparisonToHistory({
         query: submittedQuery,
         productNames: verifiedProducts.map((p) => p.name),
-        lowestPrice: lowestDeal?.price,
+        lowestPrice: lowestDeal?.price ?? undefined,
         lowestPlatform: lowestDeal?.platform,
         storeCount: allDeals.length,
       });
     }
   }, [hasSearched, isLoading, allInvalid, submittedQuery, verifiedProducts]);
 
-  // Helper to format real-time last-updated data freshness
-  const formatUpdatedTime = (isoString?: string | null): string => {
-    if (!isoString) return "Live Verified";
+  // Helper to format real-time last-updated data freshness and label stale cache
+  const formatUpdatedTime = (isoString?: string | null, isStale?: boolean): string => {
+    if (!isoString) return isStale ? "Cached / Stale" : "Live Verified";
     try {
       const d = new Date(isoString);
-      if (isNaN(d.getTime())) return "Live Verified";
+      if (isNaN(d.getTime())) return isStale ? "Cached / Stale" : "Live Verified";
       const diffMs = Date.now() - d.getTime();
       const diffMin = Math.floor(diffMs / 60000);
-      if (diffMin < 1) return "Live Verified (Just now)";
-      if (diffMin < 60) return `Updated ${diffMin} min ago`;
+      const prefix = isStale ? "Cached (Stale) • " : "Verified • ";
+      if (diffMin < 1) return `${prefix}Just now`;
+      if (diffMin < 60) return `${prefix}${diffMin}m ago`;
       const diffHours = Math.floor(diffMin / 60);
-      if (diffHours < 24) return `Updated ${diffHours} hr${diffHours > 1 ? "s" : ""} ago`;
-      return `Updated ${d.toLocaleDateString("en-IN")}`;
+      if (diffHours < 24) return `${prefix}${diffHours}h ago`;
+      return `${prefix}${d.toLocaleDateString("en-IN")}`;
     } catch {
-      return "Live Verified";
+      return isStale ? "Cached / Stale" : "Live Verified";
     }
   };
 
   // Helper to sort platform deals for a valid product
   const getSortedDeals = (platforms: PlatformDeal[]): PlatformDeal[] => {
-    const valid = platforms.filter((d) => d.price > 0);
-    const inStock = valid.filter((d) => {
+    // Separate verified offers with valid price from unverified / missing price offers
+    const verifiedWithPrice = platforms.filter(
+      (d) => d.price !== null && d.price > 0 && d.isVerified !== false
+    );
+    const unverifiedOrMissing = platforms.filter(
+      (d) => d.price === null || d.price <= 0 || d.isVerified === false
+    );
+
+    const inStock = verifiedWithPrice.filter((d) => {
       const stockStr = (d.stock || "").toLowerCase();
       return !stockStr.includes("out of stock") && !stockStr.includes("unavailable");
     });
+    const outOfStock = verifiedWithPrice.filter((d) => {
+      const stockStr = (d.stock || "").toLowerCase();
+      return stockStr.includes("out of stock") || stockStr.includes("unavailable");
+    });
 
-    let sorted = inStock.length > 0 ? inStock : valid;
+    let sorted = [...inStock];
 
     if (sortOption === "lowest_price") {
-      sorted.sort((a, b) => a.price - b.price);
+      sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
     } else if (sortOption === "highest_quality") {
       sorted.sort((a, b) => b.qualityRating - a.qualityRating);
     } else if (sortOption === "fastest_delivery") {
@@ -2785,13 +380,19 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
           d.delivery.toLowerCase().includes("15 min")
       );
       sorted = fast.length > 0 ? fast : sorted;
-      sorted.sort((a, b) => a.price - b.price);
+      sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
     } else if (sortOption === "max_discount") {
-      sorted.sort((a, b) => (b.originalPrice - b.price) - (a.originalPrice - a.price));
+      sorted.sort((a, b) => {
+        const discA = ((a.originalPrice || a.price || 0) - (a.price || 0));
+        const discB = ((b.originalPrice || b.price || 0) - (b.price || 0));
+        return discB - discA;
+      });
     } else {
-      sorted.sort((a, b) => a.price - b.price);
+      sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
     }
-    return sorted;
+
+    // Keep active in-stock verified items first, then out of stock, then unverified/unavailable offers
+    return [...sorted, ...outOfStock, ...unverifiedOrMissing];
   };
 
   return (
@@ -2837,16 +438,84 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
           </div>
         </div>
 
-        {/* Search Bar Form */}
+        {/* Search Bar Form with Live Verified Product Autocomplete */}
         <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2">
-          <div className="relative flex-1">
+          <div ref={searchDropdownRef} className="relative flex-1">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search exact phone or product (e.g. iQOO 15R, iQOO Neo 10R, iPhone 17 Pro Max, Galaxy S26 Ultra)..."
+              onFocus={() => setIsSearchFocused(true)}
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+                setIsSearchFocused(true);
+              }}
+              placeholder="Search verified products with live prices (e.g. iPhone 16 Pro, Galaxy S24 Ultra, MacBook Air)..."
               className="h-11 rounded-xl pl-10 text-xs bg-background"
             />
+
+            {/* Live Autocomplete Suggestions for 100% Accurately Verified Products */}
+            {isSearchFocused && autocompleteSuggestions.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-2 z-50 rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-md p-2 shadow-xl animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-3 py-1.5 flex items-center justify-between text-[11px] font-semibold text-muted-foreground border-b border-border/40 mb-1">
+                  <span className="flex items-center gap-1.5 text-brand">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                    Verified Products with Accurate Prices
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/80">Available Data</span>
+                </div>
+                <div className="space-y-1 max-h-72 overflow-y-auto">
+                  {autocompleteSuggestions.map((prod) => {
+                    const sortedDeals = [...prod.platforms].sort((a, b) => a.price - b.price);
+                    const lowestDeal = sortedDeals[0] || prod.platforms[0];
+                    return (
+                      <button
+                        key={prod.id}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault(); // prevent blur before click
+                          setIsSearchFocused(false);
+                          performSearch(prod.name);
+                        }}
+                        className="w-full flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-brand/10 transition-colors text-left group cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {prod.image ? (
+                            <img
+                              src={prod.image}
+                              alt={prod.name}
+                              className="h-9 w-9 object-contain rounded-lg bg-muted/40 p-0.5 shrink-0"
+                            />
+                          ) : (
+                            <div className="h-9 w-9 rounded-lg bg-brand/10 flex items-center justify-center text-brand font-bold text-xs shrink-0">
+                              {prod.name.charAt(0)}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-foreground group-hover:text-brand truncate">
+                              {prod.name}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                              {prod.platforms.length} Stores Verified ({lowestDeal?.platform || "In Stock"})
+                            </p>
+                          </div>
+                        </div>
+                        {lowestDeal && (
+                          <div className="text-right shrink-0">
+                            <span className="text-xs font-extrabold text-emerald-600 block">
+                              ₹{lowestDeal.price.toLocaleString("en-IN")}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              on {lowestDeal.platform}
+                            </span>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
           <Button
             type="submit"
@@ -2884,17 +553,23 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
           </div>
         )}
 
-        {/* Predefined Popular Comparisons (Separately maintained recommendations) */}
+        {/* Predefined Popular Comparisons with Accurately Verified Market Prices & Available Data */}
         <div className="flex flex-wrap items-center gap-2 text-xs pt-1 border-t border-border/60">
-          <span className="font-semibold text-muted-foreground">Popular Comparisons:</span>
+          <span className="font-semibold text-muted-foreground flex items-center gap-1">
+            <Sparkles className="h-3 w-3 text-brand" />
+            Verified Comparisons:
+          </span>
           {VERIFIED_AVAILABLE_SUGGESTIONS.slice(0, 8).map((chip) => (
             <button
-              key={chip.query}
+              key={chip.name}
               type="button"
-              onClick={() => handleChipClick(chip.query)}
-              className="rounded-lg bg-muted/60 hover:bg-brand hover:text-white px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors cursor-pointer"
+              onClick={() => handleChipClick(chip.name)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-muted/70 hover:bg-brand hover:text-white px-2.5 py-1 text-[11px] font-medium text-foreground transition-all cursor-pointer group shadow-2xs hover:shadow-xs"
             >
-              {chip.query}
+              <span>{chip.query || chip.name}</span>
+              <span className="font-bold text-emerald-600 group-hover:text-white/90 bg-emerald-500/10 group-hover:bg-white/20 px-1.5 py-0.5 rounded text-[10px]">
+                ₹{chip.price.toLocaleString("en-IN")}
+              </span>
             </button>
           ))}
         </div>
@@ -2976,6 +651,47 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                 Try another product name
               </Button>
             </div>
+
+            {/* Verified Available Products with Accurately Correct Price */}
+            <div className="pt-6 border-t border-border/50 text-left space-y-3">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                <span className="text-xs font-bold text-foreground">
+                  Available Verified Products with Accurate Live Prices:
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {VERIFIED_AVAILABLE_SUGGESTIONS.slice(0, 6).map((item) => (
+                  <button
+                    key={item.name}
+                    type="button"
+                    onClick={() => handleChipClick(item.name)}
+                    className="flex items-center justify-between p-2.5 rounded-2xl border border-border/80 bg-card/60 hover:bg-brand/5 hover:border-brand/40 transition-all text-left group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {item.image && (
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="h-9 w-9 object-contain rounded-lg bg-muted/40 p-0.5 shrink-0"
+                        />
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-foreground truncate group-hover:text-brand">
+                          {item.name}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {item.lowestStore} • In Stock
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-extrabold text-emerald-600 shrink-0 ml-2">
+                      ₹{item.price.toLocaleString("en-IN")}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -2990,18 +706,20 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
               category: prod.category,
               rating: prod.rating,
               reviewsCount: prod.reviewsCount,
-              platforms: prod.platforms.map((d) => ({
-                platform: d.platform,
-                price: d.price,
-                original_price: d.originalPrice,
-                discount: d.discount,
-                delivery: d.delivery,
-                qualityRating: d.qualityRating,
-                qualityScore: d.qualityScore,
-                regretRisk: d.regretRisk,
-                sellerType: d.sellerType,
-                offers: d.offers,
-              })),
+              platforms: prod.platforms
+                .filter((d) => d.price !== null && d.price > 0 && d.isVerified !== false)
+                .map((d) => ({
+                  platform: d.platform,
+                  price: d.price as number,
+                  original_price: d.originalPrice || d.price,
+                  discount: d.discount,
+                  delivery: d.delivery,
+                  qualityRating: d.qualityRating,
+                  qualityScore: d.qualityScore,
+                  regretRisk: d.regretRisk,
+                  sellerType: d.sellerType,
+                  offers: d.offers,
+                })),
             }));
 
             if (validProductsForAi.length === 0) return null;
@@ -3031,7 +749,13 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
 
             const currentProduct = result.product;
             const deals = getSortedDeals(currentProduct.platforms);
-            const lowestPriceVal = deals.length > 0 ? Math.min(...deals.map((d) => d.price)) : 0;
+            const verifiedPriceDeals = deals.filter(
+              (d) => d.price !== null && d.price > 0 && d.isVerified !== false && d.availability === "AVAILABLE"
+            );
+            const lowestPriceVal =
+              verifiedPriceDeals.length > 0
+                ? Math.min(...verifiedPriceDeals.map((d) => d.price as number))
+                : 0;
             const matchBreakdown = generateMatchScoreBreakdown(submittedQuery, currentProduct);
             const regretFactors = getRegretScoreFactors(currentProduct);
 
@@ -3147,8 +871,11 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                   <div className="space-y-6">
                     {/* 1. LOWEST VERIFIED PRICE SPOTLIGHT HERO */}
                     {(() => {
-                      const lowestDeal = deals.find((d) => d.price === lowestPriceVal) || deals[0];
-                      if (!lowestDeal) return null;
+                      if (lowestPriceVal <= 0 || verifiedPriceDeals.length === 0) {
+                        return null;
+                      }
+                      const lowestDeal = verifiedPriceDeals.find((d) => d.price === lowestPriceVal) || verifiedPriceDeals[0];
+                      if (!lowestDeal || !lowestDeal.price) return null;
                       const lowestSearchUrl = lowestDeal.productUrl || getPlatformSearchUrl(lowestDeal.platform, currentProduct.name);
 
                       return (
@@ -3157,12 +884,19 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                             <div className="flex items-center gap-2">
                               <span className="flex h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
                               <span className="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                                Lowest Verified Price Across Stores
+                                Lowest Verified Selling Price
                               </span>
                             </div>
-                            <Badge className="bg-emerald-600 text-white font-bold text-[10px] px-3 py-0.5 rounded-full self-start sm:self-auto">
-                              Best Market Deal
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              {lowestDeal.isStale && (
+                                <Badge className="bg-amber-500/10 text-amber-600 border border-amber-500/20 font-bold text-[10px] px-2 py-0.5 rounded-full">
+                                  Cached (Stale)
+                                </Badge>
+                              )}
+                              <Badge className="bg-emerald-600 text-white font-bold text-[10px] px-3 py-0.5 rounded-full self-start sm:self-auto">
+                                Best Verified Offer
+                              </Badge>
+                            </div>
                           </div>
 
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
@@ -3175,7 +909,7 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                                   <h4 className="text-lg font-black text-foreground">{lowestDeal.platform}</h4>
                                   <span className="text-xs text-muted-foreground font-mono">{lowestDeal.domain}</span>
                                   <Badge className={`rounded-full text-[10px] font-bold px-2 py-0.5 border ${lowestDeal.badgeBg}`}>
-                                    {lowestDeal.discount || "Cheapest Deal"}
+                                    {lowestDeal.discount || "Verified Deal"}
                                   </Badge>
                                 </div>
                                 <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
@@ -3186,20 +920,27 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                                   <span>•</span>
                                   <span className="flex items-center gap-1 font-mono text-[11px]">
                                     <Clock className="h-3 w-3 text-emerald-500" />
-                                    {formatUpdatedTime(lowestDeal.lastUpdated)}
+                                    {formatUpdatedTime(lowestDeal.lastUpdated, lowestDeal.isStale)}
                                   </span>
                                 </div>
+                                {lowestDeal.bankDiscount && (
+                                  <div className="text-[11px] font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                                    <span>💳</span>
+                                    <span>Bank Offer: {lowestDeal.bankDiscount}</span>
+                                  </div>
+                                )}
                               </div>
                             </div>
 
                             <div className="flex items-center gap-4 self-start md:self-auto shrink-0">
                               <div className="text-right">
+                                <div className="text-xs font-semibold text-muted-foreground">Selling Price</div>
                                 <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
                                   ₹{lowestDeal.price.toLocaleString("en-IN")}
                                 </div>
-                                {lowestDeal.originalPrice > lowestDeal.price && (
+                                {lowestDeal.originalPrice && lowestDeal.originalPrice > lowestDeal.price && (
                                   <div className="text-xs text-muted-foreground line-through">
-                                    ₹{lowestDeal.originalPrice.toLocaleString("en-IN")}
+                                    MRP: ₹{lowestDeal.originalPrice.toLocaleString("en-IN")}
                                   </div>
                                 )}
                               </div>
@@ -3239,7 +980,8 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                     {/* 3. ALL VERIFIED STORE CARDS GRID */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {deals.map((deal, dIdx) => {
-                        const isLowest = deal.price === lowestPriceVal;
+                        const hasPrice = deal.price !== null && deal.price > 0 && deal.isVerified !== false;
+                        const isLowest = hasPrice && lowestPriceVal > 0 && deal.price === lowestPriceVal;
                         const searchUrl = deal.productUrl || getPlatformSearchUrl(deal.platform, currentProduct.name);
 
                         return (
@@ -3248,7 +990,9 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                             className={`relative rounded-3xl border-2 transition-all flex flex-col justify-between overflow-hidden shadow-xs hover:shadow-md ${
                               isLowest
                                 ? "border-emerald-500/60 bg-emerald-500/[0.03] dark:bg-emerald-950/10"
-                                : "border-border/80 bg-card hover:border-border"
+                                : hasPrice
+                                ? "border-border/80 bg-card hover:border-border"
+                                : "border-dashed border-border/60 bg-muted/10 opacity-90"
                             }`}
                           >
                             {/* Top banner if Lowest Price */}
@@ -3273,33 +1017,65 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                                     </div>
                                   </div>
 
-                                  <Badge className={`rounded-full text-[10px] font-bold px-2.5 py-0.5 border ${deal.badgeBg}`}>
-                                    {deal.discount || "Verified Deal"}
+                                  <Badge className={`rounded-full text-[10px] font-bold px-2.5 py-0.5 border ${hasPrice ? deal.badgeBg : "bg-muted text-muted-foreground border-border"}`}>
+                                    {hasPrice ? (deal.discount || "Verified Deal") : "Price unavailable"}
                                   </Badge>
                                 </div>
 
                                 {/* Price & MRP */}
-                                <div className="space-y-0.5 pt-1 border-t border-border/50">
-                                  <div className="flex items-baseline gap-2">
-                                    <span className="text-2xl font-black text-foreground">
-                                      ₹{deal.price.toLocaleString("en-IN")}
-                                    </span>
-                                    {deal.originalPrice > deal.price && (
-                                      <span className="text-xs text-muted-foreground line-through">
-                                        ₹{deal.originalPrice.toLocaleString("en-IN")}
-                                      </span>
+                                <div className="space-y-1 pt-1 border-t border-border/50">
+                                  {hasPrice ? (
+                                    <>
+                                      <div className="flex items-baseline gap-2">
+                                        <span className="text-2xl font-black text-foreground">
+                                          ₹{deal.price!.toLocaleString("en-IN")}
+                                        </span>
+                                        {deal.originalPrice && deal.originalPrice > deal.price! && (
+                                          <span className="text-xs text-muted-foreground line-through">
+                                            MRP: ₹{deal.originalPrice.toLocaleString("en-IN")}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center justify-between gap-1 flex-wrap">
+                                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">
+                                          {deal.isStale ? "Cached historical price" : "Current selling price"}
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
+                                          <Clock className="h-3 w-3 text-brand" />
+                                          {formatUpdatedTime(deal.lastUpdated, deal.isStale)}
+                                        </span>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <div className="py-1 space-y-1">
+                                      <div className="text-sm font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                                        <AlertCircle className="h-4 w-4 shrink-0" />
+                                        <span>Unable to verify current price</span>
+                                      </div>
+                                      <p className="text-[11px] text-muted-foreground">
+                                        No automated price found for this exact model. Check live listing on retailer page directly.
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Conditional Bank / Coupon Offers */}
+                                {(deal.bankDiscount || deal.couponDiscount) && (
+                                  <div className="p-2 rounded-xl bg-blue-500/5 border border-blue-500/20 text-[11px] space-y-1">
+                                    {deal.bankDiscount && (
+                                      <div className="text-blue-700 dark:text-blue-300 flex items-start gap-1">
+                                        <span className="shrink-0">💳</span>
+                                        <span className="line-clamp-2"><strong>Bank Offer:</strong> {deal.bankDiscount}</span>
+                                      </div>
+                                    )}
+                                    {deal.couponDiscount && (
+                                      <div className="text-emerald-700 dark:text-emerald-300 flex items-start gap-1">
+                                        <span className="shrink-0">🏷️</span>
+                                        <span className="line-clamp-1"><strong>Coupon:</strong> {deal.couponDiscount}</span>
+                                      </div>
                                     )}
                                   </div>
-                                  <div className="flex items-center justify-between gap-1">
-                                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">
-                                      Inclusive of store taxes
-                                    </span>
-                                    <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
-                                      <Clock className="h-3 w-3 text-brand" />
-                                      {formatUpdatedTime(deal.lastUpdated)}
-                                    </span>
-                                  </div>
-                                </div>
+                                )}
 
                                 {/* Highlights Specs */}
                                 <div className="space-y-2 text-xs pt-1">
@@ -3338,10 +1114,13 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                               <div className="pt-4 mt-auto">
                                 <Button
                                   asChild
+                                  variant={hasPrice ? "default" : "outline"}
                                   className={`w-full rounded-2xl font-bold text-xs h-10 gap-1.5 shadow-xs ${
                                     isLowest
                                       ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                                      : "bg-brand hover:bg-brand/90 text-white"
+                                      : hasPrice
+                                      ? "bg-brand hover:bg-brand/90 text-white"
+                                      : "border-border hover:bg-muted text-foreground"
                                   }`}
                                 >
                                   <a
@@ -3349,7 +1128,7 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
-                                    <span>View Verified on {deal.platform}</span>
+                                    <span>{hasPrice ? `View Verified on ${deal.platform}` : `Check Price on ${deal.platform}`}</span>
                                     <ExternalLink className="h-3.5 w-3.5" />
                                   </a>
                                 </Button>
@@ -3395,7 +1174,7 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                                      p.domain.toLowerCase().includes(store.domain.toLowerCase())
                             );
 
-                            const isAvailable = !!matchedDeal && matchedDeal.price > 0;
+                            const isAvailable = !!matchedDeal && matchedDeal.price !== null && matchedDeal.price > 0 && matchedDeal.isVerified !== false;
                             const isOutOfStock = !!matchedDeal && (matchedDeal.stock || "").toLowerCase().includes("out of stock");
 
                             return (
@@ -3421,23 +1200,23 @@ export function MultiPlatformCompare({ initialQuery = "" }: { initialQuery?: str
                                     </span>
                                   ) : (
                                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-                                      <XCircle className="h-3.5 w-3.5 text-muted-foreground/60" /> Not found
+                                      <XCircle className="h-3.5 w-3.5 text-muted-foreground/60" /> Price unavailable
                                     </span>
                                   )}
                                 </div>
 
-                                {isAvailable && matchedDeal ? (
+                                {isAvailable && matchedDeal && matchedDeal.price ? (
                                   <div className="space-y-0.5">
                                     <div className="text-base font-black text-foreground">
                                       ₹{matchedDeal.price.toLocaleString("en-IN")}
                                     </div>
                                     <div className="text-[10px] text-muted-foreground">
-                                      {formatUpdatedTime(matchedDeal.lastUpdated)}
+                                      {formatUpdatedTime(matchedDeal.lastUpdated, matchedDeal.isStale)}
                                     </div>
                                   </div>
                                 ) : (
                                   <div className="text-[11px] text-muted-foreground italic">
-                                    — No matching price
+                                    — Check retailer page
                                   </div>
                                 )}
                               </div>

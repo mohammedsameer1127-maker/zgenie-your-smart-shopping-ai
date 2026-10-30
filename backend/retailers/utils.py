@@ -24,20 +24,40 @@ DESKTOP_USER_AGENTS = [
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 ]
 
-def build_scoped_retailer_query(query: str, domain: str) -> str:
-    """
-    Builds optimized search queries with category awareness and negative exclusion
-    to prevent accessory/cover noise for smartphone queries.
-    """
-    from backend.services.product_matcher import detect_product_category
-    cat, ptype, is_acc = detect_product_category(query)
+def get_direct_store_url(store_name: str, domain: str, query: str) -> str:
+    encoded = urllib.parse.quote_plus(query)
+    s_lower = store_name.lower()
+    if "amazon" in s_lower:
+        return f"https://www.amazon.in/s?k={encoded}"
+    elif "flipkart" in s_lower:
+        return f"https://www.flipkart.com/search?q={encoded}"
+    elif "croma" in s_lower:
+        return f"https://www.croma.com/searchB?q={encoded}%3Arelevance"
+    elif "reliance" in s_lower:
+        return f"https://www.reliancedigital.in/search?q={encoded}:relevance"
+    elif "blinkit" in s_lower:
+        return f"https://blinkit.com/s/?q={encoded}"
+    elif "zepto" in s_lower:
+        return f"https://www.zeptonow.com/search?query={encoded}"
+    elif "jiomart" in s_lower:
+        return f"https://www.jiomart.com/search/{encoded}"
+    elif "vijay" in s_lower:
+        return f"https://www.vijaysales.com/search/{encoded}"
+    elif "myntra" in s_lower:
+        return f"https://www.myntra.com/{encoded}"
+    elif "meesho" in s_lower:
+        return f"https://www.meesho.com/search?q={encoded}"
+    elif "tata" in s_lower:
+        return f"https://www.tatacliq.com/search/?searchCategory=all&text={encoded}"
+    return f"https://www.{domain}/search?q={encoded}"
 
-    if cat == "smartphone" and not is_acc:
-        return f"site:{domain} {query} -case -cover -glass -protector -guard -skin -pouch -cable -charger"
-    elif cat == "laptop" and not is_acc:
-        return f"site:{domain} {query} -case -sleeve -skin -cable -charger"
-    else:
-        return f"site:{domain} {query}"
+def build_scoped_retailer_query(query: str, domain: str, retailer_name: str = "") -> str:
+    """
+    Builds clean targeted search query for Google Shopping (NO site: operator).
+    Google Shopping rejects 'site:' syntax and returns 0 items if used.
+    """
+    clean_store = retailer_name or domain.split(".")[0]
+    return f"{query} {clean_store}"
 
 async def fetch_retailer_live_listings(
     retailer_name: str,
@@ -53,7 +73,7 @@ async def fetch_retailer_live_listings(
     results: List[RetailerProductResult] = []
     seen_urls = set()
     now_iso = datetime.now(timezone.utc).isoformat()
-    scoped_query = build_scoped_retailer_query(query, domain)
+    scoped_query = build_scoped_retailer_query(query, domain, retailer_name)
 
     # =========================================================================
     # TIER 1: SerpApi Google Shopping Multi-Page Retrieval
@@ -89,11 +109,13 @@ async def fetch_retailer_live_listings(
                             link = item.get("link") or item.get("product_link") or ""
                             source_str = (item.get("source") or item.get("merchant") or "").lower()
 
-                            # Verify retailer domain match
-                            if domain.lower() not in link.lower() and domain.lower().split(".")[0] not in source_str:
+                            # Verify retailer match
+                            dom_match = domain.lower() in link.lower() or domain.lower().split(".")[0] in source_str or retailer_name.lower() in source_str
+                            if not dom_match:
                                 continue
 
-                            if link in seen_urls:
+                            final_link = link if (link and "http" in link and "google." not in link) else get_direct_store_url(retailer_name, domain, query)
+                            if final_link in seen_urls:
                                 continue
 
                             raw_price = item.get("extracted_price") or item.get("price")
@@ -103,29 +125,56 @@ async def fetch_retailer_live_listings(
 
                             raw_old = item.get("extracted_old_price") or item.get("old_price")
                             orig_price = parse_price_to_float(raw_old)
+                            if orig_price and orig_price <= price:
+                                orig_price = None
+
                             discount_str = None
                             if orig_price and orig_price > price:
                                 discount_str = f"{round(((orig_price - price) / orig_price) * 100)}% OFF"
 
-                            delivery_str = item.get("delivery") or ""
+                            delivery_str = item.get("delivery") or "Standard Delivery"
                             is_out_of_stock = any(kw in delivery_str.lower() for kw in ["out of stock", "unavailable", "sold out"])
                             stock_status = "OUT_OF_STOCK" if is_out_of_stock else "AVAILABLE"
 
-                            asin_match = re.search(r"/([A-Z0-9]{10})(?:[/?]|$)", link)
+                            # Categorize offers from extensions and tags
+                            extensions = item.get("extensions") or []
+                            bank_offer = None
+                            coupon_offer = None
+                            exchange_offer = None
+                            for ext in extensions:
+                                e_str = str(ext)
+                                e_lower = e_str.lower()
+                                if any(b in e_lower for b in ["bank", "card", "hdfc", "sbi", "icici", "axis", "kotak", "cashback"]):
+                                    bank_offer = e_str
+                                elif any(c in e_lower for c in ["coupon", "code", "promo"]):
+                                    coupon_offer = e_str
+                                elif "exchange" in e_lower:
+                                    exchange_offer = e_str
+
+                            asin_match = re.search(r"/([A-Z0-9]{10})(?:[/?]|$)", final_link)
                             product_id = asin_match.group(1) if asin_match else item.get("product_id")
 
-                            seen_urls.add(link)
+                            seen_urls.add(final_link)
                             results.append(RetailerProductResult(
                                 retailer=retailer_name,
                                 title=item.get("title") or query,
-                                product_url=link,
+                                product_url=final_link,
                                 image_url=item.get("thumbnail") or item.get("serpapi_thumbnail"),
                                 price=price,
+                                selling_price=price,
                                 original_price=orig_price,
+                                mrp=orig_price,
                                 discount=discount_str,
+                                coupon_discount=coupon_offer,
+                                bank_discount=bank_offer,
+                                exchange_bonus=exchange_offer,
+                                delivery_charges="Free Delivery" if "free" in delivery_str.lower() else delivery_str,
                                 currency="INR",
                                 availability=not is_out_of_stock,
                                 stock_status=stock_status,
+                                is_verified=True,
+                                verification_status="VERIFIED",
+                                is_stale=False,
                                 seller=item.get("source") or retailer_name,
                                 product_id=product_id,
                                 source="serpapi_live",
@@ -133,6 +182,89 @@ async def fetch_retailer_live_listings(
                             ))
         except Exception as e:
             logger.debug(f"[{retailer_name}] SerpApi live query failed: {e}")
+
+    # =========================================================================
+    # TIER 1.5: SerpApi Google Web Organic Fallback (For Flipkart, Amazon, Croma)
+    # =========================================================================
+    if len(results) == 0 and serpapi_key:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(
+                    SERPAPI_SEARCH_URL,
+                    params={
+                        "engine": "google",
+                        "q": f"site:{domain} {query}",
+                        "api_key": serpapi_key,
+                        "gl": "in",
+                        "hl": "en",
+                        "num": 8
+                    }
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    organic_items = data.get("organic_results", [])
+                    dom_root = domain.split(".")[0].lower()
+
+                    for item in organic_items:
+                        title = item.get("title") or ""
+                        snippet = item.get("snippet") or ""
+                        raw_link = item.get("link") or ""
+                        lower_link = raw_link.lower()
+
+                        # Strictly reject accessory links
+                        if any(acc in title.lower() for acc in ["case", "cover", "glass", "protector"]):
+                            continue
+
+                        # Strictly reject blog, unboxed, news, and article URLs
+                        if any(art in lower_link for art in ["/unboxed/", "/article/", "/news/", "/blog/", "/story/", "/review/", "/buying-guide/"]):
+                            continue
+
+                        # Strictly require the actual organic link to belong to the retailer domain
+                        if dom_root not in lower_link or "google." in lower_link:
+                            continue
+
+                        # Extract price from snippet or rich extensions
+                        price_val = None
+                        pm = re.search(r"(?:₹|Rs\.?|INR)\s*([\d,]+(?:\.\d{2})?)", snippet)
+                        if pm:
+                            price_val = parse_price_to_float(pm.group(1))
+
+                        if not price_val and "rich_snippet" in item:
+                            rich_ext = item.get("rich_snippet", {}).get("bottom", {}).get("detected_extensions", {})
+                            if "price" in rich_ext:
+                                price_val = parse_price_to_float(rich_ext["price"])
+
+                        final_link = raw_link if (raw_link and "http" in raw_link) else get_direct_store_url(retailer_name, domain, query)
+                        if final_link in seen_urls:
+                            continue
+
+                        has_verified_price = price_val is not None and price_val > 0
+                        stock_status = "AVAILABLE" if has_verified_price else "NOT_FOUND"
+
+                        seen_urls.add(final_link)
+                        results.append(RetailerProductResult(
+                            retailer=retailer_name,
+                            title=title or f"{query} on {retailer_name}",
+                            product_url=final_link,
+                            image_url=item.get("thumbnail") or None,
+                            price=price_val,
+                            selling_price=price_val,
+                            original_price=None,
+                            mrp=None,
+                            currency="INR",
+                            availability=has_verified_price,
+                            stock_status=stock_status,
+                            is_verified=has_verified_price,
+                            verification_status="VERIFIED" if has_verified_price else "UNAVAILABLE",
+                            is_stale=False,
+                            seller=retailer_name,
+                            source="serpapi_organic_verified",
+                            fetched_at=now_iso
+                        ))
+                        if len(results) >= limit:
+                            break
+        except Exception as e:
+            logger.debug(f"[{retailer_name}] Organic fallback search failed: {e}")
 
     # =========================================================================
     # TIER 2: Serper Shopping Multi-Page Retrieval (Backup / Parallel)
